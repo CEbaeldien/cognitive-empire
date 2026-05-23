@@ -6,9 +6,11 @@ export const dynamic = "force-dynamic";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const workspaceId = process.env.DRIFT_WORKSPACE_ID;
 
 if (!supabaseUrl) throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL");
 if (!serviceRoleKey) throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY");
+if (!workspaceId) throw new Error("Missing DRIFT_WORKSPACE_ID");
 
 const supabase = createClient(supabaseUrl, serviceRoleKey, {
   auth: { persistSession: false },
@@ -16,20 +18,39 @@ const supabase = createClient(supabaseUrl, serviceRoleKey, {
 
 export async function POST() {
   try {
-    const { data: opportunities, error: opportunitiesError } = await supabase
-      .schema("drift")
-      .from("opportunities")
-      .select(
-        "id, workspace_id, value, probability, stage, last_activity_date, next_action, next_action_due_date"
-      )
-      .eq("status", "open");
+    const today = new Date().toISOString().split("T")[0];
 
-    if (opportunitiesError) {
+    const [opportunitiesResult, followupsResult] = await Promise.all([
+      supabase
+        .schema("drift")
+        .from("opportunities")
+        .select("id, workspace_id, value, probability, stage, last_activity_date, next_action")
+        .eq("workspace_id", workspaceId)
+        .eq("status", "open"),
+      supabase
+        .schema("drift")
+        .from("followups")
+        .select("opportunity_id")
+        .eq("workspace_id", workspaceId)
+        .eq("status", "pending")
+        .lt("due_date", today),
+    ]);
+
+    if (opportunitiesResult.error) {
       return NextResponse.json(
-        { error: "Failed to fetch opportunities", details: opportunitiesError },
+        { error: "Failed to fetch opportunities", details: opportunitiesResult.error },
         { status: 500 }
       );
     }
+
+    if (followupsResult.error) {
+      return NextResponse.json(
+        { error: "Failed to fetch followups", details: followupsResult.error },
+        { status: 500 }
+      );
+    }
+
+    const opportunities = opportunitiesResult.data;
 
     if (!opportunities || opportunities.length === 0) {
       return NextResponse.json({
@@ -38,8 +59,15 @@ export async function POST() {
       });
     }
 
+    const overdueCountByOpportunity = new Map<string, number>();
+    for (const followup of followupsResult.data ?? []) {
+      const prev = overdueCountByOpportunity.get(followup.opportunity_id) ?? 0;
+      overdueCountByOpportunity.set(followup.opportunity_id, prev + 1);
+    }
+
     const scoreRows = opportunities.map((opportunity) => {
-      const score = calculateDriftScore(opportunity);
+      const overdue_followup_count = overdueCountByOpportunity.get(opportunity.id) ?? 0;
+      const score = calculateDriftScore({ ...opportunity, overdue_followup_count });
 
       return {
         workspace_id: opportunity.workspace_id,

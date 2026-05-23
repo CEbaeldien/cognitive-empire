@@ -5,12 +5,28 @@ import { useRouter } from "next/navigation";
 
 type EvidenceStrength = "weak" | "moderate" | "strong";
 
+type ActivityType =
+  | "call_completed"
+  | "email_sent"
+  | "meeting_scheduled"
+  | "proposal_sent"
+  | "proposal_resent"
+  | "decision_maker_contacted"
+  | "next_action_updated"
+  | "internal_review_completed"
+  | "note_added"
+  | "other";
+
 type EvidenceModalProps = {
   interventionId: string;
   recommendedAction: string;
+  workspaceId: string;
+  opportunityId: string;
+  accountId: string;
 };
 
 type EvidenceForm = {
+  activity_type: ActivityType | "";
   action_taken: string;
   summary_note: string;
   next_action: string;
@@ -19,6 +35,7 @@ type EvidenceForm = {
 };
 
 const EMPTY_FORM: EvidenceForm = {
+  activity_type: "",
   action_taken: "",
   summary_note: "",
   next_action: "",
@@ -26,9 +43,25 @@ const EMPTY_FORM: EvidenceForm = {
   evidence_strength: "",
 };
 
+const ACTIVITY_TYPE_LABELS: Record<ActivityType, string> = {
+  call_completed: "Call Completed",
+  email_sent: "Email Sent",
+  meeting_scheduled: "Meeting Scheduled",
+  proposal_sent: "Proposal Sent",
+  proposal_resent: "Proposal Resent",
+  decision_maker_contacted: "Decision Maker Contacted",
+  next_action_updated: "Next Action Updated",
+  internal_review_completed: "Internal Review Completed",
+  note_added: "Note Added",
+  other: "Other",
+};
+
 export default function EvidenceModal({
   interventionId,
   recommendedAction,
+  workspaceId,
+  opportunityId,
+  accountId,
 }: EvidenceModalProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -37,6 +70,7 @@ export default function EvidenceModal({
   const [form, setForm] = useState<EvidenceForm>(EMPTY_FORM);
 
   const allFilled =
+    form.activity_type !== "" &&
     form.action_taken.trim() !== "" &&
     form.summary_note.trim() !== "" &&
     form.next_action.trim() !== "" &&
@@ -69,6 +103,10 @@ export default function EvidenceModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           interventionId,
+          workspace_id: workspaceId,
+          opportunity_id: opportunityId,
+          account_id: accountId,
+          activity_type: form.activity_type,
           action_taken: form.action_taken.trim(),
           summary_note: form.summary_note.trim(),
           next_action: form.next_action.trim(),
@@ -133,6 +171,26 @@ export default function EvidenceModal({
             </div>
 
             <div className="space-y-5">
+              <div>
+                <label className="mb-1.5 block text-xs uppercase tracking-wide text-slate-500">
+                  Activity Type <span className="text-red-400">*</span>
+                </label>
+                <select
+                  value={form.activity_type}
+                  onChange={(e) => handleChange("activity_type", e.target.value)}
+                  className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-slate-100 focus:border-slate-500 focus:outline-none"
+                >
+                  <option value="">Select activity type...</option>
+                  {(Object.entries(ACTIVITY_TYPE_LABELS) as [ActivityType, string][]).map(
+                    ([value, label]) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    )
+                  )}
+                </select>
+              </div>
+
               <div>
                 <label className="mb-1.5 block text-xs uppercase tracking-wide text-slate-500">
                   Action Taken <span className="text-red-400">*</span>

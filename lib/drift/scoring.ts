@@ -5,7 +5,7 @@ export type DriftOpportunityInput = {
   stage: string | null;
   last_activity_date: string | null;
   next_action: string | null;
-  next_action_due_date: string | null;
+  overdue_followup_count: number;
 };
 
 export type DriftScoreResult = {
@@ -29,18 +29,6 @@ function daysBetween(dateString: string | null): number {
 
   const diffMs = now.getTime() - date.getTime();
   return Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
-}
-
-function isOverdue(dateString: string | null): boolean {
-  if (!dateString) return false;
-
-  const dueDate = new Date(dateString);
-  const today = new Date();
-
-  dueDate.setHours(0, 0, 0, 0);
-  today.setHours(0, 0, 0, 0);
-
-  return dueDate < today;
 }
 
 function getDriftLevel(score: number): DriftScoreResult["drift_level"] {
@@ -69,7 +57,7 @@ export function calculateDriftScore(
 ): DriftScoreResult {
   const daysSinceLastActivity = daysBetween(opportunity.last_activity_date);
   const hasMissingNextAction = !opportunity.next_action;
-  const hasOverdueFollowup = isOverdue(opportunity.next_action_due_date);
+  const hasOverdueFollowup = opportunity.overdue_followup_count > 0;
 
   let score = 0;
   const notes: string[] = [];
@@ -126,7 +114,7 @@ export function calculateDriftScore(
     has_missing_next_action: hasMissingNextAction,
     has_overdue_followup: hasOverdueFollowup,
     stage_age_days: daysSinceLastActivity,
-    ignored_followups_count: hasOverdueFollowup ? 1 : 0,
+    ignored_followups_count: opportunity.overdue_followup_count,
     scoring_notes: notes.join(" "),
   };
 }

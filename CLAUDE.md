@@ -22,6 +22,7 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=   # required for all /admin and /api routes
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
+DRIFT_WORKSPACE_ID=          # UUID of the active workspace row in drift.workspaces (Phase I: single tenant)
 ```
 
 Note: `app/home/.env.local` is a stale file with an older Supabase project's credentials — the root `.env.local` is authoritative.

@@ -1,6 +1,18 @@
 import EvidenceModal from "./EvidenceModal";
 
 type DriftOverview = {
+  workspace: {
+    id: string;
+    name: string;
+    type: string;
+    status: string;
+  };
+  workspace_members: {
+    id: string;
+    email: string;
+    role: string;
+    status: string;
+  }[];
   summary: {
     totalRevenueAtRisk: number;
     criticalDrift: number;
@@ -69,7 +81,7 @@ export default async function DriftAdminPage() {
       <div className="mx-auto max-w-7xl">
         <header className="mb-8 border-b border-red-500/20 pb-6">
           <p className="text-xs uppercase tracking-[0.4em] text-red-400">
-            Cognitive Empire / Drift
+            Cognitive Empire / Drift / {data.workspace.name}
           </p>
           <h1 className="mt-3 text-4xl font-semibold tracking-tight">
             Drift Command Center
@@ -156,6 +168,9 @@ export default async function DriftAdminPage() {
                   <EvidenceModal
                     interventionId={intervention.id}
                     recommendedAction={intervention.recommended_action}
+                    workspaceId={intervention.workspace_id}
+                    opportunityId={intervention.opportunity_id}
+                    accountId={intervention.opportunities?.accounts?.id}
                   />
                 </div>
               </div>
