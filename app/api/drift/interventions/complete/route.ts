@@ -32,6 +32,7 @@ const VALID_ACTIVITY_TYPES = [
 export async function POST(req: Request) {
   try {
     const body = await req.json();
+    console.log("[complete] body received:", JSON.stringify(body));
     const {
       interventionId,
       workspace_id,
@@ -91,11 +92,19 @@ export async function POST(req: Request) {
       .single();
 
     if (interventionError) {
+      console.error("[complete] interventionError:", interventionError);
       return NextResponse.json(
-        { error: "Failed to complete intervention", details: interventionError },
+        {
+          error: `Failed to update intervention: ${interventionError.message}`,
+          code: interventionError.code,
+          details: interventionError.details,
+          hint: interventionError.hint,
+        },
         { status: 500 }
       );
     }
+
+    console.log("[complete] intervention updated, inserting activity...");
 
     const { error: activityError } = await supabase
       .schema("drift")
@@ -105,17 +114,22 @@ export async function POST(req: Request) {
         opportunity_id,
         account_id,
         activity_type,
-        summary: action_taken,
-        outcome: summary_note,
+        action_taken,
+        summary_note,
         next_action,
         next_action_due_date,
         evidence_strength,
-        created_by: "founder",
       });
 
     if (activityError) {
+      console.error("[complete] activityError:", activityError);
       return NextResponse.json(
-        { error: "Intervention completed but activity log failed", details: activityError },
+        {
+          error: `Activity log failed: ${activityError.message}`,
+          code: activityError.code,
+          details: activityError.details,
+          hint: activityError.hint,
+        },
         { status: 500 }
       );
     }
