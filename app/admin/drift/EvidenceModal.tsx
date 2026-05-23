@@ -361,22 +361,6 @@ export default function EvidenceModal({
                   />
                 </div>
 
-                {/* Evidence Strength — auto-calculated, read-only */}
-                {showStrength && (
-                  <div>
-                    <label className="mb-1.5 block text-[11px] uppercase tracking-[0.35em] text-slate-500">
-                      Evidence Strength
-                    </label>
-                    <div className="flex items-center gap-3">
-                      <span
-                        className={`rounded border px-3 py-1 text-[11px] uppercase tracking-widest ${STRENGTH_BADGE[evidenceStrength]}`}
-                      >
-                        {evidenceStrength}
-                      </span>
-                      <p className="text-[11px] text-slate-600">{STRENGTH_LABEL[evidenceStrength]}</p>
-                    </div>
-                  </div>
-                )}
               </div>
 
               {apiError && (
@@ -390,7 +374,24 @@ export default function EvidenceModal({
             </div>
 
             {/* STICKY FOOTER */}
-            <div className="flex shrink-0 gap-3 border-t border-slate-800/60 bg-slate-950 px-8 py-5">
+            <div className="shrink-0 border-t border-slate-800/60 bg-slate-950 px-8 pt-4 pb-5">
+              {/* Evidence Strength — always visible, appears once activity + outcome are selected */}
+              {showStrength && (
+                <div className="mb-4">
+                  <p className="mb-1.5 text-[11px] uppercase tracking-[0.35em] text-slate-500">
+                    Evidence Strength
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={`rounded border px-3 py-1 text-[11px] uppercase tracking-widest ${STRENGTH_BADGE[evidenceStrength]}`}
+                    >
+                      {evidenceStrength}
+                    </span>
+                    <p className="text-[11px] text-slate-600">{STRENGTH_LABEL[evidenceStrength]}</p>
+                  </div>
+                </div>
+              )}
+              <div className="flex gap-3">
               <button
                 type="button"
                 onClick={submit}
@@ -406,6 +407,7 @@ export default function EvidenceModal({
               >
                 Cancel
               </button>
+            </div>
             </div>
           </div>
         </div>
