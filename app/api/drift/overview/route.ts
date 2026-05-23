@@ -58,6 +58,7 @@ export async function GET() {
           next_action,
           next_action_due_date,
           accounts (
+            id,
             name,
             industry,
             contact_name
