@@ -25,24 +25,6 @@ type EvidenceModalProps = {
   accountId: string;
 };
 
-type EvidenceForm = {
-  activity_type: ActivityType | "";
-  action_taken: string;
-  summary_note: string;
-  next_action: string;
-  next_action_due_date: string;
-  evidence_strength: EvidenceStrength | "";
-};
-
-const EMPTY_FORM: EvidenceForm = {
-  activity_type: "",
-  action_taken: "",
-  summary_note: "",
-  next_action: "",
-  next_action_due_date: "",
-  evidence_strength: "",
-};
-
 const ACTIVITY_TYPE_LABELS: Record<ActivityType, string> = {
   call_completed: "Call Completed",
   email_sent: "Email Sent",
@@ -56,6 +38,92 @@ const ACTIVITY_TYPE_LABELS: Record<ActivityType, string> = {
   other: "Other",
 };
 
+const ACTION_TAKEN_OPTIONS = [
+  "Call completed",
+  "Follow-up email sent",
+  "Meeting scheduled",
+  "Proposal resent",
+  "Decision-maker contacted",
+  "Next action updated",
+  "Internal review completed",
+  "Other",
+];
+
+const OUTCOME_SUMMARY_OPTIONS = [
+  "Positive response received",
+  "Meeting confirmed",
+  "Next step agreed",
+  "No response yet",
+  "Objection raised",
+  "Deal still active",
+  "Probability updated",
+  "Other",
+];
+
+const NEXT_ACTION_OPTIONS = [
+  "Schedule follow-up call",
+  "Send follow-up email",
+  "Resend proposal",
+  "Request decision timeline",
+  "Escalate to decision-maker",
+  "Update close date",
+  "Internal review",
+  "Other",
+];
+
+const STRENGTH_BADGE: Record<EvidenceStrength, string> = {
+  strong: "border-emerald-500/30 bg-emerald-500/10 text-emerald-400",
+  moderate: "border-amber-500/30 bg-amber-500/10 text-amber-400",
+  weak: "border-slate-600 bg-slate-800/60 text-slate-500",
+};
+
+const STRENGTH_LABEL: Record<EvidenceStrength, string> = {
+  strong: "Definitive outcome confirmed.",
+  moderate: "Clear action, partial result.",
+  weak: "Activity logged, outcome unclear.",
+};
+
+type FormState = {
+  activity_type: ActivityType | "";
+  action_taken_select: string;
+  action_taken_other: string;
+  summary_note_select: string;
+  summary_note_other: string;
+  next_action_select: string;
+  next_action_other: string;
+  next_action_due_date: string;
+};
+
+const EMPTY_FORM: FormState = {
+  activity_type: "",
+  action_taken_select: "",
+  action_taken_other: "",
+  summary_note_select: "",
+  summary_note_other: "",
+  next_action_select: "",
+  next_action_other: "",
+  next_action_due_date: "",
+};
+
+function calcStrength(activityType: string, outcomeSelect: string): EvidenceStrength {
+  const strongActivity = activityType === "call_completed" || activityType === "meeting_scheduled";
+  const strongOutcome =
+    outcomeSelect === "Positive response received" || outcomeSelect === "Meeting confirmed";
+  if (strongActivity && strongOutcome) return "strong";
+
+  const weakActivity = activityType === "email_sent";
+  const weakOutcome = outcomeSelect === "No response yet";
+  if (weakActivity && weakOutcome) return "weak";
+
+  return "moderate";
+}
+
+const SELECT_CLASS =
+  "w-full rounded-lg border border-slate-700/80 bg-slate-900 px-4 py-2.5 text-sm text-slate-100 focus:border-slate-500 focus:outline-none";
+
+const TEXTAREA_CLASS =
+  "mt-2 w-full resize-none rounded-lg border border-slate-700/80 bg-slate-900 px-4 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:border-slate-500 focus:outline-none";
+
 export default function EvidenceModal({
   interventionId,
   recommendedAction,
@@ -67,19 +135,31 @@ export default function EvidenceModal({
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
-  const [form, setForm] = useState<EvidenceForm>(EMPTY_FORM);
+  const [form, setForm] = useState<FormState>(EMPTY_FORM);
+
+  function set(field: keyof FormState, value: string) {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  }
+
+  const actualActionTaken =
+    form.action_taken_select === "Other" ? form.action_taken_other : form.action_taken_select;
+  const actualSummaryNote =
+    form.summary_note_select === "Other" ? form.summary_note_other : form.summary_note_select;
+  const actualNextAction =
+    form.next_action_select === "Other" ? form.next_action_other : form.next_action_select;
+
+  const evidenceStrength = calcStrength(form.activity_type, form.summary_note_select);
+  const showStrength = form.activity_type !== "" && form.summary_note_select !== "";
 
   const allFilled =
     form.activity_type !== "" &&
-    form.action_taken.trim() !== "" &&
-    form.summary_note.trim() !== "" &&
-    form.next_action.trim() !== "" &&
-    form.next_action_due_date !== "" &&
-    form.evidence_strength !== "";
-
-  function handleChange(field: keyof EvidenceForm, value: string) {
-    setForm((prev) => ({ ...prev, [field]: value }));
-  }
+    form.action_taken_select !== "" &&
+    (form.action_taken_select !== "Other" || form.action_taken_other.trim() !== "") &&
+    form.summary_note_select !== "" &&
+    (form.summary_note_select !== "Other" || form.summary_note_other.trim() !== "") &&
+    form.next_action_select !== "" &&
+    (form.next_action_select !== "Other" || form.next_action_other.trim() !== "") &&
+    form.next_action_due_date !== "";
 
   function handleOpen() {
     setForm(EMPTY_FORM);
@@ -107,21 +187,17 @@ export default function EvidenceModal({
           opportunity_id: opportunityId,
           account_id: accountId,
           activity_type: form.activity_type,
-          action_taken: form.action_taken.trim(),
-          summary_note: form.summary_note.trim(),
-          next_action: form.next_action.trim(),
+          action_taken: actualActionTaken,
+          summary_note: actualSummaryNote,
+          next_action: actualNextAction,
           next_action_due_date: form.next_action_due_date,
-          evidence_strength: form.evidence_strength,
+          evidence_strength: evidenceStrength,
         }),
       });
 
       const text = await res.text();
       let result: { error?: string } | null = null;
-      try {
-        result = text ? JSON.parse(text) : null;
-      } catch {
-        result = null;
-      }
+      try { result = text ? JSON.parse(text) : null; } catch { result = null; }
 
       if (!res.ok) {
         setApiError(result?.error ?? `Request failed (${res.status})`);
@@ -149,135 +225,184 @@ export default function EvidenceModal({
 
       {open && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4"
           onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
         >
-          <div className="w-full max-w-lg rounded-2xl border border-slate-700 bg-slate-950 p-8 shadow-2xl">
-            <div className="mb-6">
-              <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
-                Drift / Intervention
-              </p>
-              <h2 className="mt-2 text-xl font-semibold text-slate-100">
-                Record Execution Evidence
-              </h2>
-              <div className="mt-3 rounded-xl border border-slate-800 bg-slate-900/60 px-4 py-3">
-                <p className="text-xs uppercase tracking-wide text-slate-500">
-                  Recommended action
+          <div
+            className="flex w-full max-w-[560px] flex-col rounded-2xl border border-slate-700/80 bg-slate-950 shadow-2xl"
+            style={{ maxHeight: "85vh" }}
+          >
+            {/* SCROLLABLE CONTENT */}
+            <div className="flex-1 overflow-y-auto px-8 pt-8 pb-2">
+              {/* Header */}
+              <div className="mb-6">
+                <p className="text-[10px] uppercase tracking-[0.4em] text-slate-600">
+                  Drift · Intervention
                 </p>
-                <p className="mt-1 text-sm leading-6 text-slate-300">
-                  {recommendedAction}
-                </p>
+                <h2 className="mt-1.5 text-xl font-semibold text-slate-100">
+                  Record Execution Evidence
+                </h2>
+                <div className="mt-3 rounded-xl border border-slate-800 bg-slate-900/60 px-4 py-3">
+                  <p className="text-[10px] uppercase tracking-[0.35em] text-slate-600">
+                    Recommended action
+                  </p>
+                  <p className="mt-1 text-sm leading-6 text-slate-300">{recommendedAction}</p>
+                </div>
               </div>
-            </div>
 
-            <div className="space-y-5">
-              <div>
-                <label className="mb-1.5 block text-xs uppercase tracking-wide text-slate-500">
-                  Activity Type <span className="text-red-400">*</span>
-                </label>
-                <select
-                  value={form.activity_type}
-                  onChange={(e) => handleChange("activity_type", e.target.value)}
-                  className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-slate-100 focus:border-slate-500 focus:outline-none"
-                >
-                  <option value="">Select activity type...</option>
-                  {(Object.entries(ACTIVITY_TYPE_LABELS) as [ActivityType, string][]).map(
-                    ([value, label]) => (
-                      <option key={value} value={value}>
-                        {label}
-                      </option>
-                    )
+              <div className="space-y-5">
+                {/* Activity Type */}
+                <div>
+                  <label className="mb-1.5 block text-[11px] uppercase tracking-[0.35em] text-slate-500">
+                    Activity Type <span className="text-red-400">*</span>
+                  </label>
+                  <select
+                    value={form.activity_type}
+                    onChange={(e) => set("activity_type", e.target.value)}
+                    className={SELECT_CLASS}
+                  >
+                    <option value="">Select activity type...</option>
+                    {(Object.entries(ACTIVITY_TYPE_LABELS) as [ActivityType, string][]).map(
+                      ([value, label]) => (
+                        <option key={value} value={value}>{label}</option>
+                      )
+                    )}
+                  </select>
+                </div>
+
+                {/* Action Taken */}
+                <div>
+                  <label className="mb-1.5 block text-[11px] uppercase tracking-[0.35em] text-slate-500">
+                    Action Taken <span className="text-red-400">*</span>
+                  </label>
+                  <select
+                    value={form.action_taken_select}
+                    onChange={(e) => set("action_taken_select", e.target.value)}
+                    className={SELECT_CLASS}
+                  >
+                    <option value="">Select what was done...</option>
+                    {ACTION_TAKEN_OPTIONS.map((opt) => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
+                  {form.action_taken_select === "Other" && (
+                    <textarea
+                      rows={2}
+                      value={form.action_taken_other}
+                      onChange={(e) => set("action_taken_other", e.target.value)}
+                      placeholder="Describe what was done..."
+                      className={TEXTAREA_CLASS}
+                    />
                   )}
-                </select>
+                </div>
+
+                {/* Outcome Summary */}
+                <div>
+                  <label className="mb-1.5 block text-[11px] uppercase tracking-[0.35em] text-slate-500">
+                    Outcome Summary <span className="text-red-400">*</span>
+                  </label>
+                  <select
+                    value={form.summary_note_select}
+                    onChange={(e) => set("summary_note_select", e.target.value)}
+                    className={SELECT_CLASS}
+                  >
+                    <option value="">Select outcome...</option>
+                    {OUTCOME_SUMMARY_OPTIONS.map((opt) => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
+                  {form.summary_note_select === "Other" && (
+                    <textarea
+                      rows={2}
+                      value={form.summary_note_other}
+                      onChange={(e) => set("summary_note_other", e.target.value)}
+                      placeholder="Describe the outcome..."
+                      className={TEXTAREA_CLASS}
+                    />
+                  )}
+                </div>
+
+                {/* Next Action */}
+                <div>
+                  <label className="mb-1.5 block text-[11px] uppercase tracking-[0.35em] text-slate-500">
+                    Next Action <span className="text-red-400">*</span>
+                  </label>
+                  <select
+                    value={form.next_action_select}
+                    onChange={(e) => set("next_action_select", e.target.value)}
+                    className={SELECT_CLASS}
+                  >
+                    <option value="">Select next action...</option>
+                    {NEXT_ACTION_OPTIONS.map((opt) => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
+                  {form.next_action_select === "Other" && (
+                    <textarea
+                      rows={2}
+                      value={form.next_action_other}
+                      onChange={(e) => set("next_action_other", e.target.value)}
+                      placeholder="Describe the next action..."
+                      className={TEXTAREA_CLASS}
+                    />
+                  )}
+                </div>
+
+                {/* Next Action Due Date */}
+                <div>
+                  <label className="mb-1.5 block text-[11px] uppercase tracking-[0.35em] text-slate-500">
+                    Next Action Due Date <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={form.next_action_due_date}
+                    onChange={(e) => set("next_action_due_date", e.target.value)}
+                    className="w-full rounded-lg border border-slate-700/80 bg-slate-900 px-4 py-2.5 text-sm text-slate-100 focus:border-slate-500 focus:outline-none [color-scheme:dark]"
+                  />
+                </div>
+
+                {/* Evidence Strength — auto-calculated, read-only */}
+                {showStrength && (
+                  <div>
+                    <label className="mb-1.5 block text-[11px] uppercase tracking-[0.35em] text-slate-500">
+                      Evidence Strength
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <span
+                        className={`rounded border px-3 py-1 text-[11px] uppercase tracking-widest ${STRENGTH_BADGE[evidenceStrength]}`}
+                      >
+                        {evidenceStrength}
+                      </span>
+                      <p className="text-[11px] text-slate-600">{STRENGTH_LABEL[evidenceStrength]}</p>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              <div>
-                <label className="mb-1.5 block text-xs uppercase tracking-wide text-slate-500">
-                  Action Taken <span className="text-red-400">*</span>
-                </label>
-                <textarea
-                  rows={2}
-                  value={form.action_taken}
-                  onChange={(e) => handleChange("action_taken", e.target.value)}
-                  placeholder="Describe what was actually done"
-                  className="w-full resize-none rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-slate-100 placeholder-slate-600 focus:border-slate-500 focus:outline-none"
-                />
-              </div>
+              {apiError && (
+                <p className="mt-5 mb-1 rounded-lg border border-red-800/60 bg-red-950/40 px-4 py-3 text-sm text-red-400">
+                  {apiError}
+                </p>
+              )}
 
-              <div>
-                <label className="mb-1.5 block text-xs uppercase tracking-wide text-slate-500">
-                  Outcome Summary <span className="text-red-400">*</span>
-                </label>
-                <textarea
-                  rows={2}
-                  value={form.summary_note}
-                  onChange={(e) => handleChange("summary_note", e.target.value)}
-                  placeholder="What changed as a result?"
-                  className="w-full resize-none rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-slate-100 placeholder-slate-600 focus:border-slate-500 focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="mb-1.5 block text-xs uppercase tracking-wide text-slate-500">
-                  Next Action <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={form.next_action}
-                  onChange={(e) => handleChange("next_action", e.target.value)}
-                  placeholder="What happens next?"
-                  className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-slate-100 placeholder-slate-600 focus:border-slate-500 focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="mb-1.5 block text-xs uppercase tracking-wide text-slate-500">
-                  Next Action Due Date <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="date"
-                  value={form.next_action_due_date}
-                  onChange={(e) => handleChange("next_action_due_date", e.target.value)}
-                  className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-slate-100 focus:border-slate-500 focus:outline-none [color-scheme:dark]"
-                />
-              </div>
-
-              <div>
-                <label className="mb-1.5 block text-xs uppercase tracking-wide text-slate-500">
-                  Evidence Strength <span className="text-red-400">*</span>
-                </label>
-                <select
-                  value={form.evidence_strength}
-                  onChange={(e) => handleChange("evidence_strength", e.target.value)}
-                  className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-slate-100 focus:border-slate-500 focus:outline-none"
-                >
-                  <option value="">Select strength...</option>
-                  <option value="weak">Weak — activity logged, outcome unclear</option>
-                  <option value="moderate">Moderate — clear action, partial result</option>
-                  <option value="strong">Strong — definitive outcome confirmed</option>
-                </select>
-              </div>
+              {/* Bottom padding so last field isn't flush against footer */}
+              <div className="h-4" />
             </div>
 
-            {apiError && (
-              <p className="mt-4 rounded-xl border border-red-800 bg-red-950/40 px-4 py-3 text-sm text-red-400">
-                {apiError}
-              </p>
-            )}
-
-            <div className="mt-8 flex gap-3">
+            {/* STICKY FOOTER */}
+            <div className="flex shrink-0 gap-3 border-t border-slate-800/60 bg-slate-950 px-8 py-5">
               <button
                 type="button"
                 onClick={submit}
                 disabled={!allFilled || submitting}
-                className="flex-1 rounded-xl bg-emerald-700 px-6 py-3 text-sm font-medium text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex-1 rounded-lg bg-emerald-700 px-6 py-2.5 text-sm font-medium text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {submitting ? "Submitting..." : "Submit Evidence"}
               </button>
               <button
                 type="button"
                 onClick={handleClose}
-                className="rounded-xl border border-slate-700 px-6 py-3 text-sm text-slate-400 transition hover:border-slate-500 hover:text-slate-300"
+                className="rounded-lg border border-slate-700/80 px-6 py-2.5 text-sm text-slate-400 transition hover:border-slate-500 hover:text-slate-300"
               >
                 Cancel
               </button>
