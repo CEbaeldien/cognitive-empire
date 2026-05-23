@@ -169,26 +169,31 @@ export default function EvidenceModal({
   }
 
   async function submit() {
+    console.log("[EvidenceModal] submit called — allFilled:", allFilled, "submitting:", submitting);
+    console.log("[EvidenceModal] props —", { interventionId, workspaceId, opportunityId, accountId });
     if (!allFilled || submitting) return;
     setSubmitting(true);
     setApiError(null);
+
+    const payload = {
+      interventionId,
+      workspace_id: workspaceId,
+      opportunity_id: opportunityId,
+      account_id: accountId,
+      activity_type: form.activity_type,
+      action_taken: actualActionTaken,
+      summary_note: actualSummaryNote,
+      next_action: actualNextAction,
+      next_action_due_date: form.next_action_due_date,
+      evidence_strength: evidenceStrength,
+    };
+    console.log("[EvidenceModal] payload →", payload);
 
     try {
       const res = await fetch("/api/drift/interventions/complete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          interventionId,
-          workspace_id: workspaceId,
-          opportunity_id: opportunityId,
-          account_id: accountId,
-          activity_type: form.activity_type,
-          action_taken: actualActionTaken,
-          summary_note: actualSummaryNote,
-          next_action: actualNextAction,
-          next_action_due_date: form.next_action_due_date,
-          evidence_strength: evidenceStrength,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const text = await res.text();
@@ -196,7 +201,9 @@ export default function EvidenceModal({
       try { result = text ? JSON.parse(text) : null; } catch { result = null; }
 
       if (!res.ok) {
-        setApiError(result?.error ?? `Request failed (${res.status})`);
+        const msg = result?.error ?? `Request failed (${res.status})`;
+        console.error("[EvidenceModal] API error —", res.status, result);
+        setApiError(msg);
         return;
       }
 
@@ -357,18 +364,19 @@ export default function EvidenceModal({
 
               </div>
 
-              {apiError && (
-                <p className="mt-5 mb-1 rounded-lg border border-red-800/60 bg-red-950/40 px-4 py-3 text-sm text-red-400">
-                  {apiError}
-                </p>
-              )}
-
               {/* Bottom padding so last field isn't flush against footer */}
               <div className="h-4" />
             </div>
 
             {/* STICKY FOOTER */}
             <div className="shrink-0 border-t border-slate-800/60 bg-slate-950 px-8 pt-4 pb-5">
+              {/* API error — always visible */}
+              {apiError && (
+                <p className="mb-4 rounded-lg border border-red-800/60 bg-red-950/40 px-4 py-3 text-sm text-red-400">
+                  {apiError}
+                </p>
+              )}
+
               {/* Evidence Strength — always visible, appears once activity + outcome are selected */}
               {showStrength && (
                 <div className="mb-4">
