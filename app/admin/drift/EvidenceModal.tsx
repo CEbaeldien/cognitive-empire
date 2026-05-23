@@ -25,27 +25,23 @@ type EvidenceModalProps = {
   accountId: string;
 };
 
-const ACTIVITY_TYPE_LABELS: Record<ActivityType, string> = {
-  call_completed: "Call Completed",
-  email_sent: "Email Sent",
-  meeting_scheduled: "Meeting Scheduled",
-  proposal_sent: "Proposal Sent",
-  proposal_resent: "Proposal Resent",
-  decision_maker_contacted: "Decision Maker Contacted",
-  next_action_updated: "Next Action Updated",
-  internal_review_completed: "Internal Review Completed",
-  note_added: "Note Added",
-  other: "Other",
-};
+const ACTIVITY_TYPE_OPTIONS: { value: ActivityType; label: string }[] = [
+  { value: "call_completed", label: "Call" },
+  { value: "email_sent", label: "Email" },
+  { value: "meeting_scheduled", label: "Meeting" },
+  { value: "proposal_sent", label: "Proposal" },
+  { value: "internal_review_completed", label: "Internal Review" },
+  { value: "other", label: "Other" },
+];
 
 const ACTION_TAKEN_OPTIONS = [
-  "Call completed",
-  "Follow-up email sent",
-  "Meeting scheduled",
-  "Proposal resent",
-  "Decision-maker contacted",
-  "Next action updated",
-  "Internal review completed",
+  "Completed the call",
+  "Sent follow-up email",
+  "Scheduled a meeting",
+  "Resent the proposal",
+  "Contacted decision-maker",
+  "Updated next action",
+  "Completed internal review",
   "Other",
 ];
 
@@ -261,12 +257,10 @@ export default function EvidenceModal({
                     onChange={(e) => set("activity_type", e.target.value)}
                     className={SELECT_CLASS}
                   >
-                    <option value="">Select activity type...</option>
-                    {(Object.entries(ACTIVITY_TYPE_LABELS) as [ActivityType, string][]).map(
-                      ([value, label]) => (
-                        <option key={value} value={value}>{label}</option>
-                      )
-                    )}
+                    <option value="">Select category...</option>
+                    {ACTIVITY_TYPE_OPTIONS.map(({ value, label }) => (
+                      <option key={value} value={value}>{label}</option>
+                    ))}
                   </select>
                 </div>
 
