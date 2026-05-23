@@ -1,0 +1,43 @@
+domain,name,source_type,url,canonical_url,feed_url,trust_level,credibility_score,ingestion_policy,max_snippet_chars,terms_check,active,ingestion_mode,ingestion_status,notes
+AI,OpenAI News,official,https://openai.com/news,https://openai.com/news,,5,5,4h,500,yes,true,rss_proxy,pending_proxy_setup,Frontier AI deployment
+AI,Anthropic News,official,https://www.anthropic.com/news,https://www.anthropic.com/news,,5,5,4h,500,yes,true,rss_proxy,pending_proxy_setup,Claude and AI safety research
+AI,Google DeepMind Blog,official,https://deepmind.google/discover/blog,https://deepmind.google/discover/blog,,5,5,6h,500,yes,true,rss_proxy,pending_proxy_setup,Frontier AI research
+AI,NVIDIA News,strategic,https://nvidianews.nvidia.com,https://nvidianews.nvidia.com,,4,4,6h,500,yes,true,rss_proxy,pending_proxy_setup,Compute and AI infrastructure
+AI,Stanford AI Index,research,https://aiindex.stanford.edu,https://aiindex.stanford.edu,,5,5,24h,500,yes,true,rss_proxy,pending_proxy_setup,AI metrics and long term trends
+AI,Epoch AI,research,https://epoch.ai,https://epoch.ai,,5,5,24h,500,yes,true,rss_proxy,pending_proxy_setup,AI compute scaling and frontier trends
+Robotics,Figure AI,official,https://www.figure.ai/news,https://www.figure.ai/news,,5,5,6h,500,yes,true,rss_proxy,pending_proxy_setup,Humanoid deployment
+Robotics,Boston Dynamics,official,https://bostondynamics.com/news,https://bostondynamics.com/news,,5,5,12h,500,yes,true,rss_proxy,pending_proxy_setup,Industrial robotics
+Robotics,Agility Robotics,official,https://agilityrobotics.com,https://agilityrobotics.com,,4,4,12h,500,yes,true,rss_proxy,pending_proxy_setup,Commercial humanoid robotics
+Robotics,IEEE Spectrum Robotics,technical_media,https://spectrum.ieee.org/robotics,https://spectrum.ieee.org/robotics,,4,4,12h,500,yes,true,rss_proxy,pending_proxy_setup,Technical robotics analysis
+Robotics,International Federation of Robotics,research,https://ifr.org,https://ifr.org,,5,5,24h,500,yes,true,rss_proxy,pending_proxy_setup,Global robotics deployment statistics
+Robotics,The Robot Report,technical_media,https://www.therobotreport.com,https://www.therobotreport.com,,4,4,12h,500,yes,true,rss_proxy,pending_proxy_setup,Robotics market and deployment signals
+Energy,IEA,official,https://www.iea.org,https://www.iea.org,,5,5,12h,500,yes,true,rss_proxy,pending_proxy_setup,Global energy authority
+Energy,ARPA-E,official,https://arpa-e.energy.gov,https://arpa-e.energy.gov,,5,5,24h,500,yes,true,rss_proxy,pending_proxy_setup,Energy innovation programs
+Energy,ITER,official,https://www.iter.org,https://www.iter.org,,5,5,24h,500,yes,true,rss_proxy,pending_proxy_setup,Fusion infrastructure
+Energy,Tesla Energy,strategic,https://www.tesla.com/energy,https://www.tesla.com/energy,,4,4,12h,500,yes,true,rss_proxy,pending_proxy_setup,Storage deployment economics
+Energy,Ember,research,https://ember-energy.org,https://ember-energy.org,,5,5,24h,500,yes,true,rss_proxy,pending_proxy_setup,Electricity transition data
+Energy,U.S. Energy Information Administration,official,https://www.eia.gov,https://www.eia.gov,,5,5,24h,500,yes,true,rss_proxy,pending_proxy_setup,Energy data and market statistics
+Science,Nature News,research,https://www.nature.com/news,https://www.nature.com/news,,5,5,12h,500,yes,true,rss_proxy,pending_proxy_setup,Scientific discovery
+Science,Science Magazine,research,https://www.science.org,https://www.science.org,,5,5,12h,500,yes,true,rss_proxy,pending_proxy_setup,Scientific developments
+Science,MIT News Science,research,https://news.mit.edu/topic/science,https://news.mit.edu/topic/science,,4,4,24h,500,yes,true,rss_proxy,pending_proxy_setup,Institutional science research
+Science,CERN News,official,https://home.cern/news,https://home.cern/news,,5,5,24h,500,yes,true,rss_proxy,pending_proxy_setup,Physics infrastructure
+Science,Nature Physics,research,https://www.nature.com/nphys,https://www.nature.com/nphys,,5,5,24h,500,yes,true,rss_proxy,pending_proxy_setup,Physics research signals
+Science,arXiv Physics,research,https://arxiv.org/archive/physics,https://arxiv.org/archive/physics,,4,4,24h,500,yes,true,rss_proxy,pending_proxy_setup,Early physics research with caution
+Technology,IEEE Spectrum,technical_media,https://spectrum.ieee.org,https://spectrum.ieee.org,,5,5,12h,500,yes,true,rss_proxy,pending_proxy_setup,Engineering and infrastructure
+Technology,Cloudflare Radar,official,https://radar.cloudflare.com,https://radar.cloudflare.com,,5,5,6h,500,yes,true,rss_proxy,pending_proxy_setup,Internet infrastructure
+Technology,APNIC Blog,technical_media,https://blog.apnic.net,https://blog.apnic.net,,5,5,12h,500,yes,true,rss_proxy,pending_proxy_setup,Internet routing and network infrastructure
+Technology,Semiconductor Industry Association,official,https://www.semiconductors.org,https://www.semiconductors.org,,5,5,24h,500,yes,true,rss_proxy,pending_proxy_setup,Semiconductor market and policy signals
+Technology,SEMI,official,https://www.semi.org,https://www.semi.org,,5,5,24h,500,yes,true,rss_proxy,pending_proxy_setup,Semiconductor manufacturing ecosystem
+Technology,ASML News,official,https://www.asml.com/en/news,https://www.asml.com/en/news,,5,5,24h,500,yes,true,rss_proxy,pending_proxy_setup,Lithography and chip supply chain
+Agriculture,FAO,official,https://www.fao.org,https://www.fao.org,,5,5,24h,500,yes,true,rss_proxy,pending_proxy_setup,Food systems
+Agriculture,CGIAR,research,https://www.cgiar.org,https://www.cgiar.org,,5,5,24h,500,yes,true,rss_proxy,pending_proxy_setup,Agricultural research
+Agriculture,USDA ARS,official,https://www.ars.usda.gov,https://www.ars.usda.gov,,5,5,24h,500,yes,true,rss_proxy,pending_proxy_setup,Applied agricultural science
+Agriculture,John Deere Technology,strategic,https://www.deere.com/en/news,https://www.deere.com/en/news,,4,4,24h,500,yes,true,rss_proxy,pending_proxy_setup,Precision agriculture
+Agriculture,IFPRI,research,https://www.ifpri.org,https://www.ifpri.org,,5,5,24h,500,yes,true,rss_proxy,pending_proxy_setup,Food policy and agriculture economics
+Agriculture,World Food Programme,official,https://www.wfp.org,https://www.wfp.org,,5,5,24h,500,yes,true,rss_proxy,pending_proxy_setup,Food security and crisis signals
+Space,NASA News,official,https://www.nasa.gov/news,https://www.nasa.gov/news,,5,5,12h,500,yes,true,rss_proxy,pending_proxy_setup,Space infrastructure
+Space,ESA Newsroom,official,https://www.esa.int/Newsroom,https://www.esa.int/Newsroom,,5,5,12h,500,yes,true,rss_proxy,pending_proxy_setup,European orbital infrastructure
+Space,SpaceX Updates,strategic,https://www.spacex.com/updates,https://www.spacex.com/updates,,4,4,12h,500,yes,true,rss_proxy,pending_proxy_setup,Launch infrastructure
+Space,NOAA Satellites,official,https://www.nesdis.noaa.gov,https://www.nesdis.noaa.gov,,5,5,24h,500,yes,true,rss_proxy,pending_proxy_setup,Earth observation systems
+Space,SpaceNews,strategic,https://spacenews.com,https://spacenews.com,,4,4,12h,500,yes,true,rss_proxy,pending_proxy_setup,Space market and policy signals
+Space,Satellite Industry Association,official,https://sia.org,https://sia.org,,5,5,24h,500,yes,true,rss_proxy,pending_proxy_setup,Satellite industry infrastructure
