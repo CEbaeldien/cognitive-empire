@@ -34,7 +34,8 @@ Note: `app/home/.env.local` is a stale file with an older Supabase project's cre
 ### Two Supabase Clients
 
 - **Anon client** (`lib/supabase.ts`) — used in public server components (`app/signals/page.tsx`) for read-only queries
-- **Service role client** — instantiated inline in every admin API route (`app/api/**`) for write access and privileged reads; never shared via `lib/`
+- **Service role client** — instantiated inline in every admin API route (`app/api/**`) for write access and privileged reads; also used in `lib/drift/data.ts` for server component direct queries
+- **Never self-fetch** — server components must not call their own API routes via HTTP (`fetch(NEXT_PUBLIC_SITE_URL/api/...)`). Import shared query functions from `lib/` instead (e.g. `getDriftOverview` from `lib/drift/data.ts`)
 
 Admin server pages (e.g. `app/admin/drift/page.tsx`) fetch data from their own internal API routes via `fetch(${NEXT_PUBLIC_SITE_URL}/api/...)` with `cache: "no-store"` rather than querying Supabase directly.
 
