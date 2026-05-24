@@ -1,56 +1,48 @@
 {
-  "id": "drift-import-processor-v1",
   "name": "Drift: Import Processor",
-  "active": false,
   "nodes": [
     {
-      "id": "node-webhook",
-      "name": "Webhook: drift-import",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
-      "position": [0, 0],
-      "webhookId": "drift-import",
       "parameters": {
         "path": "drift-import",
         "httpMethod": "POST",
         "responseMode": "responseNode",
         "options": {}
-      }
+      },
+      "id": "44444444-0004-4000-8000-000000000001",
+      "name": "Webhook: drift-import",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "44444444-0004-4000-8000-000000000001"
     },
     {
-      "id": "node-post-import",
-      "name": "POST to Import API",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [220, 0],
       "parameters": {
         "method": "POST",
         "url": "={{ $vars.DRIFT_BASE_URL }}/api/drift/import",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            { "name": "Content-Type", "value": "application/json" }
-          ]
-        },
         "sendBody": true,
         "contentType": "json",
-        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "body": "={{ JSON.stringify($json.body) }}",
         "options": {}
-      }
+      },
+      "id": "44444444-0004-4000-8000-000000000002",
+      "name": "POST to Import API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300]
     },
     {
-      "id": "node-respond",
-      "name": "Respond to Webhook",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.1,
-      "position": [440, 0],
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={\n  \"batch_id\": \"{{ $json.batch_id }}\",\n  \"status\": \"{{ $json.status }}\"\n}",
+        "responseBody": "={{ JSON.stringify({ batch_id: $json.batch_id, status: $json.status }) }}",
         "options": {
           "responseCode": 200
         }
-      }
+      },
+      "id": "44444444-0004-4000-8000-000000000003",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [680, 300]
     }
   ],
   "connections": {
@@ -65,12 +57,14 @@
       ]
     }
   },
+  "active": false,
   "settings": {
     "executionOrder": "v1"
   },
-  "tags": [{ "name": "Drift" }],
-  "pinData": {},
+  "versionId": "1",
   "meta": {
-    "templateCredsSetupCompleted": true
-  }
+    "instanceId": "ce-runtime"
+  },
+  "id": "d8f10000-0004-4000-8000-000000000004",
+  "tags": []
 }

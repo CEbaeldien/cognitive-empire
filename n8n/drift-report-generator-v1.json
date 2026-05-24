@@ -1,14 +1,7 @@
 {
-  "id": "drift-report-generator-v1",
   "name": "Drift: Report Generator",
-  "active": false,
   "nodes": [
     {
-      "id": "node-schedule-weekly",
-      "name": "Monday 7am",
-      "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.2,
-      "position": [0, 0],
       "parameters": {
         "rule": {
           "interval": [
@@ -18,40 +11,44 @@
             }
           ]
         }
-      }
+      },
+      "id": "33333333-0003-4000-8000-000000000001",
+      "name": "Monday 7am",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300]
     },
     {
-      "id": "node-gen-report",
-      "name": "Generate Weekly Report",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [220, 0],
       "parameters": {
         "method": "POST",
         "url": "={{ $vars.DRIFT_BASE_URL }}/api/drift/reports",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            { "name": "Content-Type", "value": "application/json" }
-          ]
-        },
         "sendBody": true,
         "contentType": "json",
-        "jsonBody": "={\n  \"report_type\": \"weekly\",\n  \"generated_by\": \"n8n\"\n}",
+        "bodyParameters": {
+          "parameters": [
+            { "name": "report_type", "value": "weekly" },
+            { "name": "generated_by", "value": "n8n" }
+          ]
+        },
         "options": {}
-      }
-    },
-    {
-      "id": "node-verify-report",
-      "name": "Verify Report Created",
+      },
+      "id": "33333333-0003-4000-8000-000000000002",
+      "name": "Generate Weekly Report",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [440, 0],
+      "position": [460, 300]
+    },
+    {
       "parameters": {
         "method": "GET",
         "url": "={{ $vars.DRIFT_BASE_URL }}/api/drift/reports",
         "options": {}
-      }
+      },
+      "id": "33333333-0003-4000-8000-000000000003",
+      "name": "Verify Report Created",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 300]
     }
   ],
   "connections": {
@@ -66,12 +63,14 @@
       ]
     }
   },
+  "active": false,
   "settings": {
     "executionOrder": "v1"
   },
-  "tags": [{ "name": "Drift" }],
-  "pinData": {},
+  "versionId": "1",
   "meta": {
-    "templateCredsSetupCompleted": true
-  }
+    "instanceId": "ce-runtime"
+  },
+  "id": "d8f10000-0003-4000-8000-000000000003",
+  "tags": []
 }

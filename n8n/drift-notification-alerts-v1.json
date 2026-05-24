@@ -1,14 +1,7 @@
 {
-  "id": "drift-notification-alerts-v1",
   "name": "Drift: Notification Alerts",
-  "active": false,
   "nodes": [
     {
-      "id": "node-schedule-12h",
-      "name": "Every 12 Hours",
-      "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.2,
-      "position": [0, 0],
       "parameters": {
         "rule": {
           "interval": [
@@ -18,26 +11,26 @@
             }
           ]
         }
-      }
+      },
+      "id": "55555555-0005-4000-8000-000000000001",
+      "name": "Every 12 Hours",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300]
     },
     {
-      "id": "node-get-overview",
-      "name": "Get Overview",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [220, 0],
       "parameters": {
         "method": "GET",
         "url": "={{ $vars.DRIFT_BASE_URL }}/api/drift/overview",
         "options": {}
-      }
+      },
+      "id": "55555555-0005-4000-8000-000000000002",
+      "name": "Get Overview",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300]
     },
     {
-      "id": "node-if-alert",
-      "name": "Alert Conditions Met?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [440, 0],
       "parameters": {
         "conditions": {
           "options": {
@@ -47,7 +40,7 @@
           },
           "conditions": [
             {
-              "id": "cond-critical",
+              "id": "55555555-0005-4000-8000-c00000000001",
               "leftValue": "={{ $json.criticalDrift }}",
               "rightValue": 0,
               "operator": {
@@ -56,7 +49,7 @@
               }
             },
             {
-              "id": "cond-overdue",
+              "id": "55555555-0005-4000-8000-c00000000002",
               "leftValue": "={{ $json.overdueFollowups }}",
               "rightValue": 5,
               "operator": {
@@ -67,40 +60,45 @@
           ],
           "combinator": "or"
         }
-      }
+      },
+      "id": "55555555-0005-4000-8000-000000000003",
+      "name": "Alert Conditions?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [680, 300]
     },
     {
-      "id": "node-log-alert",
-      "name": "Log Alert Summary",
+      "parameters": {
+        "jsCode": "const overview = $input.first().json;\nconst reasons = [];\n\nif (overview.criticalDrift > 0) {\n  reasons.push(`${overview.criticalDrift} critical drift account(s)`);\n}\nif (overview.overdueFollowups > 5) {\n  reasons.push(`${overview.overdueFollowups} overdue follow-up(s)`);\n}\n\nconst summary = {\n  timestamp: new Date().toISOString(),\n  alertSummary: `DRIFT ALERT: ${reasons.join(' | ')}`,\n  criticalDrift: overview.criticalDrift,\n  overdueFollowups: overview.overdueFollowups,\n  pendingInterventions: overview.pendingInterventions\n};\n\nconsole.log('[Drift Alert]', JSON.stringify(summary));\nreturn [{ json: summary }];"
+      },
+      "id": "55555555-0005-4000-8000-000000000004",
+      "name": "Log Alert",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [660, -120],
-      "parameters": {
-        "jsCode": "const overview = $input.first().json;\nconst reasons = [];\n\nif (overview.criticalDrift > 0) {\n  reasons.push(`${overview.criticalDrift} critical drift account(s)`);\n}\nif (overview.overdueFollowups > 5) {\n  reasons.push(`${overview.overdueFollowups} overdue follow-ups`);\n}\n\nconst summary = {\n  timestamp: new Date().toISOString(),\n  alertSummary: `DRIFT ALERT: ${reasons.join(' | ')}`,\n  criticalDrift: overview.criticalDrift,\n  overdueFollowups: overview.overdueFollowups,\n  pendingInterventions: overview.pendingInterventions,\n};\n\nconsole.log('[Drift Alert]', JSON.stringify(summary, null, 2));\n\nreturn [{ json: summary }];"
-      }
+      "position": [900, 180]
     },
     {
-      "id": "node-slack-alert",
-      "name": "Send Slack Alert",
-      "type": "n8n-nodes-base.slack",
-      "typeVersion": 2.2,
-      "position": [880, -120],
-      "disabled": true,
       "parameters": {
         "operation": "message",
         "channel": "#drift-alerts",
         "text": "={{ $json.alertSummary }}",
         "otherOptions": {}
       },
+      "id": "55555555-0005-4000-8000-000000000005",
+      "name": "Send Slack Alert",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [1120, 180],
+      "disabled": true,
       "credentials": {}
     },
     {
-      "id": "node-no-alert",
+      "parameters": {},
+      "id": "55555555-0005-4000-8000-000000000006",
       "name": "No Alerts",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
-      "position": [660, 120],
-      "parameters": {}
+      "position": [900, 420]
     }
   ],
   "connections": {
@@ -111,27 +109,29 @@
     },
     "Get Overview": {
       "main": [
-        [{ "node": "Alert Conditions Met?", "type": "main", "index": 0 }]
+        [{ "node": "Alert Conditions?", "type": "main", "index": 0 }]
       ]
     },
-    "Alert Conditions Met?": {
+    "Alert Conditions?": {
       "main": [
-        [{ "node": "Log Alert Summary", "type": "main", "index": 0 }],
+        [{ "node": "Log Alert", "type": "main", "index": 0 }],
         [{ "node": "No Alerts", "type": "main", "index": 0 }]
       ]
     },
-    "Log Alert Summary": {
+    "Log Alert": {
       "main": [
-        [{ "node": "Slack or Email (Configure)", "type": "main", "index": 0 }]
+        [{ "node": "Send Slack Alert", "type": "main", "index": 0 }]
       ]
     }
   },
+  "active": false,
   "settings": {
     "executionOrder": "v1"
   },
-  "tags": [{ "name": "Drift" }],
-  "pinData": {},
+  "versionId": "1",
   "meta": {
-    "templateCredsSetupCompleted": true
-  }
+    "instanceId": "ce-runtime"
+  },
+  "id": "d8f10000-0005-4000-8000-000000000005",
+  "tags": []
 }
