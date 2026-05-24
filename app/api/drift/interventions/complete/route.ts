@@ -74,21 +74,53 @@ export async function POST(req: Request) {
       );
     }
 
+    console.log("[complete] inserting activity...");
+
+    const now = new Date().toISOString();
+
+    const { data: activity, error: activityError } = await supabase
+      .schema("drift")
+      .from("activities")
+      .insert({
+        workspace_id,
+        opportunity_id,
+        account_id,
+        activity_type,
+        action_taken,
+        outcome_summary: summary_note,
+        next_action,
+        next_action_due_date,
+        evidence_strength,
+      })
+      .select("id")
+      .single();
+
+    if (activityError) {
+      console.error("[complete] activityError:", activityError);
+      return NextResponse.json(
+        {
+          error: `Activity insert failed: ${activityError.message}`,
+          code: activityError.code,
+          details: activityError.details,
+          hint: activityError.hint,
+        },
+        { status: 500 }
+      );
+    }
+
+    console.log("[complete] activity inserted, updating intervention...");
+
     const { data: intervention, error: interventionError } = await supabase
       .schema("drift")
       .from("interventions")
       .update({
         status: "completed",
-        action_taken,
-        summary_note,
-        next_action,
-        next_action_due_date,
-        evidence_strength,
-        completed_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        completed_at: now,
+        completion_activity_id: activity.id,
+        updated_at: now,
       })
       .eq("id", interventionId)
-      .select("id")
+      .select("id, status, completed_at, completion_activity_id")
       .single();
 
     if (interventionError) {
@@ -104,39 +136,10 @@ export async function POST(req: Request) {
       );
     }
 
-    console.log("[complete] intervention updated, inserting activity...");
-
-    const { error: activityError } = await supabase
-      .schema("drift")
-      .from("activities")
-      .insert({
-        workspace_id,
-        opportunity_id,
-        account_id,
-        activity_type,
-        action_taken,
-        summary_note,
-        next_action,
-        next_action_due_date,
-        evidence_strength,
-      });
-
-    if (activityError) {
-      console.error("[complete] activityError:", activityError);
-      return NextResponse.json(
-        {
-          error: `Activity log failed: ${activityError.message}`,
-          code: activityError.code,
-          details: activityError.details,
-          hint: activityError.hint,
-        },
-        { status: 500 }
-      );
-    }
-
     return NextResponse.json({
       message: "Intervention completed and activity logged",
-      intervention_id: intervention.id,
+      activity,
+      intervention,
     });
   } catch (error) {
     return NextResponse.json(
