@@ -1,0 +1,133 @@
+{
+  "id": "drift-notification-alerts-v1",
+  "name": "Drift: Notification Alerts",
+  "active": false,
+  "nodes": [
+    {
+      "id": "node-schedule-12h",
+      "name": "Every 12 Hours",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 0],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 */12 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "node-get-overview",
+      "name": "Get Overview",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [220, 0],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $vars.DRIFT_BASE_URL }}/api/drift/overview",
+        "options": {}
+      }
+    },
+    {
+      "id": "node-if-alert",
+      "name": "Alert Conditions Met?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [440, 0],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-critical",
+              "leftValue": "={{ $json.criticalDrift }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            },
+            {
+              "id": "cond-overdue",
+              "leftValue": "={{ $json.overdueFollowups }}",
+              "rightValue": 5,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "or"
+        }
+      }
+    },
+    {
+      "id": "node-log-alert",
+      "name": "Log Alert Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, -120],
+      "parameters": {
+        "jsCode": "const overview = $input.first().json;\nconst reasons = [];\n\nif (overview.criticalDrift > 0) {\n  reasons.push(`${overview.criticalDrift} critical drift account(s)`);\n}\nif (overview.overdueFollowups > 5) {\n  reasons.push(`${overview.overdueFollowups} overdue follow-ups`);\n}\n\nconst summary = {\n  timestamp: new Date().toISOString(),\n  alertSummary: `DRIFT ALERT: ${reasons.join(' | ')}`,\n  criticalDrift: overview.criticalDrift,\n  overdueFollowups: overview.overdueFollowups,\n  pendingInterventions: overview.pendingInterventions,\n};\n\nconsole.log('[Drift Alert]', JSON.stringify(summary, null, 2));\n\nreturn [{ json: summary }];"
+      }
+    },
+    {
+      "id": "node-notify-placeholder",
+      "name": "Slack or Email (Configure)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [880, -120],
+      "disabled": true,
+      "parameters": {
+        "jsCode": "// PLACEHOLDER — replace this node with a Slack or email node.\n// Input from previous node:\n//   $json.alertSummary  — human-readable alert string\n//   $json.criticalDrift — count of critical drift accounts\n//   $json.overdueFollowups — count of overdue follow-ups\n//\n// Suggested replacement:\n//   - Slack node → post to #drift-alerts channel\n//   - Gmail / SMTP node → send to founder@cognitiveempire.com\n\nreturn $input.all();"
+      }
+    },
+    {
+      "id": "node-no-alert",
+      "name": "No Alerts",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [660, 120],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Every 12 Hours": {
+      "main": [
+        [{ "node": "Get Overview", "type": "main", "index": 0 }]
+      ]
+    },
+    "Get Overview": {
+      "main": [
+        [{ "node": "Alert Conditions Met?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Alert Conditions Met?": {
+      "main": [
+        [{ "node": "Log Alert Summary", "type": "main", "index": 0 }],
+        [{ "node": "No Alerts", "type": "main", "index": 0 }]
+      ]
+    },
+    "Log Alert Summary": {
+      "main": [
+        [{ "node": "Slack or Email (Configure)", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [{ "name": "Drift" }],
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

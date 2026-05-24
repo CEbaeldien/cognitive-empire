@@ -1,0 +1,126 @@
+{
+  "id": "drift-intervention-queue-v1",
+  "name": "Drift: Intervention Queue",
+  "active": false,
+  "nodes": [
+    {
+      "id": "node-schedule-6h",
+      "name": "Every 6 Hours",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 0],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 */6 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "node-get-overview",
+      "name": "Get Overview",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [220, 0],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $vars.DRIFT_BASE_URL }}/api/drift/overview",
+        "options": {}
+      }
+    },
+    {
+      "id": "node-if-queue-low",
+      "name": "Low Queue & Critical Drift?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [440, 0],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-pending",
+              "leftValue": "={{ $json.pendingInterventions }}",
+              "rightValue": 3,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            },
+            {
+              "id": "cond-critical",
+              "leftValue": "={{ $json.criticalDrift }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "node-gen-interventions",
+      "name": "Generate Interventions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [660, -120],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $vars.DRIFT_BASE_URL }}/api/drift/interventions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": false,
+        "options": {}
+      }
+    },
+    {
+      "id": "node-queue-ok",
+      "name": "Queue Sufficient",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [660, 120],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Every 6 Hours": {
+      "main": [
+        [{ "node": "Get Overview", "type": "main", "index": 0 }]
+      ]
+    },
+    "Get Overview": {
+      "main": [
+        [{ "node": "Low Queue & Critical Drift?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Low Queue & Critical Drift?": {
+      "main": [
+        [{ "node": "Generate Interventions", "type": "main", "index": 0 }],
+        [{ "node": "Queue Sufficient", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [{ "name": "Drift" }],
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

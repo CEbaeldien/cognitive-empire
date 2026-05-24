@@ -1,0 +1,76 @@
+{
+  "id": "drift-import-processor-v1",
+  "name": "Drift: Import Processor",
+  "active": false,
+  "nodes": [
+    {
+      "id": "node-webhook",
+      "name": "Webhook: drift-import",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "drift-import",
+      "parameters": {
+        "path": "drift-import",
+        "httpMethod": "POST",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "node-post-import",
+      "name": "POST to Import API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [220, 0],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $vars.DRIFT_BASE_URL }}/api/drift/import",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={\n  \"workspace_id\": \"{{ $json.body.workspace_id }}\",\n  \"file_name\": \"{{ $json.body.file_name }}\",\n  \"csv_data\": \"{{ $json.body.csv_data }}\"\n}",
+        "options": {}
+      }
+    },
+    {
+      "id": "node-respond",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [440, 0],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"batch_id\": \"{{ $json.batch_id }}\",\n  \"status\": \"{{ $json.status }}\"\n}",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook: drift-import": {
+      "main": [
+        [{ "node": "POST to Import API", "type": "main", "index": 0 }]
+      ]
+    },
+    "POST to Import API": {
+      "main": [
+        [{ "node": "Respond to Webhook", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [{ "name": "Drift" }],
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "id": "drift-report-generator-v1",
+  "name": "Drift: Report Generator",
+  "active": false,
+  "nodes": [
+    {
+      "id": "node-schedule-weekly",
+      "name": "Monday 7am",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 0],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 7 * * 1"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "node-gen-report",
+      "name": "Generate Weekly Report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [220, 0],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $vars.DRIFT_BASE_URL }}/api/drift/reports",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={\n  \"report_type\": \"weekly\",\n  \"generated_by\": \"n8n\"\n}",
+        "options": {}
+      }
+    },
+    {
+      "id": "node-verify-report",
+      "name": "Verify Report Created",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 0],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $vars.DRIFT_BASE_URL }}/api/drift/reports",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Monday 7am": {
+      "main": [
+        [{ "node": "Generate Weekly Report", "type": "main", "index": 0 }]
+      ]
+    },
+    "Generate Weekly Report": {
+      "main": [
+        [{ "node": "Verify Report Created", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [{ "name": "Drift" }],
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}
