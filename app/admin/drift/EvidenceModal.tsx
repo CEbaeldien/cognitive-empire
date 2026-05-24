@@ -221,9 +221,12 @@ export default function EvidenceModal({
       <button
         type="button"
         onClick={handleOpen}
-        className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-xs uppercase tracking-wide text-emerald-200 transition hover:bg-emerald-500/20"
+        className="flex h-7 w-7 items-center justify-center rounded border border-slate-700/50 bg-slate-800/30 text-slate-500 transition-colors hover:border-slate-500 hover:text-slate-200"
+        title="Record Evidence"
       >
-        Record Evidence
+        <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+          <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+        </svg>
       </button>
 
       {open && (
