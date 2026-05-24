@@ -15,7 +15,7 @@
       "id": "55555555-0005-4000-8000-000000000001",
       "name": "Every 12 Hours",
       "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.2,
+      "typeVersion": 1.1,
       "position": [240, 300]
     },
     {
@@ -89,8 +89,7 @@
       "type": "n8n-nodes-base.slack",
       "typeVersion": 2.2,
       "position": [1120, 180],
-      "disabled": true,
-      "credentials": {}
+      "disabled": true
     },
     {
       "parameters": {},

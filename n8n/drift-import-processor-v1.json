@@ -21,7 +21,7 @@
         "url": "={{ $vars.DRIFT_BASE_URL }}/api/drift/import",
         "sendBody": true,
         "contentType": "json",
-        "body": "={{ JSON.stringify($json.body) }}",
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
         "options": {}
       },
       "id": "44444444-0004-4000-8000-000000000002",
