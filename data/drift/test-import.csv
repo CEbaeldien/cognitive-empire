@@ -1,0 +1,6 @@
+account_name,opportunity_title,value,stage,currency,probability,expected_close_date,last_activity_date,next_action,next_action_due_date,contact_name,contact_email
+Meridian Health Systems,Q3 Enterprise EHR License,240000,Negotiation,USD,75,2026-06-30,2026-04-08,Send revised contract,2026-05-30,Sarah Chen,s.chen@meridianhealth.com
+Meridian Health Systems,Patient Portal Integration,85000,Proposal,USD,50,2026-07-15,2026-05-10,Follow up on proposal,2026-05-28,Sarah Chen,s.chen@meridianhealth.com
+Vantage Capital Partners,Wealth Management Platform,320000,Technical Evaluation,USD,40,2026-08-01,2026-04-22,Schedule technical demo,2026-06-01,Marcus Webb,m.webb@vantagecap.com
+Nexgen Logistics,Fleet Optimization Suite,150000,Discovery,USD,25,2026-09-15,2026-03-14,,2026-05-31,Priya Sharma,p.sharma@nexgenlogistics.com
+Nexgen Logistics,API Integration Services,45000,Proposal Sent,USD,60,2026-06-15,2026-05-18,Confirm scope document,2026-06-05,Priya Sharma,p.sharma@nexgenlogistics.com

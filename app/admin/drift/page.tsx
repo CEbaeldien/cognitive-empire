@@ -1,4 +1,5 @@
 import EvidenceModal from "./EvidenceModal";
+import ImportCSV from "./ImportCSV";
 import { getDriftOverview } from "@/lib/drift/data";
 
 const LEVEL_DOT: Record<string, string> = {
@@ -61,11 +62,14 @@ export default async function DriftAdminPage() {
     <main className="min-h-screen bg-[#06080f] px-10 py-10 text-slate-100">
       <div className="mx-auto max-w-5xl">
         {/* HEADER */}
-        <div className="mb-10">
-          <p className="text-[10px] uppercase tracking-[0.45em] text-slate-600">
-            {data.workspace.name} · Drift
-          </p>
-          <h1 className="mt-1.5 text-2xl font-semibold tracking-tight">Revenue Execution</h1>
+        <div className="mb-10 flex items-end justify-between">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.45em] text-slate-600">
+              {data.workspace.name} · Drift
+            </p>
+            <h1 className="mt-1.5 text-2xl font-semibold tracking-tight">Revenue Execution</h1>
+          </div>
+          <ImportCSV />
         </div>
 
         {/* KPI BAR */}
