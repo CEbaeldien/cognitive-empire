@@ -705,9 +705,13 @@ export default function DriftDashboard({ data }: { data: DriftOverview }) {
               ) : (
                 <>
                   <div className="mb-2 grid grid-cols-[1fr_auto_1.2fr] gap-x-3">
-                    {["Opportunity", "Exposure", "Why It Leaked"].map((h) => (
-                      <p key={h} className="text-[9px] uppercase tracking-[0.35em] text-slate-600">
-                        {h}
+                    {[
+                      { label: "Opportunity", cls: "tracking-[0.35em]" },
+                      { label: "Exposure",    cls: "tracking-[0.35em]" },
+                      { label: "Why Leaked",  cls: "tracking-[0.2em]"  },
+                    ].map(({ label, cls }) => (
+                      <p key={label} className={`text-[9px] uppercase text-slate-600 ${cls}`}>
+                        {label}
                       </p>
                     ))}
                   </div>
