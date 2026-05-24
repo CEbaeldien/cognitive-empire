@@ -34,7 +34,7 @@
         },
         "sendBody": true,
         "contentType": "json",
-        "jsonBody": "={\n  \"workspace_id\": \"{{ $json.body.workspace_id }}\",\n  \"file_name\": \"{{ $json.body.file_name }}\",\n  \"csv_data\": \"{{ $json.body.csv_data }}\"\n}",
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
         "options": {}
       }
     },

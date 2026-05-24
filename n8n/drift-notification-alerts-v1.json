@@ -80,15 +80,19 @@
       }
     },
     {
-      "id": "node-notify-placeholder",
-      "name": "Slack or Email (Configure)",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "id": "node-slack-alert",
+      "name": "Send Slack Alert",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
       "position": [880, -120],
       "disabled": true,
       "parameters": {
-        "jsCode": "// PLACEHOLDER — replace this node with a Slack or email node.\n// Input from previous node:\n//   $json.alertSummary  — human-readable alert string\n//   $json.criticalDrift — count of critical drift accounts\n//   $json.overdueFollowups — count of overdue follow-ups\n//\n// Suggested replacement:\n//   - Slack node → post to #drift-alerts channel\n//   - Gmail / SMTP node → send to founder@cognitiveempire.com\n\nreturn $input.all();"
-      }
+        "operation": "message",
+        "channel": "#drift-alerts",
+        "text": "={{ $json.alertSummary }}",
+        "otherOptions": {}
+      },
+      "credentials": {}
     },
     {
       "id": "node-no-alert",
