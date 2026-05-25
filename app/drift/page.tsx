@@ -153,11 +153,11 @@ export default function DriftMarketingPage() {
             Revenue Triage Software
           </p>
 
-          <h1 style={{ fontSize: 72, fontWeight: 900, lineHeight: 1.1, letterSpacing: "-0.03em", color: "#ffffff", maxWidth: 760, margin: "0 0 32px" }}>
+          <h1 style={{ fontSize: "clamp(3.5rem, 6vw, 7rem)", fontWeight: 900, lineHeight: 1, letterSpacing: "-0.03em", color: "#ffffff", maxWidth: "none", margin: "0 0 32px" }}>
             Most revenue dies from neglect, not bad deals.
           </h1>
 
-          <p style={{ fontSize: 20, fontWeight: 400, lineHeight: 1.625, color: "#cbd5e1", maxWidth: 672, margin: "0 0 48px" }}>
+          <p style={{ fontSize: 20, fontWeight: 400, lineHeight: 1.625, color: "#e2e8f0", maxWidth: 768, margin: "0 0 48px" }}>
             Drift turns stale CRM data into operational pressure. It detects decay, ranks risk, and forces proof of execution — so neglected revenue doesn't disappear quietly.
           </p>
 
@@ -181,7 +181,7 @@ export default function DriftMarketingPage() {
               View Pricing
             </a>
           </div>
-          <p style={{ fontSize: 12, color: C.faint }}>14 days free. No credit card required.</p>
+          <p style={{ fontSize: 16, color: "#94a3b8" }}>14 days free. No credit card required.</p>
 
           {/* Mock intervention table */}
           <div style={{ marginTop: 56, borderRadius: 10, border: `1px solid ${C.border}`, overflow: "hidden" }}>
@@ -194,7 +194,7 @@ export default function DriftMarketingPage() {
               padding: "10px 0",
             }}>
               {["OPPORTUNITY", "STAGE", "EXPOSURE", "DECAY REASONS", "REQUIRED INTERVENTION", "URGENCY"].map((h, i) => (
-                <div key={h} style={{ padding: "0 16px", fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.35em", color: C.muted }}>
+                <div key={h} style={{ padding: "0 16px", fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.35em", color: C.muted }}>
                   {h}
                 </div>
               ))}
@@ -214,25 +214,25 @@ export default function DriftMarketingPage() {
                 }}
               >
                 {/* Account */}
-                <div style={{ padding: "16px 16px" }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#f1f5f9" }}>{row.account}</div>
-                  <div style={{ fontSize: 11, color: C.muted, marginTop: 3 }}>{row.deal}</div>
+                <div style={{ padding: "20px 16px" }}>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: "#f1f5f9" }}>{row.account}</div>
+                  <div style={{ fontSize: 14, color: C.muted, marginTop: 3 }}>{row.deal}</div>
                 </div>
                 {/* Stage */}
-                <div style={{ padding: "16px 16px" }}>
-                  <div style={{ fontSize: 12, color: "#94a3b8" }}>{row.stage}</div>
-                  <div style={{ fontSize: 10, fontWeight: 600, marginTop: 4, color: row.badgeColor }}>{row.level === "critical" ? "High-Risk" : row.level === "decaying" ? "At Risk" : "Watch"}</div>
+                <div style={{ padding: "20px 16px" }}>
+                  <div style={{ fontSize: 14, color: "#94a3b8" }}>{row.stage}</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, marginTop: 4, color: row.badgeColor }}>{row.level === "critical" ? "High-Risk" : row.level === "decaying" ? "At Risk" : "Watch"}</div>
                 </div>
                 {/* Exposure */}
-                <div style={{ padding: "16px 16px" }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: row.badgeColor }}>{row.exposure}</div>
-                  <div style={{ fontSize: 10, color: C.muted, marginTop: 3 }}>{row.pct}</div>
+                <div style={{ padding: "20px 16px" }}>
+                  <div style={{ fontSize: 16, fontWeight: 600, color: row.badgeColor }}>{row.exposure}</div>
+                  <div style={{ fontSize: 12, color: C.muted, marginTop: 3 }}>{row.pct}</div>
                 </div>
                 {/* Decay reasons */}
-                <div style={{ padding: "16px 16px" }}>
+                <div style={{ padding: "20px 16px" }}>
                   <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
                     {row.reasons.map(r => (
-                      <li key={r} style={{ display: "flex", alignItems: "flex-start", gap: 6, fontSize: 11, color: "#64748b", marginBottom: 5 }}>
+                      <li key={r} style={{ display: "flex", alignItems: "flex-start", gap: 6, fontSize: 14, color: "#64748b", marginBottom: 5 }}>
                         <span style={{ width: 4, height: 4, borderRadius: "50%", background: C.faint, flexShrink: 0, marginTop: 5 }} />
                         {r}
                       </li>
@@ -240,17 +240,17 @@ export default function DriftMarketingPage() {
                   </ul>
                 </div>
                 {/* Intervention */}
-                <div style={{ padding: "16px 16px" }}>
-                  <div style={{ fontSize: 12, color: "#cbd5e1", lineHeight: 1.5 }}>{row.action}</div>
+                <div style={{ padding: "20px 16px" }}>
+                  <div style={{ fontSize: 14, color: "#cbd5e1", lineHeight: 1.5 }}>{row.action}</div>
                 </div>
                 {/* Urgency */}
-                <div style={{ padding: "16px 16px" }}>
+                <div style={{ padding: "20px 16px" }}>
                   <span style={{
                     display: "inline-block",
-                    padding: "5px 10px", borderRadius: 4,
+                    padding: "5px 14px", borderRadius: 4,
                     border: `1px solid ${row.badgeColor}`,
                     color: row.badgeColor,
-                    fontSize: 9, fontWeight: 700, letterSpacing: "0.1em",
+                    fontSize: 12, fontWeight: 700, letterSpacing: "0.1em",
                     background: `${row.badgeColor}12`,
                   }}>
                     {row.badge}
