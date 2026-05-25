@@ -117,7 +117,7 @@ export default function SignUpPage() {
           {/* GitHub OAuth */}
           <button
             type="button"
-            onClick={() => supabase.auth.signInWithOAuth({ provider: "github", options: { redirectTo: window.location.origin + "/app" } })}
+            onClick={() => supabase.auth.signInWithOAuth({ provider: "github", options: { redirectTo: window.location.origin + "/auth/callback" } })}
             style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, padding: "11px", borderRadius: 7, background: "#161b22", border: `1px solid ${S.border}`, color: S.text, fontSize: 15, fontWeight: 600, cursor: "pointer", letterSpacing: "-0.01em", marginBottom: 20 }}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
