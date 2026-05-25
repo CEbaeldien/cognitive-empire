@@ -11,5 +11,11 @@ export async function GET(request: Request) {
     await supabase.auth.exchangeCodeForSession(code)
   }
 
-  return NextResponse.redirect(new URL('/app', requestUrl.origin))
+  const response = NextResponse.redirect(new URL('/admin/drift', requestUrl.origin))
+  response.cookies.set('sb-auth', '1', {
+    path: '/',
+    maxAge: 60 * 60 * 24 * 7,
+    sameSite: 'lax',
+  })
+  return response
 }
