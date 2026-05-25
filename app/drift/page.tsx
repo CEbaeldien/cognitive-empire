@@ -148,7 +148,7 @@ export default function DriftMarketingPage() {
         </nav>
 
         {/* ══════════ HERO ══════════ */}
-        <section style={{ maxWidth: 1120, margin: "0 auto", padding: "128px 40px 96px" }}>
+        <section style={{ maxWidth: 1152, margin: "0 auto", padding: "128px 40px 96px" }}>
           <p style={{ fontSize: 14, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: C.blue, marginBottom: 28 }}>
             Revenue Triage Software
           </p>
@@ -269,7 +269,7 @@ export default function DriftMarketingPage() {
 
         {/* ══════════ PROBLEM ══════════ */}
         <section style={{ borderTop: `1px solid ${C.border}`, padding: "96px 40px" }}>
-          <div style={{ maxWidth: 1120, margin: "0 auto" }}>
+          <div style={{ maxWidth: 1152, margin: "0 auto" }}>
             <p style={{ fontSize: 14, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: C.blue, marginBottom: 24 }}>
               The Problem
             </p>
@@ -319,7 +319,7 @@ export default function DriftMarketingPage() {
 
         {/* ══════════ HOW IT WORKS ══════════ */}
         <section style={{ borderTop: `1px solid ${C.border}`, padding: "96px 40px" }}>
-          <div style={{ maxWidth: 1120, margin: "0 auto" }}>
+          <div style={{ maxWidth: 1152, margin: "0 auto" }}>
             <p style={{ fontSize: 14, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: C.blue, marginBottom: 24 }}>
               The Core Loop
             </p>
@@ -345,7 +345,7 @@ export default function DriftMarketingPage() {
 
         {/* ══════════ PRICING ══════════ */}
         <section id="pricing" style={{ borderTop: `1px solid ${C.border}`, padding: "96px 40px" }}>
-          <div style={{ maxWidth: 1120, margin: "0 auto" }}>
+          <div style={{ maxWidth: 1152, margin: "0 auto" }}>
             <p style={{ fontSize: 14, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: C.blue, marginBottom: 24 }}>
               Pricing
             </p>
@@ -353,7 +353,7 @@ export default function DriftMarketingPage() {
               Most serious operators start with Pro.
             </h2>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24, alignItems: "start" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24, alignItems: "stretch" }}>
               {PLANS.map(plan => (
                 <div
                   key={plan.name}
@@ -364,6 +364,8 @@ export default function DriftMarketingPage() {
                     padding: "40px 32px",
                     position: "relative",
                     boxShadow: plan.highlight ? "0 0 40px rgba(59,130,246,0.12)" : "none",
+                    display: "flex",
+                    flexDirection: "column",
                   }}
                 >
                   {plan.highlight && (
@@ -400,21 +402,23 @@ export default function DriftMarketingPage() {
                     ))}
                   </ul>
 
-                  <Link
-                    href={plan.ctaHref}
-                    style={{
-                      display: "block", textAlign: "center",
-                      fontSize: 16, fontWeight: 600, textDecoration: "none",
-                      padding: "12px 24px", borderRadius: 6,
-                      color: plan.highlight ? "#fff" : "#f1f5f9",
-                      background: plan.highlight ? C.blue : "transparent",
-                      border: `1px solid ${plan.highlight ? C.blue : C.border}`,
-                      marginBottom: 14,
-                    }}
-                  >
-                    {plan.cta}
-                  </Link>
-                  <p style={{ fontSize: 12, textAlign: "center", color: C.faint }}>{plan.note}</p>
+                  <div style={{ marginTop: "auto" }}>
+                    <Link
+                      href={plan.ctaHref}
+                      style={{
+                        display: "block", textAlign: "center",
+                        fontSize: 16, fontWeight: 600, textDecoration: "none",
+                        padding: "12px 24px", borderRadius: 6,
+                        color: plan.highlight ? "#fff" : "#f1f5f9",
+                        background: plan.highlight ? C.blue : "transparent",
+                        border: `1px solid ${plan.highlight ? C.blue : C.border}`,
+                        marginBottom: 14,
+                      }}
+                    >
+                      {plan.cta}
+                    </Link>
+                    <p style={{ fontSize: 12, textAlign: "center", color: C.faint }}>{plan.note}</p>
+                  </div>
                 </div>
               ))}
             </div>
@@ -444,7 +448,7 @@ export default function DriftMarketingPage() {
 
         {/* ══════════ FOOTER ══════════ */}
         <footer style={{ padding: "32px 40px", borderTop: `1px solid ${C.border}` }}>
-          <div style={{ maxWidth: 1120, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ maxWidth: 1152, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             {/* Wordmark */}
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <div style={{ width: 22, height: 22, borderRadius: 4, background: "rgba(59,130,246,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
