@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { DriftOverview } from "@/lib/drift/data";
+import { supabase } from "@/lib/supabase";
 import EvidenceModal from "./EvidenceModal";
 import ImportCSV from "./ImportCSV";
 
@@ -133,6 +134,61 @@ const Sparkline = () => (
 export default function DriftDashboard({ data }: { data: DriftOverview }) {
   const router = useRouter();
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
+
+  // ── Add client modal ─────────────────────────────────────────────────────────
+  const [showAddClient, setShowAddClient] = useState(false);
+  const [newClientName, setNewClientName] = useState("");
+  const [newClientContact, setNewClientContact] = useState("");
+  const [newClientEmail, setNewClientEmail] = useState("");
+  const [addingClient, setAddingClient] = useState(false);
+  const [addClientError, setAddClientError] = useState<string | null>(null);
+
+  async function handleAddClient() {
+    if (!newClientName.trim()) return;
+    setAddingClient(true);
+    setAddClientError(null);
+    try {
+      const res = await fetch("/api/drift/accounts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newClientName.trim(), contact_name: newClientContact.trim() || null, contact_email: newClientEmail.trim() || null }),
+      });
+      const body = await res.json();
+      if (!res.ok) { setAddClientError(body.error ?? "Failed to add client"); return; }
+      setShowAddClient(false);
+      setNewClientName(""); setNewClientContact(""); setNewClientEmail("");
+      router.refresh();
+    } catch { setAddClientError("Network error"); }
+    finally { setAddingClient(false); }
+  }
+
+  // ── Profile dropdown ─────────────────────────────────────────────────────────
+  const [showProfile, setShowProfile] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUserEmail(session?.user?.email ?? null);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!showProfile) return;
+    function handleClick(e: MouseEvent) {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setShowProfile(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [showProfile]);
+
+  async function handleSignOut() {
+    await supabase.auth.signOut();
+    document.cookie = "sb-auth=; path=/; max-age=0";
+    router.replace("/auth/signin");
+  }
 
   // ── Lookup maps ──────────────────────────────────────────────────────────────
   const scoreByOppId = new Map(data.opportunities.map(o => [o.id, o.score]));
@@ -277,7 +333,10 @@ export default function DriftDashboard({ data }: { data: DriftOverview }) {
         <div className="flex-1 overflow-y-auto px-3 py-3">
           <div className="mb-2 flex items-center justify-between px-2">
             <p className="text-[9px] font-medium uppercase tracking-[0.45em] text-slate-600">Clients</p>
-            <button className="text-slate-600 hover:text-slate-400 transition-colors">
+            <button
+              onClick={() => { setNewClientName(""); setNewClientContact(""); setNewClientEmail(""); setAddClientError(null); setShowAddClient(true); }}
+              className="text-slate-600 hover:text-slate-400 transition-colors"
+            >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                 <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
               </svg>
@@ -314,19 +373,55 @@ export default function DriftDashboard({ data }: { data: DriftOverview }) {
         </div>
 
         {/* Profile */}
-        <div className="shrink-0 border-t border-white/[0.05] px-4 py-3">
-          <div className="flex items-center justify-between">
+        <div className="relative shrink-0 border-t border-white/[0.05] px-4 py-3" ref={profileRef}>
+          <button
+            onClick={() => setShowProfile(v => !v)}
+            className="flex w-full items-center justify-between rounded-lg hover:bg-white/[0.04] transition-colors px-1 py-1"
+          >
             <div className="flex items-center gap-2.5">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-700 text-[12px] font-bold text-white">
                 E
               </div>
-              <div>
+              <div className="text-left">
                 <p className="text-[12px] font-medium text-slate-200">Dr. E</p>
                 <p className="text-[10px] text-slate-500">Operator</p>
               </div>
             </div>
             <span className="text-slate-600"><IcoChevronRight /></span>
-          </div>
+          </button>
+
+          {showProfile && (
+            <div className="absolute bottom-full left-2 right-2 mb-2 overflow-hidden rounded-xl border border-white/[0.08] bg-[#0d1220] shadow-2xl">
+              {userEmail && (
+                <div className="border-b border-white/[0.06] px-4 py-3">
+                  <p className="text-[9px] font-medium uppercase tracking-[0.35em] text-slate-600 mb-0.5">Signed in as</p>
+                  <p className="text-[11px] text-slate-400 truncate">{userEmail}</p>
+                </div>
+              )}
+              <Link
+                href="/admin/drift/settings"
+                onClick={() => setShowProfile(false)}
+                className="flex items-center gap-2.5 px-4 py-2.5 text-[12px] text-slate-400 hover:bg-white/[0.04] hover:text-slate-200 transition-colors"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
+                </svg>
+                Account settings
+              </Link>
+              <button
+                onClick={handleSignOut}
+                className="flex w-full items-center gap-2.5 px-4 py-2.5 text-[12px] text-slate-400 hover:bg-white/[0.04] hover:text-red-400 transition-colors"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+                  <polyline points="16 17 21 12 16 7" />
+                  <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+                Sign out
+              </button>
+            </div>
+          )}
         </div>
       </aside>
 
@@ -780,6 +875,72 @@ export default function DriftDashboard({ data }: { data: DriftOverview }) {
             </div>
           </aside>
         </div>
+
+        {/* Add Client Modal */}
+        {showAddClient && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
+            onClick={() => setShowAddClient(false)}>
+            <div className="w-full max-w-md rounded-2xl border border-white/[0.08] bg-[#0f1420] p-8 shadow-2xl"
+              onClick={e => e.stopPropagation()}>
+              <h2 className="mb-6 text-[18px] font-bold text-white tracking-tight">Add Client</h2>
+
+              <div className="mb-4">
+                <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-500">Account name *</label>
+                <input
+                  autoFocus
+                  value={newClientName}
+                  onChange={e => setNewClientName(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && handleAddClient()}
+                  placeholder="Acme Corp"
+                  className="w-full rounded-lg border border-[#1e2a45] bg-[#090c17] px-4 py-2.5 text-[13px] text-white outline-none placeholder:text-slate-700 focus:border-blue-500/50"
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-500">Primary contact name</label>
+                <input
+                  value={newClientContact}
+                  onChange={e => setNewClientContact(e.target.value)}
+                  placeholder="Jane Smith"
+                  className="w-full rounded-lg border border-[#1e2a45] bg-[#090c17] px-4 py-2.5 text-[13px] text-white outline-none placeholder:text-slate-700 focus:border-blue-500/50"
+                />
+              </div>
+
+              <div className="mb-6">
+                <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-500">Contact email</label>
+                <input
+                  type="email"
+                  value={newClientEmail}
+                  onChange={e => setNewClientEmail(e.target.value)}
+                  placeholder="jane@acme.com"
+                  className="w-full rounded-lg border border-[#1e2a45] bg-[#090c17] px-4 py-2.5 text-[13px] text-white outline-none placeholder:text-slate-700 focus:border-blue-500/50"
+                />
+              </div>
+
+              {addClientError && (
+                <div className="mb-4 rounded-lg border border-red-500/25 bg-red-500/10 px-4 py-3 text-[12px] text-red-400">
+                  {addClientError}
+                </div>
+              )}
+
+              <div className="flex items-center justify-end gap-3">
+                <button
+                  onClick={() => setShowAddClient(false)}
+                  className="rounded-lg border border-white/[0.08] px-5 py-2.5 text-[13px] text-slate-400 hover:text-slate-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddClient}
+                  disabled={addingClient || !newClientName.trim()}
+                  className="rounded-lg bg-blue-500 px-5 py-2.5 text-[13px] font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {addingClient ? "Adding…" : "Add Client"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Status Bar */}
         <footer className="flex shrink-0 items-center justify-between border-t border-white/[0.06] bg-[#0b0f1c] px-8 py-2.5">
