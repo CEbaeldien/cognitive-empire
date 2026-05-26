@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import type { DriftOverview } from "@/lib/drift/data";
 import EvidenceModal from "./EvidenceModal";
 import ImportCSV from "./ImportCSV";
@@ -129,6 +131,7 @@ const Sparkline = () => (
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function DriftDashboard({ data }: { data: DriftOverview }) {
+  const router = useRouter();
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
 
   // ── Lookup maps ──────────────────────────────────────────────────────────────
@@ -245,16 +248,17 @@ export default function DriftDashboard({ data }: { data: DriftOverview }) {
             <span className="text-[13px] font-semibold text-white">Revenue Execution</span>
           </div>
 
-          {/* Inactive items */}
+          {/* Nav links */}
           {[
-            { label: "Interventions", icon: <IcoInterventions />, badge: data.summary.pendingInterventions > 0 ? data.summary.pendingInterventions : null },
-            { label: "Reports",       icon: <IcoReports />,      badge: null },
-            { label: "Data Sources",  icon: <IcoDataSources />,  badge: null },
-            { label: "Settings",      icon: <IcoSettings />,     badge: null },
+            { label: "Interventions", icon: <IcoInterventions />, href: "/admin/drift/interventions", badge: data.summary.pendingInterventions > 0 ? data.summary.pendingInterventions : null },
+            { label: "Reports",       icon: <IcoReports />,       href: "/admin/drift/reports",        badge: null },
+            { label: "Data Sources",  icon: <IcoDataSources />,   href: "/admin/drift/sources",        badge: null },
+            { label: "Settings",      icon: <IcoSettings />,      href: "/admin/drift/settings",       badge: null },
           ].map(item => (
-            <div
+            <Link
               key={item.label}
-              className="mb-0.5 flex cursor-default items-center justify-between rounded-lg px-3 py-2 text-slate-500 hover:bg-white/[0.04] hover:text-slate-300 transition-colors"
+              href={item.href}
+              className="mb-0.5 flex items-center justify-between rounded-lg px-3 py-2 text-slate-500 hover:bg-white/[0.04] hover:text-slate-300 transition-colors"
             >
               <div className="flex items-center gap-3">
                 <span className="opacity-60">{item.icon}</span>
@@ -263,7 +267,7 @@ export default function DriftDashboard({ data }: { data: DriftOverview }) {
               {item.badge !== null && (
                 <span className="rounded bg-red-500/20 px-1.5 py-0.5 text-[10px] text-red-400">{item.badge}</span>
               )}
-            </div>
+            </Link>
           ))}
         </nav>
 
@@ -359,9 +363,12 @@ export default function DriftDashboard({ data }: { data: DriftOverview }) {
               </div>
             </div>
 
-            {/* Bell */}
+            {/* Bell → /admin/drift/interventions */}
             <div className="relative">
-              <button className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.04] text-slate-400 hover:text-slate-200 transition-colors">
+              <button
+                onClick={() => router.push("/admin/drift/interventions")}
+                className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.04] text-slate-400 hover:text-slate-200 transition-colors"
+              >
                 <IcoBell />
               </button>
               {data.summary.pendingInterventions > 0 && (
@@ -376,7 +383,7 @@ export default function DriftDashboard({ data }: { data: DriftOverview }) {
         {/* KPI Strip */}
         <div className="grid shrink-0 grid-cols-4 gap-4 border-b border-white/[0.06] bg-[#0b0f1c] px-8 py-5">
 
-          {/* Revenue Exposure */}
+          {/* Revenue Exposure — no click */}
           <div className="rounded-xl border border-white/[0.07] bg-[#0f1420] p-5">
             <div className="flex items-start justify-between">
               <p className="text-[10px] font-semibold uppercase tracking-[0.4em] text-slate-500">
@@ -392,8 +399,11 @@ export default function DriftDashboard({ data }: { data: DriftOverview }) {
             </div>
           </div>
 
-          {/* Critical Decay */}
-          <div className="rounded-xl border border-white/[0.07] bg-[#0f1420] p-5">
+          {/* Critical Decay → /admin/drift/interventions */}
+          <button
+            onClick={() => router.push("/admin/drift/interventions")}
+            className="rounded-xl border border-white/[0.07] bg-[#0f1420] p-5 text-left transition-colors hover:border-white/[0.14] hover:bg-[#111828]"
+          >
             <p className="text-[10px] font-semibold uppercase tracking-[0.4em] text-slate-500">Critical Decay</p>
             <div className="mt-3 flex items-center justify-between">
               <div>
@@ -406,10 +416,13 @@ export default function DriftDashboard({ data }: { data: DriftOverview }) {
                 <line x1="12" y1="17" x2="12.01" y2="17" />
               </svg>
             </div>
-          </div>
+          </button>
 
-          {/* Intervention Backlog */}
-          <div className="rounded-xl border border-white/[0.07] bg-[#0f1420] p-5">
+          {/* Intervention Backlog → /admin/drift/interventions */}
+          <button
+            onClick={() => router.push("/admin/drift/interventions")}
+            className="rounded-xl border border-white/[0.07] bg-[#0f1420] p-5 text-left transition-colors hover:border-white/[0.14] hover:bg-[#111828]"
+          >
             <p className="text-[10px] font-semibold uppercase tracking-[0.4em] text-slate-500">
               Intervention Backlog<IcoInfo />
             </p>
@@ -424,9 +437,9 @@ export default function DriftDashboard({ data }: { data: DriftOverview }) {
                 <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
               </svg>
             </div>
-          </div>
+          </button>
 
-          {/* Snapshot Freshness */}
+          {/* Snapshot Freshness — no click */}
           <div className="rounded-xl border border-white/[0.07] bg-[#0f1420] p-5">
             <p className="text-[10px] font-semibold uppercase tracking-[0.4em] text-slate-500">
               Snapshot Freshness<IcoInfo />
@@ -468,9 +481,12 @@ export default function DriftDashboard({ data }: { data: DriftOverview }) {
                   </span>
                 )}
               </div>
-              <button className="flex items-center gap-1.5 rounded-lg border border-white/[0.1] px-4 py-2 text-[12px] text-slate-300 transition-colors hover:border-white/[0.2] hover:text-white">
+              <Link
+                href="/admin/drift/interventions"
+                className="flex items-center gap-1.5 rounded-lg border border-white/[0.1] px-4 py-2 text-[12px] text-slate-300 transition-colors hover:border-white/[0.2] hover:text-white"
+              >
                 View all interventions <IcoChevronRight />
-              </button>
+              </Link>
             </div>
 
             {sortedInterventions.length === 0 ? (
@@ -640,9 +656,12 @@ export default function DriftDashboard({ data }: { data: DriftOverview }) {
                   <p className="text-[11px] text-slate-600">
                     Showing {sortedInterventions.length} of {data.interventions.length} interventions
                   </p>
-                  <button className="flex items-center gap-1 text-[11px] text-blue-400 hover:text-blue-300 transition-colors">
+                  <Link
+                    href="/admin/drift/interventions"
+                    className="flex items-center gap-1 text-[11px] text-blue-400 hover:text-blue-300 transition-colors"
+                  >
                     View all interventions <IcoChevronRight />
-                  </button>
+                  </Link>
                 </div>
               </div>
             )}
@@ -655,7 +674,9 @@ export default function DriftDashboard({ data }: { data: DriftOverview }) {
             <div className="mb-6">
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="text-[14px] font-bold text-white">Recommended Interventions</h3>
-                <button className="text-[12px] font-medium text-blue-400 hover:text-blue-300 transition-colors">View all</button>
+                <Link href="/admin/drift/interventions" className="text-[12px] font-medium text-blue-400 hover:text-blue-300 transition-colors">
+                  View all
+                </Link>
               </div>
 
               {sortedInterventions.length === 0 ? (
@@ -671,11 +692,8 @@ export default function DriftDashboard({ data }: { data: DriftOverview }) {
                     const iconBgs = ["bg-red-500/20", "bg-orange-500/20", "bg-blue-500/20"];
                     const iconBg = iconBgs[i] ?? "bg-slate-700/50";
                     const icons = [
-                      // Phone icon
                       <svg key="p" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.68A2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z" /></svg>,
-                      // Arrows icon
                       <svg key="a" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="17 1 21 5 17 9" /><path d="M3 11V9a4 4 0 014-4h14" /><polyline points="7 23 3 19 7 15" /><path d="M21 13v2a4 4 0 01-4 4H3" /></svg>,
-                      // Refresh icon
                       <svg key="r" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10" /><polyline points="1 20 1 14 7 14" /><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" /></svg>,
                     ];
                     const iconColor = i === 0 ? "#f87171" : i === 1 ? "#fb923c" : "#60a5fa";
@@ -704,9 +722,12 @@ export default function DriftDashboard({ data }: { data: DriftOverview }) {
                 </div>
               )}
 
-              <button className="mt-3 flex items-center gap-1 text-[12px] text-blue-400 hover:text-blue-300 transition-colors">
+              <Link
+                href="/admin/drift/interventions"
+                className="mt-3 flex items-center gap-1 text-[12px] text-blue-400 hover:text-blue-300 transition-colors"
+              >
                 View all interventions <IcoChevronRight />
-              </button>
+              </Link>
             </div>
 
             <div className="mb-5 border-t border-white/[0.06]" />
@@ -748,9 +769,12 @@ export default function DriftDashboard({ data }: { data: DriftOverview }) {
                     );
                   })}
 
-                  <button className="mt-3 flex items-center gap-1 text-[12px] text-blue-400 hover:text-blue-300 transition-colors">
+                  <Link
+                    href="/admin/drift/reports"
+                    className="mt-3 flex items-center gap-1 text-[12px] text-blue-400 hover:text-blue-300 transition-colors"
+                  >
                     View full leaking report <IcoChevronRight />
-                  </button>
+                  </Link>
                 </>
               )}
             </div>
