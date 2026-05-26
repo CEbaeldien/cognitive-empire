@@ -29,7 +29,7 @@ function CognitionCore() {
     <div className="flex items-center justify-center w-full h-full">
       <svg
         viewBox="0 0 400 400"
-        className="w-[420px] h-[420px] max-w-full"
+        className="w-[580px] h-[580px] max-w-full"
         style={{ filter: "drop-shadow(0 0 28px rgba(0,212,255,0.14))" }}
       >
         <defs>
@@ -112,7 +112,7 @@ function CognitionCore() {
 
 function IconDrift() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
     </svg>
   );
@@ -120,7 +120,7 @@ function IconDrift() {
 
 function IconSignals() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="12" r="2" />
       <path d="M4.93 4.93a10 10 0 0 0 0 14.14" />
       <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
@@ -132,7 +132,7 @@ function IconSignals() {
 
 function IconOps() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <rect x="3" y="3" width="6" height="6" rx="1" />
       <rect x="15" y="3" width="6" height="6" rx="1" />
       <rect x="9" y="15" width="6" height="6" rx="1" />
@@ -144,7 +144,7 @@ function IconOps() {
 
 function IconBriefs() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
       <polyline points="14 2 14 8 20 8" />
       <line x1="16" y1="13" x2="8" y2="13" />
@@ -155,7 +155,7 @@ function IconBriefs() {
 
 function IconContact() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <line x1="22" y1="2" x2="11" y2="13" />
       <polygon points="22 2 15 22 11 13 2 9 22 2" />
     </svg>
@@ -370,24 +370,27 @@ export default function ConnectPage() {
       </nav>
 
       {/* Hero */}
-      <section className="max-w-7xl mx-auto px-8 py-20">
+      <section className="max-w-7xl mx-auto px-8 pt-32 pb-20">
         <div className="grid grid-cols-2 gap-16 items-center">
           <div>
-            <h1 className="text-[84px] leading-none font-mono font-light tracking-tight text-white mb-5">
+            <h1
+              className="leading-none font-mono font-[200] tracking-wider text-white mb-8"
+              style={{ fontSize: "clamp(5rem, 10vw, 9rem)" }}
+            >
               DR. E<span className="cursor-blink">_</span>
             </h1>
-            <p className="text-[10px] text-[#00d4ff] uppercase tracking-[0.35em] mb-5">
+            <p className="text-sm text-[#00d4ff] uppercase tracking-[0.45em] mb-8">
               Public Interface of Cognitive Empire
             </p>
-            <p className="text-sm text-white/65 max-w-md leading-relaxed mb-8">
+            <p className="text-xl text-white/65 max-w-lg leading-relaxed mb-10">
               Structured operational routing for serious systems and strategic engagements.
             </p>
-            <div className="w-10 border-t border-[#00d4ff]/30 mb-8" />
-            <p className="text-[10px] text-[#00d4ff] uppercase tracking-[0.35em]">
+            <div className="w-10 border-t border-[#00d4ff]/30 mb-10" />
+            <p className="text-sm text-[#00d4ff] uppercase tracking-[0.45em]">
               Select Your Entry Point.
             </p>
           </div>
-          <div className="flex items-center justify-center h-[440px]">
+          <div className="flex items-center justify-center h-[580px]">
             <CognitionCore />
           </div>
         </div>
@@ -395,22 +398,22 @@ export default function ConnectPage() {
 
       {/* Routing Cards */}
       <section className="max-w-7xl mx-auto px-8 pb-24">
-        <div className="grid grid-cols-5 gap-3">
+        <div className="grid grid-cols-5 gap-5">
           {CARDS.map((card) => (
             <button key={card.id} onClick={() => handleCardClick(card.id)}
-              className={`relative text-left p-5 bg-[#0a0a0f] border cursor-pointer transition-all duration-200 group min-h-[230px] flex flex-col ${
+              className={`relative text-left p-8 bg-[#0a0a0f] border cursor-pointer transition-all duration-200 group min-h-[288px] flex flex-col ${
                 activeCard === card.id
                   ? "border-[#00d4ff]/50 shadow-[0_0_22px_rgba(0,212,255,0.10)]"
                   : "border-[#1a1a2e] hover:border-[#00d4ff]/30 hover:shadow-[0_0_16px_rgba(0,212,255,0.06)]"
               }`}
             >
-              <span className="text-[#00d4ff] text-[10px] font-mono tracking-wider block mb-4">{card.number}</span>
-              <span className="text-[#4b5563] group-hover:text-[#6b7280] transition-colors mb-3 block">
+              <span className="text-[#00d4ff] text-base font-mono tracking-wider block mb-6">{card.number}</span>
+              <span className="text-[#4b5563] group-hover:text-[#6b7280] transition-colors mb-5 block">
                 <card.Icon />
               </span>
-              <h3 className="text-white font-bold text-[10px] uppercase tracking-[0.12em] mb-3 leading-snug">{card.title}</h3>
-              <p className="text-[#6b7280] text-[11px] leading-relaxed flex-1">{card.description}</p>
-              <span className={`text-sm mt-4 block transition-colors ${activeCard === card.id ? "text-[#00d4ff]" : "text-[#3d3d55] group-hover:text-[#00d4ff]"}`}>
+              <h3 className="text-white font-bold text-lg uppercase tracking-[0.1em] mb-4 leading-snug">{card.title}</h3>
+              <p className="text-[#6b7280] text-base leading-relaxed flex-1">{card.description}</p>
+              <span className={`text-xl mt-5 block transition-colors ${activeCard === card.id ? "text-[#00d4ff]" : "text-[#3d3d55] group-hover:text-[#00d4ff]"}`}>
                 →
               </span>
             </button>
