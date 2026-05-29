@@ -14,7 +14,7 @@ function sb() {
 export async function GET() {
   const { data, error } = await sb()
     .from("doctrine_vectors")
-    .select("id, name, slug")
+    .select("id, name")
     .eq("is_active", true)
     .order("name");
 

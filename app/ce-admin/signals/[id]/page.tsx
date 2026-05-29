@@ -291,7 +291,9 @@ export default function SignalDetailPage() {
         setEditStructuralRelevance(s.structural_relevance ?? "");
         setEditSecondOrderEffect(s.second_order_effect ?? "");
         setEditImpactLayer(new Set(
-          s.impact_layer ? s.impact_layer.split(", ").filter(Boolean) : []
+          typeof s.impact_layer === "string" && s.impact_layer
+            ? s.impact_layer.split(", ").filter(Boolean)
+            : []
         ));
         if (sc) setScore(scoreFromRow(sc));
         setPvSelected(new Set(pressure_vector_ids ?? []));
