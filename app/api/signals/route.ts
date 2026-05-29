@@ -35,7 +35,22 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   const body = await req.json();
-  const { category, title, summary, implication, raw_item_id, metadata } = body;
+  const {
+    category,
+    title,
+    summary,
+    implication,
+    raw_item_id,
+    metadata,
+    subcategory,
+    what_changed,
+    why_it_matters,
+    structural_relevance,
+    second_order_effect,
+    impact_layer,
+    pressure_vector_ids,
+    doctrine_vector_ids,
+  } = body;
 
   if (!category || !title || !summary || !implication) {
     return NextResponse.json(
@@ -44,20 +59,51 @@ export async function POST(req: Request) {
     );
   }
 
-  const { data, error } = await sb()
+  const client = sb();
+
+  const { data, error } = await client
     .from("signals")
     .insert({
       category,
       title,
       summary,
       implication,
-      raw_item_id: raw_item_id ?? null,
-      metadata:    metadata ?? {},
-      status:      "draft",
+      raw_item_id:          raw_item_id ?? null,
+      metadata:             metadata ?? {},
+      status:               "draft",
+      subcategory:          subcategory?.trim() || null,
+      what_changed:         what_changed?.trim() || null,
+      why_it_matters:       why_it_matters?.trim() || null,
+      structural_relevance: structural_relevance?.trim() || null,
+      second_order_effect:  second_order_effect?.trim() || null,
+      impact_layer:         impact_layer?.trim() || null,
     })
     .select()
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  const signalId = data.id;
+
+  const junctionInserts: PromiseLike<unknown>[] = [];
+
+  if (Array.isArray(pressure_vector_ids) && pressure_vector_ids.length > 0) {
+    junctionInserts.push(
+      client.from("signal_pressure_vectors").insert(
+        pressure_vector_ids.map((vid: string) => ({ signal_id: signalId, vector_id: vid }))
+      )
+    );
+  }
+
+  if (Array.isArray(doctrine_vector_ids) && doctrine_vector_ids.length > 0) {
+    junctionInserts.push(
+      client.from("signal_doctrine_vectors").insert(
+        doctrine_vector_ids.map((did: string) => ({ signal_id: signalId, doctrine_vector_id: did }))
+      )
+    );
+  }
+
+  if (junctionInserts.length > 0) await Promise.all(junctionInserts);
+
   return NextResponse.json(data, { status: 201 });
 }

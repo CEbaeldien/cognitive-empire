@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import type { SignalRow, SignalScoreRow, SignalStatus, SignalCategory, LawId } from "@/types/signals";
+import type { SignalRow, SignalScoreRow, SignalStatus, SignalCategory } from "@/types/signals";
 
 // ── Palette ───────────────────────────────────────────────────────────────────
 
@@ -21,27 +21,89 @@ const C = {
   input:        "#0a0919",
 } as const;
 
-// ── Eight Laws — static doctrine ──────────────────────────────────────────────
-
-type LawMeta = { id: LawId; name: string; shortDesc: string; temporalClass: string };
-
-const EIGHT_LAWS: LawMeta[] = [
-  { id: "intelligence_abundance",   name: "Intelligence Abundance",   shortDesc: "AI capability is now a commodity. The differentiator shifts upstream.",            temporalClass: "fast_moving" },
-  { id: "bottleneck_migration",     name: "Bottleneck Migration",     shortDesc: "When one constraint is removed, the next one becomes visible.",                    temporalClass: "fast_moving" },
-  { id: "responsibility_migration", name: "Responsibility Migration", shortDesc: "As AI executes more, accountability pressure migrates to decision-makers.",        temporalClass: "slow_burn"   },
-  { id: "output_inflation",         name: "Output Inflation",         shortDesc: "Volume of AI-generated output expands faster than human capacity to evaluate it.", temporalClass: "fast_moving" },
-  { id: "decision_half_life",       name: "Decision Half-Life",       shortDesc: "The useful lifespan of strategic decisions is compressing.",                       temporalClass: "classifier"  },
-  { id: "escalation_preservation",  name: "Escalation Preservation",  shortDesc: "High-stakes, irreversible, and ambiguous decisions must remain human.",            temporalClass: "slow_burn"   },
-  { id: "optimization_fragility",   name: "Optimization Fragility",   shortDesc: "Highly optimized systems become brittle at the edges they were not optimized for.", temporalClass: "slow_burn"  },
-  { id: "human_differentiation",    name: "Human Differentiation",    shortDesc: "The value of distinctly human attributes increases as AI capability expands.",     temporalClass: "fast_moving" },
-];
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── Constants ─────────────────────────────────────────────────────────────────
 
 const CATEGORIES: SignalCategory[] = [
   "intelligence", "physical_systems", "infrastructure", "energy",
   "science_frontier", "governance_stability", "markets_human_prosperity", "resources_continuity",
 ];
+
+const IMPACT_LAYER_OPTIONS = [
+  "Founder", "Operator", "Creator", "Builder", "Investor",
+  "Governance", "Infrastructure", "Market", "Prosperity", "Continuity",
+];
+
+// ── Score types ───────────────────────────────────────────────────────────────
+
+type ScoreState = {
+  strength:              number;
+  weight:                number;
+  longevity:             number;
+  convergence_potential: number;
+  decay_factor:          number;
+  governance_impact:     number;
+  continuity_pressure:   number;
+  prosperity_relevance:  number;
+  structural_relevance:  number;
+  confidence:            number;
+  scoring_notes:         string;
+};
+
+const DEFAULT_SCORE: ScoreState = {
+  strength: 5, weight: 5, longevity: 5,
+  convergence_potential: 5, decay_factor: 5,
+  governance_impact: 5, continuity_pressure: 5,
+  prosperity_relevance: 5, structural_relevance: 5,
+  confidence: 0.7, scoring_notes: "",
+};
+
+type ScoreFieldDef = {
+  key: Exclude<keyof ScoreState, "confidence" | "scoring_notes">;
+  label: string;
+};
+
+const SCORE_FIELDS: ScoreFieldDef[] = [
+  { key: "strength",              label: "Strength" },
+  { key: "weight",                label: "Weight" },
+  { key: "longevity",             label: "Longevity" },
+  { key: "convergence_potential", label: "Convergence Potential" },
+  { key: "governance_impact",     label: "Governance Impact" },
+  { key: "continuity_pressure",   label: "Continuity Pressure" },
+  { key: "prosperity_relevance",  label: "Prosperity Relevance" },
+  { key: "structural_relevance",  label: "Structural Relevance" },
+  { key: "decay_factor",          label: "Decay Factor" },
+];
+
+function scoreFromRow(row: SignalScoreRow): ScoreState {
+  return {
+    strength:              row.strength,
+    weight:                row.weight,
+    longevity:             row.longevity,
+    convergence_potential: row.convergence_potential,
+    decay_factor:          row.decay_factor,
+    governance_impact:     row.governance_impact,
+    continuity_pressure:   row.continuity_pressure,
+    prosperity_relevance:  row.prosperity_relevance,
+    structural_relevance:  row.structural_relevance,
+    confidence:            row.confidence,
+    scoring_notes:         row.scoring_notes ?? "",
+  };
+}
+
+function computeFinalScore(s: ScoreState): number {
+  const weighted =
+    s.strength              * 1.5 +
+    s.weight                * 1.2 +
+    s.longevity             * 1.0 +
+    s.convergence_potential * 1.3 +
+    s.governance_impact     * 1.0 +
+    s.continuity_pressure   * 1.1 +
+    s.prosperity_relevance  * 1.0 +
+    s.structural_relevance  * 1.4;
+  return Math.round((weighted / 9.5) * s.confidence * 10 * 10) / 10;
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function fmtCategory(s: string) {
   return s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -51,6 +113,8 @@ function fmtDate(iso: string | null | undefined) {
   if (!iso) return "—";
   return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
+
+// ── Status colours ────────────────────────────────────────────────────────────
 
 const STATUS_COLORS: Record<SignalStatus, [string, string]> = {
   draft:     ["rgba(100,116,139,0.12)", "#94a3b8"],
@@ -63,45 +127,7 @@ const STATUS_COLORS: Record<SignalStatus, [string, string]> = {
   archived:  ["rgba(51,65,85,0.2)",     "#475569"],
 };
 
-function StatusBadge({ status }: { status: SignalStatus }) {
-  const [bg, color] = STATUS_COLORS[status] ?? ["rgba(100,116,139,0.12)", "#94a3b8"];
-  return (
-    <span style={{ padding: "4px 12px", borderRadius: 7, background: bg, color, fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>
-      {status.replace("_", " ")}
-    </span>
-  );
-}
-
-const TEMPORAL_COLORS: Record<string, string> = {
-  fast_moving: "#00E0FF",
-  slow_burn:   "#f97316",
-  classifier:  "#a78bfa",
-};
-
-// ── Score state type ───────────────────────────────────────────────────────────
-
-type LawScoreState = {
-  cesm_score:      number;
-  cesm_rationale:  string;
-  cecm_score:      number;
-  cecm_rationale:  string;
-};
-
-function defaultScoreState(): LawScoreState {
-  return { cesm_score: 5, cesm_rationale: "", cecm_score: 5, cecm_rationale: "" };
-}
-
-function initScores(_loaded: SignalScoreRow[]): Record<string, LawScoreState> {
-  const init: Record<string, LawScoreState> = {};
-  for (const law of EIGHT_LAWS) init[law.id] = defaultScoreState();
-  return init;
-}
-
-function cesic(state: LawScoreState): number {
-  return Math.round((state.cesm_score * 0.6 + state.cecm_score * 0.4) * 10) / 10;
-}
-
-// ── Shared input styles ───────────────────────────────────────────────────────
+// ── UI primitives ─────────────────────────────────────────────────────────────
 
 const inputStyle: React.CSSProperties = {
   width: "100%", padding: "9px 12px", borderRadius: 7, border: `1px solid ${C.border}`,
@@ -109,11 +135,14 @@ const inputStyle: React.CSSProperties = {
   fontFamily: "system-ui, -apple-system, sans-serif",
 };
 
-function Label({ text }: { text: string }) {
+function Label({ text, hint }: { text: string; hint?: string }) {
   return (
-    <label style={{ display: "block", fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: C.faint, marginBottom: 6 }}>
-      {text}
-    </label>
+    <div style={{ marginBottom: 6 }}>
+      <label style={{ display: "block", fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: C.faint }}>
+        {text}
+      </label>
+      {hint && <p style={{ fontSize: 11, color: C.faint, marginTop: 2 }}>{hint}</p>}
+    </div>
   );
 }
 
@@ -126,7 +155,14 @@ function SectionHeader({ title, sub }: { title: string; sub?: string }) {
   );
 }
 
-// ── Toast ─────────────────────────────────────────────────────────────────────
+function StatusBadge({ status }: { status: SignalStatus }) {
+  const [bg, color] = STATUS_COLORS[status] ?? ["rgba(100,116,139,0.12)", "#94a3b8"];
+  return (
+    <span style={{ padding: "4px 12px", borderRadius: 7, background: bg, color, fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+      {status.replace("_", " ")}
+    </span>
+  );
+}
 
 function Toast({ msg, type, onDismiss }: { msg: string; type: "ok" | "err"; onDismiss: () => void }) {
   useEffect(() => {
@@ -143,25 +179,57 @@ function Toast({ msg, type, onDismiss }: { msg: string; type: "ok" | "err"; onDi
   );
 }
 
-// ── Number score input (1–10) ─────────────────────────────────────────────────
-
-function ScoreInput({ value, onChange }: { value: number; onChange: (n: number) => void }) {
+function NumInput({ value, onChange, min = 1, max = 10, step = 1 }: {
+  value: number; onChange: (n: number) => void; min?: number; max?: number; step?: number;
+}) {
   return (
     <input
       type="number"
-      min={1}
-      max={10}
+      min={min}
+      max={max}
+      step={step}
       value={value}
       onChange={(e) => {
-        const n = Math.min(10, Math.max(1, parseInt(e.target.value, 10) || 1));
+        const n = Math.min(max, Math.max(min, parseFloat(e.target.value) || min));
         onChange(n);
       }}
-      style={{ width: 64, padding: "7px 10px", borderRadius: 7, border: `1px solid ${C.border}`, background: C.input, color: C.text, fontSize: 14, fontWeight: 700, outline: "none", textAlign: "center" }}
+      style={{ width: 72, padding: "7px 10px", borderRadius: 7, border: `1px solid ${C.border}`, background: C.input, color: C.text, fontSize: 14, fontWeight: 700, outline: "none", textAlign: "center" }}
     />
   );
 }
 
+function TagGrid({ options, selected, onToggle }: {
+  options: { id: string; name: string }[];
+  selected: Set<string>;
+  onToggle: (id: string) => void;
+}) {
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+      {options.map((opt) => {
+        const on = selected.has(opt.id);
+        return (
+          <button
+            key={opt.id}
+            type="button"
+            onClick={() => onToggle(opt.id)}
+            style={{
+              padding: "5px 13px", borderRadius: 6, cursor: "pointer", fontSize: 11, fontWeight: 600,
+              border: `1px solid ${on ? C.accentBorder : C.border}`,
+              background: on ? C.accentBg : "transparent",
+              color: on ? C.accent : C.faint,
+            }}
+          >
+            {opt.name}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
+
+type Vector = { id: string; name: string };
 
 export default function SignalDetailPage() {
   const params = useParams();
@@ -173,39 +241,63 @@ export default function SignalDetailPage() {
   const [pageErr, setPageErr] = useState<string | null>(null);
 
   // Metadata edit state
-  const [editTitle,       setEditTitle]       = useState("");
-  const [editCategory,    setEditCategory]    = useState<SignalCategory | "">("");
-  const [editSummary,     setEditSummary]     = useState("");
-  const [editImplication, setEditImplication] = useState("");
-  const [savingMeta,      setSavingMeta]      = useState(false);
+  const [editTitle,               setEditTitle]               = useState("");
+  const [editCategory,            setEditCategory]            = useState<SignalCategory | "">("");
+  const [editSubcategory,         setEditSubcategory]         = useState("");
+  const [editSummary,             setEditSummary]             = useState("");
+  const [editImplication,         setEditImplication]         = useState("");
+  const [editWhatChanged,         setEditWhatChanged]         = useState("");
+  const [editWhyItMatters,        setEditWhyItMatters]        = useState("");
+  const [editStructuralRelevance, setEditStructuralRelevance] = useState("");
+  const [editSecondOrderEffect,   setEditSecondOrderEffect]   = useState("");
+  const [editImpactLayer,         setEditImpactLayer]         = useState<Set<string>>(new Set());
 
-  // Score state — keyed by LawId
-  const [scores,      setScores]      = useState<Record<string, LawScoreState>>(() => initScores([]));
-  const [savingScores, setSavingScores] = useState(false);
+  // Tag vectors
+  const [pressureVectors,   setPressureVectors]   = useState<Vector[]>([]);
+  const [doctrineVectors,   setDoctrineVectors]   = useState<Vector[]>([]);
+  const [pvSelected,        setPvSelected]        = useState<Set<string>>(new Set());
+  const [dvSelected,        setDvSelected]        = useState<Set<string>>(new Set());
 
-  // Review submit
+  // Score state
+  const [score,       setScore]       = useState<ScoreState>(DEFAULT_SCORE);
+  const [savingScore, setSavingScore] = useState(false);
+
+  // Actions
+  const [savingMeta,       setSavingMeta]       = useState(false);
   const [submittingReview, setSubmittingReview] = useState(false);
+  const [toast,            setToast]            = useState<{ msg: string; type: "ok" | "err" } | null>(null);
 
-  // Toast
-  const [toast, setToast] = useState<{ msg: string; type: "ok" | "err" } | null>(null);
+  function showToast(msg: string, type: "ok" | "err") { setToast({ msg, type }); }
 
-  function showToast(msg: string, type: "ok" | "err") {
-    setToast({ msg, type });
-  }
-
-  // ── Load signal + scores ──────────────────────────────────────────────────
+  // ── Load ──────────────────────────────────────────────────────────────────
 
   const load = useCallback(() => {
     setLoading(true);
-    fetch(`/api/signals/${id}`)
-      .then((r) => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
-      .then(({ signal: s, scores: sc }: { signal: SignalRow; scores: SignalScoreRow[] }) => {
+    Promise.all([
+      fetch(`/api/signals/${id}`).then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`)),
+      fetch("/api/signals/pressure-vectors").then(r => r.ok ? r.json() : { vectors: [] }),
+      fetch("/api/signals/doctrine-vectors").then(r => r.ok ? r.json() : { vectors: [] }),
+    ])
+      .then(([detail, pvData, dvData]) => {
+        const { signal: s, score: sc, pressure_vector_ids, doctrine_vector_ids } = detail;
         setSignal(s);
         setEditTitle(s.title);
         setEditCategory(s.category);
+        setEditSubcategory(s.subcategory ?? "");
         setEditSummary(s.summary);
         setEditImplication(s.implication);
-        setScores(initScores(sc));
+        setEditWhatChanged(s.what_changed ?? "");
+        setEditWhyItMatters(s.why_it_matters ?? "");
+        setEditStructuralRelevance(s.structural_relevance ?? "");
+        setEditSecondOrderEffect(s.second_order_effect ?? "");
+        setEditImpactLayer(new Set(
+          s.impact_layer ? s.impact_layer.split(", ").filter(Boolean) : []
+        ));
+        if (sc) setScore(scoreFromRow(sc));
+        setPvSelected(new Set(pressure_vector_ids ?? []));
+        setDvSelected(new Set(doctrine_vector_ids ?? []));
+        setPressureVectors(pvData.vectors ?? []);
+        setDoctrineVectors(dvData.vectors ?? []);
         setLoading(false);
       })
       .catch((e) => { setPageErr(String(e)); setLoading(false); });
@@ -213,18 +305,31 @@ export default function SignalDetailPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  // ── Save metadata ─────────────────────────────────────────────────────────
+  // ── Handlers ──────────────────────────────────────────────────────────────
 
   async function handleSaveMeta() {
     if (!editCategory || !editTitle.trim() || !editSummary.trim() || !editImplication.trim()) {
-      showToast("All metadata fields are required.", "err");
+      showToast("Category, title, summary, and implication are required.", "err");
       return;
     }
     setSavingMeta(true);
     const res = await fetch(`/api/signals/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: editTitle.trim(), category: editCategory, summary: editSummary.trim(), implication: editImplication.trim() }),
+      body: JSON.stringify({
+        title:                editTitle.trim(),
+        category:             editCategory,
+        subcategory:          editSubcategory.trim() || null,
+        summary:              editSummary.trim(),
+        implication:          editImplication.trim(),
+        what_changed:         editWhatChanged.trim() || null,
+        why_it_matters:       editWhyItMatters.trim() || null,
+        structural_relevance: editStructuralRelevance.trim() || null,
+        second_order_effect:  editSecondOrderEffect.trim() || null,
+        impact_layer:         editImpactLayer.size > 0 ? [...editImpactLayer].join(", ") : null,
+        pressure_vector_ids:  [...pvSelected],
+        doctrine_vector_ids:  [...dvSelected],
+      }),
     });
     setSavingMeta(false);
     if (!res.ok) {
@@ -237,40 +342,26 @@ export default function SignalDetailPage() {
     showToast("Signal saved.", "ok");
   }
 
-  // ── Save scores ───────────────────────────────────────────────────────────
-
-  async function handleSaveScores() {
-    const payload = EIGHT_LAWS.map((law) => ({
-      law_id:         law.id,
-      cesm_score:     scores[law.id].cesm_score,
-      cesm_rationale: scores[law.id].cesm_rationale,
-      cecm_score:     scores[law.id].cecm_score,
-      cecm_rationale: scores[law.id].cecm_rationale,
-    }));
-
-    setSavingScores(true);
+  async function handleSaveScore() {
+    setSavingScore(true);
     const res = await fetch(`/api/signals/${id}/score`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ scores: payload }),
+      body: JSON.stringify({ score }),
     });
-    setSavingScores(false);
-
+    setSavingScore(false);
     if (!res.ok) {
       const d = await res.json().catch(() => ({}));
       showToast(d.error ?? `HTTP ${res.status}`, "err");
       return;
     }
-    showToast("Scores saved.", "ok");
+    showToast("Score saved.", "ok");
   }
-
-  // ── Submit to review ──────────────────────────────────────────────────────
 
   async function handleSubmitReview() {
     setSubmittingReview(true);
     const res = await fetch(`/api/signals/${id}/review`, { method: "POST" });
     setSubmittingReview(false);
-
     if (!res.ok) {
       const d = await res.json().catch(() => ({}));
       showToast(d.error ?? `HTTP ${res.status}`, "err");
@@ -280,8 +371,6 @@ export default function SignalDetailPage() {
     setSignal((prev) => prev ? { ...prev, status: "in_review" } : prev);
   }
 
-  // ── Archive ───────────────────────────────────────────────────────────────
-
   async function handleArchive() {
     if (!confirm("Archive this signal? It will be hidden from the list but not deleted.")) return;
     const res = await fetch(`/api/signals/${id}`, { method: "DELETE" });
@@ -289,7 +378,20 @@ export default function SignalDetailPage() {
     else showToast("Failed to archive signal.", "err");
   }
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  function toggleImpact(opt: string) {
+    setEditImpactLayer(prev => { const n = new Set(prev); n.has(opt) ? n.delete(opt) : n.add(opt); return n; });
+  }
+  function togglePv(vid: string) {
+    setPvSelected(prev => { const n = new Set(prev); n.has(vid) ? n.delete(vid) : n.add(vid); return n; });
+  }
+  function toggleDv(did: string) {
+    setDvSelected(prev => { const n = new Set(prev); n.has(did) ? n.delete(did) : n.add(did); return n; });
+  }
+  function updateScore<K extends keyof ScoreState>(key: K, val: ScoreState[K]) {
+    setScore(prev => ({ ...prev, [key]: val }));
+  }
+
+  // ── Render guards ─────────────────────────────────────────────────────────
 
   if (loading) {
     return <div style={{ padding: "60px 32px", color: C.faint, fontSize: 13, textAlign: "center" }}>Loading signal…</div>;
@@ -305,6 +407,10 @@ export default function SignalDetailPage() {
   }
 
   const canSubmitReview = signal.status !== "in_review" && signal.status !== "published" && signal.status !== "archived";
+  const finalScore = computeFinalScore(score);
+  const scoreColor = finalScore >= 70 ? C.accent : finalScore >= 40 ? "#fbbf24" : C.muted;
+
+  // ── Render ────────────────────────────────────────────────────────────────
 
   return (
     <div style={{ padding: "28px 32px", maxWidth: 900 }}>
@@ -335,56 +441,99 @@ export default function SignalDetailPage() {
         </p>
       </div>
 
-      {/* ── SECTION 1: Metadata ─────────────────────────────────────────────── */}
-      <section style={{ borderRadius: 12, border: `1px solid ${C.border}`, background: C.panel, padding: "22px 24px", marginBottom: 20 }}>
+      {/* ── SECTION 1: Core Metadata ───────────────────────────────────────── */}
+      <section style={{ borderRadius: 12, border: `1px solid ${C.border}`, background: C.panel, padding: "22px 24px", marginBottom: 16 }}>
         <SectionHeader title="Signal Metadata" sub="Core fields. Edit and save before scoring." />
 
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
-          {/* Category */}
-          <div>
-            <Label text="Category" />
-            <select
-              value={editCategory}
-              onChange={(e) => setEditCategory(e.target.value as SignalCategory)}
-              style={{ ...inputStyle, cursor: "pointer" }}
-            >
-              {CATEGORIES.map((c) => <option key={c} value={c}>{fmtCategory(c)}</option>)}
-            </select>
+          {/* Category + Subcategory */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+            <div>
+              <Label text="Category" />
+              <select
+                value={editCategory}
+                onChange={(e) => setEditCategory(e.target.value as SignalCategory)}
+                style={{ ...inputStyle, cursor: "pointer" }}
+              >
+                {CATEGORIES.map((c) => <option key={c} value={c}>{fmtCategory(c)}</option>)}
+              </select>
+            </div>
+            <div>
+              <Label text="Subcategory" />
+              <input
+                type="text"
+                value={editSubcategory}
+                onChange={(e) => setEditSubcategory(e.target.value)}
+                placeholder="Optional refinement"
+                style={inputStyle}
+              />
+            </div>
           </div>
 
           {/* Title */}
           <div>
             <Label text="Title" />
-            <input
-              type="text"
-              value={editTitle}
-              onChange={(e) => setEditTitle(e.target.value)}
-              style={inputStyle}
-            />
+            <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} style={inputStyle} />
           </div>
 
           {/* Summary */}
           <div>
-            <Label text="Summary" />
-            <textarea
-              value={editSummary}
-              onChange={(e) => setEditSummary(e.target.value)}
-              rows={4}
-              style={{ ...inputStyle, resize: "vertical" }}
-            />
+            <Label text="Summary" hint="2–3 sentences in CE voice. State what happened." />
+            <textarea value={editSummary} onChange={(e) => setEditSummary(e.target.value)} rows={4} style={{ ...inputStyle, resize: "vertical" }} />
           </div>
 
           {/* Implication */}
           <div>
-            <Label text="Implication" />
-            <textarea
-              value={editImplication}
-              onChange={(e) => setEditImplication(e.target.value)}
-              rows={3}
-              style={{ ...inputStyle, resize: "vertical" }}
+            <Label text="Implication" hint="The so-what for the CE reader." />
+            <textarea value={editImplication} onChange={(e) => setEditImplication(e.target.value)} rows={3} style={{ ...inputStyle, resize: "vertical" }} />
+          </div>
+
+          {/* Structural Analysis — 2-col grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+            <div>
+              <Label text="What Changed" />
+              <textarea value={editWhatChanged} onChange={(e) => setEditWhatChanged(e.target.value)} rows={3} style={{ ...inputStyle, resize: "vertical" }} placeholder="Concrete change or announcement." />
+            </div>
+            <div>
+              <Label text="Why It Matters" />
+              <textarea value={editWhyItMatters} onChange={(e) => setEditWhyItMatters(e.target.value)} rows={3} style={{ ...inputStyle, resize: "vertical" }} placeholder="Structural significance." />
+            </div>
+            <div>
+              <Label text="Structural Relevance" />
+              <textarea value={editStructuralRelevance} onChange={(e) => setEditStructuralRelevance(e.target.value)} rows={3} style={{ ...inputStyle, resize: "vertical" }} placeholder="Downstream structural consequence." />
+            </div>
+            <div>
+              <Label text="Second Order Effect" />
+              <textarea value={editSecondOrderEffect} onChange={(e) => setEditSecondOrderEffect(e.target.value)} rows={3} style={{ ...inputStyle, resize: "vertical" }} placeholder="What moves after the first-order effect." />
+            </div>
+          </div>
+
+          {/* Impact Layer */}
+          <div>
+            <Label text="Impact Layer" hint="Who or what does this signal most directly affect?" />
+            <TagGrid
+              options={IMPACT_LAYER_OPTIONS.map(o => ({ id: o, name: o }))}
+              selected={editImpactLayer}
+              onToggle={toggleImpact}
             />
           </div>
+
+          {/* Pressure Vectors */}
+          {pressureVectors.length > 0 && (
+            <div>
+              <Label text="Pressure Vectors" hint="Named structural forces this signal activates." />
+              <TagGrid options={pressureVectors} selected={pvSelected} onToggle={togglePv} />
+            </div>
+          )}
+
+          {/* Doctrine Vectors */}
+          {doctrineVectors.length > 0 && (
+            <div>
+              <Label text="Doctrine Vectors" hint="Doctrine vectors this signal expresses." />
+              <TagGrid options={doctrineVectors} selected={dvSelected} onToggle={toggleDv} />
+            </div>
+          )}
 
           {/* Raw item link */}
           {signal.raw_item_id && (
@@ -406,103 +555,78 @@ export default function SignalDetailPage() {
         </div>
       </section>
 
-      {/* ── SECTION 2: CESIC Scoring ─────────────────────────────────────────── */}
-      <section style={{ borderRadius: 12, border: `1px solid ${C.border}`, background: C.panel, padding: "22px 24px", marginBottom: 20 }}>
+      {/* ── SECTION 2: Signal Scoring ──────────────────────────────────────── */}
+      <section style={{ borderRadius: 12, border: `1px solid ${C.border}`, background: C.panel, padding: "22px 24px", marginBottom: 16 }}>
         <SectionHeader
-          title="CESIC Scoring"
-          sub="Score this signal against all Eight Laws. CESM (signal magnitude) and CECM (convergence magnitude), 1–10 each. CESIC = (CESM × 0.6) + (CECM × 0.4)."
+          title="Signal Scoring"
+          sub="Rate each dimension 1–10. Confidence is 0.0–1.0. Final score = weighted sum × confidence × 10."
         />
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          {EIGHT_LAWS.map((law, i) => {
-            const state  = scores[law.id] ?? defaultScoreState();
-            const score  = cesic(state);
-            const tColor = TEMPORAL_COLORS[law.temporalClass] ?? C.faint;
-
-            return (
-              <div key={law.id} style={{ borderRadius: 10, border: `1px solid ${C.border}`, background: C.panelAlt, overflow: "hidden" }}>
-
-                {/* Law header */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", borderBottom: `1px solid ${C.border}`, background: "#0c0b1e" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <span style={{ fontSize: 10, fontWeight: 700, color: C.faint, minWidth: 18 }}>L{i + 1}</span>
-                    <div>
-                      <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: 0 }}>{law.name}</p>
-                      <p style={{ fontSize: 11, color: C.faint, margin: "2px 0 0" }}>{law.shortDesc}</p>
-                    </div>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0, marginLeft: 16 }}>
-                    <span style={{ fontSize: 9, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: tColor, padding: "2px 7px", borderRadius: 4, border: `1px solid ${tColor}44`, background: `${tColor}11` }}>
-                      {law.temporalClass.replace("_", " ")}
-                    </span>
-                    {/* Live CESIC */}
-                    <div style={{ textAlign: "center", minWidth: 64, padding: "6px 10px", borderRadius: 7, background: score >= 7 ? "rgba(0,224,255,0.12)" : score >= 4 ? "rgba(251,191,36,0.1)" : "rgba(100,116,139,0.1)", border: `1px solid ${score >= 7 ? C.accentBorder : score >= 4 ? "rgba(251,191,36,0.25)" : C.border}` }}>
-                      <p style={{ fontSize: 9, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: C.faint, margin: "0 0 2px" }}>CESIC</p>
-                      <p style={{ fontSize: 17, fontWeight: 800, color: score >= 7 ? C.accent : score >= 4 ? "#fbbf24" : C.muted, margin: 0, lineHeight: 1 }}>{score.toFixed(1)}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Score inputs */}
-                <div style={{ padding: "14px 16px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-
-                  {/* CESM */}
-                  <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-                      <Label text="CESM" />
-                      <ScoreInput
-                        value={state.cesm_score}
-                        onChange={(n) => setScores((prev) => ({ ...prev, [law.id]: { ...prev[law.id], cesm_score: n } }))}
-                      />
-                      <span style={{ fontSize: 10, color: C.faint }}>/ 10</span>
-                    </div>
-                    <textarea
-                      value={state.cesm_rationale}
-                      onChange={(e) => setScores((prev) => ({ ...prev, [law.id]: { ...prev[law.id], cesm_rationale: e.target.value } }))}
-                      placeholder="Signal magnitude rationale — why this score?"
-                      rows={2}
-                      style={{ ...inputStyle, fontSize: 12, resize: "vertical" }}
-                    />
-                  </div>
-
-                  {/* CECM */}
-                  <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-                      <Label text="CECM" />
-                      <ScoreInput
-                        value={state.cecm_score}
-                        onChange={(n) => setScores((prev) => ({ ...prev, [law.id]: { ...prev[law.id], cecm_score: n } }))}
-                      />
-                      <span style={{ fontSize: 10, color: C.faint }}>/ 10</span>
-                    </div>
-                    <textarea
-                      value={state.cecm_rationale}
-                      onChange={(e) => setScores((prev) => ({ ...prev, [law.id]: { ...prev[law.id], cecm_rationale: e.target.value } }))}
-                      placeholder="Convergence magnitude rationale — alignment with other signals?"
-                      rows={2}
-                      style={{ ...inputStyle, fontSize: 12, resize: "vertical" }}
-                    />
-                  </div>
-                </div>
+        {/* Score grid */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 16 }}>
+          {SCORE_FIELDS.map(({ key, label }) => (
+            <div key={key} style={{ padding: "12px 14px", borderRadius: 9, border: `1px solid ${C.border}`, background: C.panelAlt }}>
+              <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: C.faint, margin: "0 0 10px" }}>{label}</p>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <NumInput
+                  value={score[key]}
+                  onChange={(n) => updateScore(key, n)}
+                />
+                <span style={{ fontSize: 11, color: C.faint }}>/ 10</span>
               </div>
-            );
-          })}
+            </div>
+          ))}
+
+          {/* Confidence */}
+          <div style={{ padding: "12px 14px", borderRadius: 9, border: `1px solid ${C.border}`, background: C.panelAlt }}>
+            <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: C.faint, margin: "0 0 10px" }}>Confidence</p>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <NumInput
+                value={score.confidence}
+                onChange={(n) => updateScore("confidence", n)}
+                min={0}
+                max={1}
+                step={0.05}
+              />
+              <span style={{ fontSize: 11, color: C.faint }}>{Math.round(score.confidence * 100)}%</span>
+            </div>
+          </div>
         </div>
 
-        {/* Save scores button */}
-        <div style={{ marginTop: 20, display: "flex", alignItems: "center", gap: 12 }}>
-          <button
-            onClick={handleSaveScores}
-            disabled={savingScores}
-            style={{ padding: "9px 20px", borderRadius: 7, background: C.accent, border: "none", color: "#000", fontSize: 13, fontWeight: 700, cursor: savingScores ? "not-allowed" : "pointer", opacity: savingScores ? 0.6 : 1 }}
-          >
-            {savingScores ? "Saving scores…" : "Save All Scores"}
-          </button>
-          <span style={{ fontSize: 11, color: C.faint }}>All 8 laws saved together.</span>
+        {/* Scoring notes */}
+        <div style={{ marginBottom: 20 }}>
+          <Label text="Scoring Notes" />
+          <textarea
+            value={score.scoring_notes}
+            onChange={(e) => updateScore("scoring_notes", e.target.value)}
+            rows={3}
+            placeholder="Rationale for this score — what drove the values?"
+            style={{ ...inputStyle, resize: "vertical" }}
+          />
+        </div>
+
+        {/* Final score display */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <button
+              onClick={handleSaveScore}
+              disabled={savingScore}
+              style={{ padding: "9px 20px", borderRadius: 7, background: C.accent, border: "none", color: "#000", fontSize: 13, fontWeight: 700, cursor: savingScore ? "not-allowed" : "pointer", opacity: savingScore ? 0.6 : 1 }}
+            >
+              {savingScore ? "Saving…" : "Save Score"}
+            </button>
+            <span style={{ fontSize: 11, color: C.faint }}>Upserts one row per signal.</span>
+          </div>
+
+          <div style={{ textAlign: "right", padding: "10px 16px", borderRadius: 9, border: `1px solid ${scoreColor}44`, background: `${scoreColor}11` }}>
+            <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: C.faint, margin: "0 0 2px" }}>Final Score</p>
+            <p style={{ fontSize: 28, fontWeight: 800, color: scoreColor, margin: 0, lineHeight: 1 }}>{finalScore.toFixed(1)}</p>
+            <p style={{ fontSize: 9, color: C.faint, margin: "2px 0 0" }}>/ 100</p>
+          </div>
         </div>
       </section>
 
-      {/* ── SECTION 3: Review Queue ──────────────────────────────────────────── */}
+      {/* ── SECTION 3: Review Queue ────────────────────────────────────────── */}
       <section style={{ borderRadius: 12, border: canSubmitReview ? `1px solid ${C.accentBorder}` : `1px solid ${C.border}`, background: C.panel, padding: "22px 24px", marginBottom: 20 }}>
         <SectionHeader
           title="Submit to Review"
@@ -531,7 +655,7 @@ export default function SignalDetailPage() {
           <div>
             {signal.status === "rejected" && (
               <p style={{ fontSize: 12, color: "#f87171", marginBottom: 14 }}>
-                This signal was previously rejected. Review revision_notes below and update the signal before resubmitting.
+                This signal was previously rejected. Review revision_notes and update before resubmitting.
               </p>
             )}
             {signal.revision_notes && (
@@ -548,7 +672,7 @@ export default function SignalDetailPage() {
               {submittingReview ? "Submitting…" : signal.status === "rejected" ? "Resubmit for Review" : "Submit to Review Queue"}
             </button>
             <p style={{ fontSize: 11, color: C.faint, marginTop: 8 }}>
-              This will set status to <strong style={{ color: "#fbbf24" }}>in_review</strong> and create a review_queue entry. No publish path exists in this panel.
+              Sets status to <strong style={{ color: "#fbbf24" }}>in_review</strong> and creates a review_queue entry.
             </p>
           </div>
         )}
