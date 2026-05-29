@@ -17,7 +17,14 @@ const C = {
   input:        "#0a0919",
 } as const;
 
-const STATUSES: SignalStatus[] = ["draft", "in_review", "watching", "decaying", "approved", "published", "rejected", "archived"];
+const STATUS_TABS: { value: string; label: string }[] = [
+  { value: "",          label: "All" },
+  { value: "draft",     label: "Draft" },
+  { value: "in_review", label: "In Review" },
+  { value: "approved",  label: "Approved" },
+  { value: "published", label: "Published" },
+  { value: "rejected",  label: "Rejected" },
+];
 
 const CATEGORIES: SignalCategory[] = [
   "intelligence", "physical_systems", "infrastructure", "energy",
@@ -103,17 +110,32 @@ export default function SignalsListPage() {
         </Link>
       </div>
 
-      {/* Filters */}
-      <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          style={{ padding: "8px 12px", borderRadius: 7, border: `1px solid ${C.border}`, background: C.input, color: statusFilter ? C.text : C.faint, fontSize: 12, outline: "none", cursor: "pointer" }}
-        >
-          <option value="">All statuses</option>
-          {STATUSES.map((s) => <option key={s} value={s}>{s.replace("_", " ")}</option>)}
-        </select>
+      {/* Status Tabs */}
+      <div style={{ display: "flex", gap: 4, marginBottom: 16, borderBottom: `1px solid ${C.border}`, paddingBottom: 0 }}>
+        {STATUS_TABS.map(({ value, label }) => {
+          const active = statusFilter === value;
+          const isReview = value === "in_review";
+          return (
+            <button
+              key={value}
+              onClick={() => setStatusFilter(value)}
+              style={{
+                padding: "7px 14px", borderRadius: "7px 7px 0 0", border: "none", cursor: "pointer",
+                fontSize: 12, fontWeight: active ? 700 : 400,
+                background: active ? C.panel : "transparent",
+                color: active ? (isReview ? "#fbbf24" : C.text) : C.faint,
+                borderBottom: active ? `2px solid ${isReview ? "#fbbf24" : C.accent}` : "2px solid transparent",
+                marginBottom: -1,
+              }}
+            >
+              {label}
+            </button>
+          );
+        })}
+      </div>
 
+      {/* Category filter */}
+      <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
@@ -123,12 +145,12 @@ export default function SignalsListPage() {
           {CATEGORIES.map((c) => <option key={c} value={c}>{fmtCategory(c)}</option>)}
         </select>
 
-        {(statusFilter || categoryFilter) && (
+        {categoryFilter && (
           <button
-            onClick={() => { setStatusFilter(""); setCategoryFilter(""); }}
+            onClick={() => setCategoryFilter("")}
             style={{ padding: "8px 12px", borderRadius: 7, border: `1px solid ${C.border}`, background: "transparent", color: C.faint, fontSize: 12, cursor: "pointer" }}
           >
-            Clear filters
+            Clear
           </button>
         )}
       </div>

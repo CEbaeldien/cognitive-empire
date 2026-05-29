@@ -29,7 +29,7 @@ function CognitionCore() {
     <div className="flex items-center justify-center w-full h-full">
       <svg
         viewBox="0 0 400 400"
-        className="w-[580px] h-[580px] max-w-full"
+        className="w-[320px] h-[320px] max-w-full"
         style={{ filter: "drop-shadow(0 0 28px rgba(0,212,255,0.14))" }}
       >
         <defs>
@@ -353,67 +353,67 @@ export default function ConnectPage() {
 
       {/* Navigation */}
       <nav className="sticky top-0 z-50 border-b border-[#1a1a2e] bg-[#050505]/96 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-8 py-4 flex items-center justify-between">
-          <Link href="/home" className="text-white text-sm font-semibold tracking-widest uppercase">
+        <div className="max-w-7xl mx-auto px-8 py-6 flex items-center justify-between">
+          <Link href="/home" className="text-white text-base font-bold tracking-widest uppercase">
             Cognitive Empire
           </Link>
           <div className="flex items-center gap-7">
             {NAV_LINKS.map((link) => (
               <Link key={link.label} href={link.href}
-                className={`text-xs transition-colors ${link.active ? "text-white border-b border-white pb-px" : "text-[#6b7280] hover:text-white"}`}>
+                className={`text-sm px-1 transition-colors ${link.active ? "text-white border-b border-white pb-px" : "text-[#6b7280] hover:text-white"}`}>
                 {link.label}
               </Link>
             ))}
           </div>
-          <span className="text-[#00d4ff] text-xs font-mono tracking-wider">• DR. E INTERFACE</span>
+          <span className="text-[#00d4ff] text-sm font-mono tracking-wider">• DR. E INTERFACE</span>
         </div>
       </nav>
 
       {/* Hero */}
-      <section className="max-w-7xl mx-auto px-8 pt-32 pb-20">
+      <section className="max-w-7xl mx-auto px-8 pt-10 pb-6">
         <div className="grid grid-cols-2 gap-16 items-center">
           <div>
             <h1
-              className="leading-none font-mono font-[200] tracking-wider text-white mb-8"
-              style={{ fontSize: "clamp(5rem, 10vw, 9rem)" }}
+              className="leading-none font-mono font-[200] tracking-wider text-white mb-3"
+              style={{ fontSize: "clamp(3rem, 6vw, 5rem)" }}
             >
-              DR. E<span className="cursor-blink">_</span>
+              DR. E<span className="cursor-blink font-[400]" style={{ letterSpacing: 0 }}>_</span>
             </h1>
-            <p className="text-sm text-[#00d4ff] uppercase tracking-[0.45em] mb-8">
+            <p className="text-sm text-[#00d4ff] uppercase tracking-[0.45em] mb-3">
               Public Interface of Cognitive Empire
             </p>
-            <p className="text-xl text-white/65 max-w-lg leading-relaxed mb-10">
+            <p className="text-xl text-white/65 max-w-lg leading-relaxed mb-5">
               Structured operational routing for serious systems and strategic engagements.
             </p>
-            <div className="w-10 border-t border-[#00d4ff]/30 mb-10" />
+            <div className="w-10 border-t border-[#00d4ff]/30 mb-5" />
             <p className="text-sm text-[#00d4ff] uppercase tracking-[0.45em]">
               Select Your Entry Point.
             </p>
           </div>
-          <div className="flex items-center justify-center h-[580px]">
+          <div className="flex items-center justify-center h-[320px]">
             <CognitionCore />
           </div>
         </div>
       </section>
 
       {/* Routing Cards */}
-      <section className="max-w-7xl mx-auto px-8 pb-24">
-        <div className="grid grid-cols-5 gap-5">
+      <section className="max-w-7xl mx-auto px-8 pb-6">
+        <div className="grid grid-cols-5 gap-3">
           {CARDS.map((card) => (
             <button key={card.id} onClick={() => handleCardClick(card.id)}
-              className={`relative text-left p-8 bg-[#0a0a0f] border cursor-pointer transition-all duration-200 group min-h-[288px] flex flex-col ${
+              className={`relative text-left p-5 bg-[#0a0a0f] border cursor-pointer transition-all duration-200 group flex flex-col ${
                 activeCard === card.id
                   ? "border-[#00d4ff]/50 shadow-[0_0_22px_rgba(0,212,255,0.10)]"
                   : "border-[#1a1a2e] hover:border-[#00d4ff]/30 hover:shadow-[0_0_16px_rgba(0,212,255,0.06)]"
               }`}
             >
-              <span className="text-[#00d4ff] text-base font-mono tracking-wider block mb-6">{card.number}</span>
-              <span className="text-[#4b5563] group-hover:text-[#6b7280] transition-colors mb-5 block">
+              <span className="text-[#00d4ff] text-base font-mono tracking-wider block mb-3">{card.number}</span>
+              <span className="text-[#4b5563] group-hover:text-[#6b7280] transition-colors mb-3 block">
                 <card.Icon />
               </span>
-              <h3 className="text-white font-bold text-lg uppercase tracking-[0.1em] mb-4 leading-snug">{card.title}</h3>
+              <h3 className="text-white font-bold text-lg uppercase tracking-[0.1em] mb-2 leading-snug">{card.title}</h3>
               <p className="text-[#6b7280] text-base leading-relaxed flex-1">{card.description}</p>
-              <span className={`text-xl mt-5 block transition-colors ${activeCard === card.id ? "text-[#00d4ff]" : "text-[#3d3d55] group-hover:text-[#00d4ff]"}`}>
+              <span className={`text-xl mt-3 block transition-colors ${activeCard === card.id ? "text-[#00d4ff]" : "text-[#3d3d55] group-hover:text-[#00d4ff]"}`}>
                 →
               </span>
             </button>

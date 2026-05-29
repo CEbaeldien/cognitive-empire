@@ -6,6 +6,7 @@ export type MesodmaSource = {
   slug: string;
   category: string;
   source_type: string;
+  ingestion_mode: string;
   endpoint_url: string;
   fetch_interval: number;
   metadata: Record<string, unknown>;

@@ -48,16 +48,30 @@ const IcoChevron = () => (
   </svg>
 );
 
-const NAV = [
-  { href: "/ce-admin/signals",     label: "All Signals", icon: <IcoList /> },
-  { href: "/ce-admin/signals/new", label: "New Signal",  icon: <IcoPlus /> },
+const IcoReview = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
+  </svg>
+);
+
+const NAV: { href: string; label: string; icon: React.ReactNode; badge?: boolean }[] = [
+  { href: "/ce-admin/signals",        label: "All Signals",   icon: <IcoList /> },
+  { href: "/ce-admin/signals/review", label: "Review Queue",  icon: <IcoReview />, badge: true },
+  { href: "/ce-admin/signals/new",    label: "New Signal",    icon: <IcoPlus /> },
 ];
 
 function isNavActive(href: string, pathname: string): boolean {
   if (href === "/ce-admin/signals/new") return pathname === "/ce-admin/signals/new";
-  // "All Signals" is active on the list page and any detail page
-  return pathname === "/ce-admin/signals" || (
-    pathname.startsWith("/ce-admin/signals/") && pathname !== "/ce-admin/signals/new"
+  if (href === "/ce-admin/signals/review") {
+    return pathname === "/ce-admin/signals/review" || pathname.endsWith("/review");
+  }
+  // "All Signals": list page + signal detail edit pages
+  return (
+    pathname === "/ce-admin/signals" ||
+    (pathname.startsWith("/ce-admin/signals/") &&
+      pathname !== "/ce-admin/signals/new" &&
+      pathname !== "/ce-admin/signals/review" &&
+      !pathname.endsWith("/review"))
   );
 }
 
@@ -65,9 +79,10 @@ export default function SignalsAdminLayout({ children }: { children: React.React
   const router   = useRouter();
   const pathname = usePathname();
 
-  const [authChecked, setAuthChecked] = useState(false);
-  const [userEmail,   setUserEmail]   = useState<string | null>(null);
-  const [showProfile, setShowProfile] = useState(false);
+  const [authChecked,  setAuthChecked]  = useState(false);
+  const [userEmail,    setUserEmail]    = useState<string | null>(null);
+  const [showProfile,  setShowProfile]  = useState(false);
+  const [reviewCount,  setReviewCount]  = useState<number | null>(null);
   const profileRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -81,6 +96,13 @@ export default function SignalsAdminLayout({ children }: { children: React.React
       setAuthChecked(true);
     });
   }, [router]);
+
+  useEffect(() => {
+    fetch("/api/signals?status=in_review&limit=1")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d) setReviewCount(d.total ?? 0); })
+      .catch(() => {});
+  }, [pathname]);
 
   useEffect(() => {
     if (!showProfile) return;
@@ -129,8 +151,9 @@ export default function SignalsAdminLayout({ children }: { children: React.React
         {/* Nav */}
         <nav style={{ padding: "12px 10px", flex: 1, overflow: "auto" }}>
           <p style={{ fontSize: 9, fontWeight: 600, letterSpacing: "0.45em", textTransform: "uppercase", color: C.faint, padding: "0 10px", marginBottom: 6 }}>Navigation</p>
-          {NAV.map(({ href, label, icon }) => {
+          {NAV.map(({ href, label, icon, badge }) => {
             const active = isNavActive(href, pathname);
+            const count = badge && reviewCount != null ? reviewCount : null;
             return (
               <Link key={href} href={href} style={{ textDecoration: "none", display: "block" }}>
                 <div style={{
@@ -143,7 +166,12 @@ export default function SignalsAdminLayout({ children }: { children: React.React
                   transition: "all 0.15s",
                 }}>
                   <span style={{ opacity: active ? 1 : 0.6 }}>{icon}</span>
-                  {label}
+                  <span style={{ flex: 1 }}>{label}</span>
+                  {count != null && count > 0 && (
+                    <span style={{ padding: "1px 7px", borderRadius: 10, background: "rgba(251,191,36,0.15)", border: "1px solid rgba(251,191,36,0.3)", color: "#fbbf24", fontSize: 10, fontWeight: 700 }}>
+                      {count}
+                    </span>
+                  )}
                 </div>
               </Link>
             );

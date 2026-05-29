@@ -13,6 +13,7 @@ import type {
 // ── Configuration ─────────────────────────────────────────────────────────────
 
 const EXTRACTION_MODEL = "gpt-4o-mini";
+const MAX_NEW_ITEMS_RESEARCH_API = 25;
 
 const EXTRACTION_SYSTEM_PROMPT =
   "You are an extraction engine only. Do not interpret, score, or analyze. " +
@@ -53,9 +54,9 @@ async function fetchActiveSources(
 ): Promise<MesodmaSource[]> {
   const { data, error } = await supabase
     .from("sources")
-    .select("id, slug, category, source_type, endpoint_url, fetch_interval, metadata")
+    .select("id, slug, category, source_type, endpoint_url, fetch_interval, metadata, ingestion_mode")
     .eq("is_active", true)
-    .eq("source_type", "rss")
+    .in("source_type", ["rss", "api"])
     .not("endpoint_url", "is", null);
 
   if (error) throw new Error(`Failed to fetch sources: ${error.message}`);
@@ -72,6 +73,7 @@ async function fetchExistingExternalIds(
     .from("raw_items")
     .select("external_id")
     .eq("source_id", sourceId)
+    .eq("status", "extracted")
     .not("external_id", "is", null);
 
   if (error) throw new Error(`Failed to fetch existing items: ${error.message}`);
@@ -200,7 +202,7 @@ async function writeRawItem(
   item: RawRssItem,
   extraction: ExtractionResult
 ): Promise<void> {
-  const { error } = await supabase.from("raw_items").insert({
+  const { error } = await supabase.from("raw_items").upsert({
     source_id:        sourceId,
     external_id:      item.external_id,
     title:            item.title,
@@ -211,9 +213,10 @@ async function writeRawItem(
     status:           "extracted",
     extraction_model: EXTRACTION_MODEL,
     extracted_fields: extraction,
-  });
+    error_message:    null,
+  }, { onConflict: "source_id,external_id" });
 
-  if (error) throw new Error(`DB insert failed: ${error.message}`);
+  if (error) throw new Error(`DB upsert failed: ${error.message}`);
 }
 
 async function writeErrorItem(
@@ -222,7 +225,7 @@ async function writeErrorItem(
   item: RawRssItem,
   errorMessage: string
 ): Promise<void> {
-  await supabase.from("raw_items").insert({
+  await supabase.from("raw_items").upsert({
     source_id:     sourceId,
     external_id:   item.external_id,
     title:         item.title,
@@ -232,7 +235,7 @@ async function writeErrorItem(
     published_at:  item.published_at,
     status:        "error",
     error_message: errorMessage,
-  }).then(({ error }) => {
+  }, { onConflict: "source_id,external_id", ignoreDuplicates: true }).then(({ error }) => {
     if (error) console.error("[mesodma] error writing error row:", error.message);
   });
 }
@@ -272,7 +275,12 @@ async function ingestSource(
     return result;
   }
 
-  for (const item of feedItems) {
+  const isResearchApi = source.ingestion_mode === "research_api";
+  const itemsToProcess = isResearchApi
+    ? feedItems.filter((item) => !item.external_id || !existingIds.has(item.external_id)).slice(0, MAX_NEW_ITEMS_RESEARCH_API)
+    : feedItems;
+
+  for (const item of itemsToProcess) {
     const outcome = await processItem(supabase, openai, source.id, item, existingIds);
 
     if (outcome.status === "extracted") result.items_extracted++;
@@ -311,6 +319,7 @@ async function processItem(
     const message = err instanceof Error ? err.message : String(err);
     console.error(`[mesodma] item error (${item.external_id ?? item.url}):`, message);
     await writeErrorItem(supabase, sourceId, item, message);
+    if (item.external_id) existingIds.add(item.external_id);
     return { status: "error", external_id: item.external_id, error: message };
   }
 }
