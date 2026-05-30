@@ -66,7 +66,8 @@ function sb() {
   );
 }
 
-function fmt(s: string) {
+function fmt(s: string | null | undefined): string {
+  if (!s) return "—";
   return s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
@@ -155,7 +156,7 @@ export default async function RuntimeDashboardPage() {
     client.from("runtime_memories").select("*", { count: "exact", head: true }).or("confidence.eq.stale,lifecycle_status.eq.stale"),
     client.from("runtime_conflicts").select("*", { count: "exact", head: true }).eq("status", "open"),
     client.from("runtime_approvals").select("*", { count: "exact", head: true }).eq("status", "pending"),
-    client.from("runtime_health_checks").select("*", { count: "exact", head: true }).eq("health_status", "broken").gt("checked_at", ago24h),
+    client.from("runtime_health_checks").select("*", { count: "exact", head: true }).eq("status", "broken").gt("checked_at", ago24h),
     // Display data
     client.from("runtime_systems").select("*").order("name"),
     client.from("runtime_memories").select("id, title, confidence, lifecycle_status, updated_at").order("updated_at", { ascending: false }).limit(300),

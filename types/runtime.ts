@@ -402,12 +402,12 @@ export type RuntimeConflictUpdate = Partial<RuntimeConflictInsert>;
 export type RuntimeHealthCheckRow = {
   id: string;
   system_id: string;
-  health_status: HealthStatus;
-  sync_status: SyncStatus;
-  notes: string | null;
+  status: HealthStatus;
+  check_type: string | null;
   checked_by: string | null;
+  issues_found: string | null;
+  notes: string | null;
   checked_at: string;
-  metadata: Record<string, unknown>;
   created_at: string;
 };
 

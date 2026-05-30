@@ -31,7 +31,7 @@ export async function GET() {
     client.from("runtime_memories").select("*", { count: "exact", head: true }).eq("lifecycle_status", "stale"),
     client
       .from("runtime_health_checks")
-      .select("id, system_id, health_status, sync_status, notes, checked_at")
+      .select("id, system_id, status, check_type, notes, checked_at")
       .order("checked_at", { ascending: false })
       .limit(10),
   ]);

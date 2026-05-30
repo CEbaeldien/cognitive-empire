@@ -141,7 +141,7 @@ type StateResult = {
   pending_approvals:    number;
   open_conflicts:       number;
   stale_memories:       number;
-  recent_health_checks: Array<{ id: string; system_id: string; health_status: string; checked_at: string; notes: string | null }>;
+  recent_health_checks: Array<{ id: string; system_id: string; status: string; check_type: string | null; checked_at: string; notes: string | null }>;
 };
 
 // ── page ─────────────────────────────────────────────────────────────────────
@@ -583,9 +583,9 @@ export default function RuntimeControlPage() {
                   {stateResult.recent_health_checks.map((hc, i) => (
                     <div key={hc.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 14px", background: C.panelDeep, borderBottom: i < stateResult.recent_health_checks.length - 1 ? `1px solid ${C.border}` : undefined }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <span style={{ width: 7, height: 7, borderRadius: "50%", background: HEALTH_COLOR[hc.health_status] ?? C.faint, flexShrink: 0 }} />
+                        <span style={{ width: 7, height: 7, borderRadius: "50%", background: HEALTH_COLOR[hc.status] ?? C.faint, flexShrink: 0 }} />
                         <span style={{ fontSize: 11, color: C.muted, fontFamily: "monospace" }}>{hc.system_id.slice(0, 8)}…</span>
-                        <span style={{ fontSize: 11, color: HEALTH_COLOR[hc.health_status] ?? C.faint, fontWeight: 600 }}>{fmt(hc.health_status)}</span>
+                        <span style={{ fontSize: 11, color: HEALTH_COLOR[hc.status] ?? C.faint, fontWeight: 600 }}>{fmt(hc.status)}</span>
                         {hc.notes && <span style={{ fontSize: 10, color: C.faint, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 200 }}>{hc.notes}</span>}
                       </div>
                       <span style={{ fontSize: 10, color: C.faint, flexShrink: 0 }}>{timeAgo(hc.checked_at)}</span>
