@@ -44,7 +44,7 @@ export async function POST(req: Request) {
 
   const { error: sysErr } = await client
     .from("runtime_systems")
-    .update({ health_status: health, last_health_check_at: now })
+    .update({ health_status: health, last_health_check: now })
     .eq("id", system_id);
 
   if (sysErr) return NextResponse.json({ error: sysErr.message }, { status: 500 });

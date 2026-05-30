@@ -20,13 +20,14 @@ export async function GET(req: Request) {
   let q = sb()
     .from("runtime_systems")
     .select(
-      "id, name, slug, type, status, description, health_status, sync_status, " +
-      "cost_type, billing_status, monthly_cost_usd, url, owner, last_health_check_at, created_at, updated_at"
+      "id, name, system_slug, system_type, status, description, health_status, sync_status, " +
+      "priority, risk_level, cost_type, billing_status, cost_monthly, public_url, admin_url, " +
+      "owner, last_health_check, current_phase, next_action, created_at, updated_at"
     )
     .order("name", { ascending: true });
 
-  if (type)   q = q.eq("type",          type);
-  if (status) q = q.eq("status",        status);
+  if (type)   q = q.eq("system_type",  type);
+  if (status) q = q.eq("status",       status);
   if (health) q = q.eq("health_status", health);
 
   const { data, error } = await q;
@@ -38,15 +39,15 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const body = await req.json();
   const {
-    name, slug, type, status, description,
-    health_status, sync_status, data_sensitivity, reversibility_class,
-    cost_type, billing_status, payment_provider, monthly_cost_usd,
-    url, owner, metadata,
+    name, system_slug, system_type, status, description,
+    health_status, sync_status, data_sensitivity, risk_level,
+    cost_type, billing_status, payment_provider, cost_monthly,
+    public_url, admin_url, owner, notes, priority, owner_role, environment,
   } = body;
 
-  if (!name || !slug || !type || !status) {
+  if (!name || !system_slug || !system_type || !status) {
     return NextResponse.json(
-      { error: "Missing required fields: name, slug, type, status" },
+      { error: "Missing required fields: name, system_slug, system_type, status" },
       { status: 400 }
     );
   }
@@ -55,21 +56,25 @@ export async function POST(req: Request) {
     .from("runtime_systems")
     .insert({
       name,
-      slug,
-      type,
+      system_slug,
+      system_type,
       status,
-      description:         description         ?? null,
-      health_status:       health_status       ?? "unknown",
-      sync_status:         sync_status         ?? "unknown",
-      data_sensitivity:    data_sensitivity    ?? "internal",
-      reversibility_class: reversibility_class ?? null,
-      cost_type:           cost_type           ?? "unknown",
-      billing_status:      billing_status      ?? "unknown",
-      payment_provider:    payment_provider    ?? "unknown",
-      monthly_cost_usd:    monthly_cost_usd    ?? null,
-      url:                 url                 ?? null,
-      owner:               owner               ?? null,
-      metadata:            metadata            ?? {},
+      description:      description      ?? null,
+      health_status:    health_status    ?? "unknown",
+      sync_status:      sync_status      ?? "unknown",
+      data_sensitivity: data_sensitivity ?? "internal",
+      risk_level:       risk_level       ?? null,
+      cost_type:        cost_type        ?? "unknown",
+      billing_status:   billing_status   ?? "unknown",
+      payment_provider: payment_provider ?? "none",
+      cost_monthly:     cost_monthly     ?? null,
+      public_url:       public_url       ?? null,
+      admin_url:        admin_url        ?? null,
+      owner:            owner            ?? null,
+      notes:            notes            ?? null,
+      priority:         priority         ?? null,
+      owner_role:       owner_role       ?? null,
+      environment:      environment      ?? null,
     })
     .select()
     .single();

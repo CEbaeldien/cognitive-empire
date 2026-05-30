@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import type {
   RuntimeSystemRow, RuntimeConflictRow, RuntimeApprovalRow,
   SystemType, SystemStatus, HealthStatus, SyncStatus,
-  DataSensitivity, ReversibilityClass, CostType,
+  DataSensitivity, CostType,
   MemoryType, MemoryConfidence, MemoryLifecycleStatus, MemorySourceType,
 } from "@/types/runtime";
 
@@ -47,7 +47,7 @@ const SYS_STATUSES:     SystemStatus[]          = ["planned","active","paused","
 const HEALTH_STATUSES:  HealthStatus[]          = ["healthy","warning","broken","stale","unknown","needs_review"];
 const SYNC_STATUSES:    SyncStatus[]            = ["in_sync","stale","drift_detected","conflicted","unknown","manual_review_required"];
 const DATA_SENS:        DataSensitivity[]       = ["public","internal","restricted","confidential"];
-const RISK_LEVELS:      ReversibilityClass[]    = ["R0","R1","R2","R3","R4"];
+const RISK_LEVELS                               = ["critical","high","medium","low"];
 const COST_TYPES:       CostType[]              = ["free","fixed_subscription","usage_based","hybrid","manual","unknown"];
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -271,7 +271,7 @@ export default function RuntimeControlPage() {
   const [sysDesc,     setSysDesc]     = useState("");
   const [sysUrl,      setSysUrl]      = useState("");
   const [sysAdminUrl, setSysAdminUrl] = useState("");
-  const [sysRisk,     setSysRisk]     = useState<ReversibilityClass | "">("");
+  const [sysRisk,     setSysRisk]     = useState("");
   const [sysSens,     setSysSens]     = useState<DataSensitivity | "">("");
   const [sysCost,     setSysCost]     = useState("");
   const [sysCostType, setSysCostType] = useState<CostType | "">("");
@@ -283,18 +283,22 @@ export default function RuntimeControlPage() {
     e.preventDefault();
     if (!sysName || !sysType || !sysStatus) return;
     setSysBusy(true); setSysMsg(null);
-    const slug = sysName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    const system_slug = sysName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
     const res = await fetch("/api/runtime/systems", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        name: sysName, slug, type: sysType, status: sysStatus,
-        description:         sysDesc     || null,
-        url:                 sysUrl      || null,
-        reversibility_class: sysRisk     || null,
-        data_sensitivity:    sysSens     || "internal",
-        monthly_cost_usd:    sysCost ? parseFloat(sysCost) : null,
-        cost_type:           sysCostType || "unknown",
-        metadata:            { admin_url: sysAdminUrl || null, notes: sysNotes || null },
+        name:             sysName,
+        system_slug,
+        system_type:      sysType      || null,
+        status:           sysStatus    || null,
+        description:      sysDesc      || null,
+        public_url:       sysUrl       || null,
+        admin_url:        sysAdminUrl  || null,
+        risk_level:       sysRisk      || null,
+        data_sensitivity: sysSens      || "internal",
+        cost_monthly:     sysCost ? parseFloat(sysCost) : null,
+        cost_type:        sysCostType  || "unknown",
+        notes:            sysNotes     || null,
       }),
     });
     const d = await res.json().catch(() => ({}));
@@ -524,7 +528,7 @@ export default function RuntimeControlPage() {
             </div>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 14 }}>
-            <SelectField label="Risk Class" value={sysRisk} onChange={v => setSysRisk(v as ReversibilityClass)} options={RISK_LEVELS} placeholder="None" />
+            <SelectField label="Risk Class" value={sysRisk} onChange={v => setSysRisk(v)} options={RISK_LEVELS} placeholder="None" />
             <SelectField label="Data Sensitivity" value={sysSens} onChange={v => setSysSens(v as DataSensitivity)} options={DATA_SENS} />
             <div>
               <Label text="Cost / mo (USD)" />

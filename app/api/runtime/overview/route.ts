@@ -3,89 +3,60 @@ import { createClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-if (!supabaseUrl) {
-  throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL");
+function sb() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { persistSession: false } }
+  );
 }
-
-if (!serviceRoleKey) {
-  throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY");
-}
-
-const supabase = createClient(supabaseUrl, serviceRoleKey, {
-  auth: {
-    persistSession: false,
-  },
-});
 
 export async function GET() {
   try {
+    const client = sb();
     const [
-      systemsResult,
-      statesResult,
-      decisionsResult,
-      tasksResult,
-      workflowsResult,
+      systemsRes,
+      memoriesRes,
+      tasksRes,
+      projectsRes,
+      approvalsRes,
+      conflictsRes,
     ] = await Promise.all([
-      supabase
-        .from("runtime_systems")
-        .select("*")
-        .order("created_at", { ascending: true }),
-
-      supabase
-        .from("runtime_project_states")
-        .select("*, runtime_systems(name)")
-        .order("updated_at", { ascending: false }),
-
-      supabase
-        .from("runtime_decisions")
-        .select("*")
-        .order("created_at", { ascending: false }),
-
-      supabase
-        .from("runtime_tasks")
-        .select("*")
-        .order("created_at", { ascending: false }),
-
-      supabase
-        .from("runtime_workflows")
-        .select("*")
-        .order("created_at", { ascending: true }),
+      client.from("runtime_systems").select("*").order("name", { ascending: true }),
+      client.from("runtime_memories").select("id, type, confidence, lifecycle_status, title, updated_at").order("updated_at", { ascending: false }).limit(50),
+      client.from("runtime_tasks").select("*").order("created_at", { ascending: false }).limit(50),
+      client.from("runtime_projects").select("*").order("created_at", { ascending: false }),
+      client.from("runtime_approvals").select("*").eq("status", "pending").order("requested_at", { ascending: false }),
+      client.from("runtime_conflicts").select("*").eq("status", "open").order("detected_at", { ascending: false }),
     ]);
 
     const errors = [
-      systemsResult.error,
-      statesResult.error,
-      decisionsResult.error,
-      tasksResult.error,
-      workflowsResult.error,
+      systemsRes.error,
+      memoriesRes.error,
+      tasksRes.error,
+      projectsRes.error,
+      approvalsRes.error,
+      conflictsRes.error,
     ].filter(Boolean);
 
     if (errors.length > 0) {
       return NextResponse.json(
-        {
-          error: "Failed to load runtime overview",
-          details: errors,
-        },
+        { error: "Failed to load runtime overview", details: errors },
         { status: 500 }
       );
     }
 
     return NextResponse.json({
-      systems: systemsResult.data ?? [],
-      projectStates: statesResult.data ?? [],
-      decisions: decisionsResult.data ?? [],
-      tasks: tasksResult.data ?? [],
-      workflows: workflowsResult.data ?? [],
+      systems:   systemsRes.data   ?? [],
+      memories:  memoriesRes.data  ?? [],
+      tasks:     tasksRes.data     ?? [],
+      projects:  projectsRes.data  ?? [],
+      approvals: approvalsRes.data ?? [],
+      conflicts: conflictsRes.data ?? [],
     });
   } catch (error) {
     return NextResponse.json(
-      {
-        error: "Unexpected runtime dashboard error",
-        details: error instanceof Error ? error.message : String(error),
-      },
+      { error: "Unexpected runtime overview error", details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

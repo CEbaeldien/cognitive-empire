@@ -35,11 +35,10 @@ const SYNC_COLOR: Record<string, string> = {
 };
 
 const RISK_COLOR: Record<string, string> = {
-  R0: "#4ade80",
-  R1: "#00E0FF",
-  R2: "#fbbf24",
-  R3: "#fb923c",
-  R4: "#f87171",
+  low:      "#4ade80",
+  medium:   "#fbbf24",
+  high:     "#fb923c",
+  critical: "#f87171",
 };
 
 const CONF_COLOR: Record<string, string> = {
@@ -251,7 +250,7 @@ export default async function RuntimeDashboardPage() {
                 </tr>
               ) : systems.map((s, i) => {
                 const hColor = HEALTH_COLOR[s.health_status] ?? C.faint;
-                const nextAction = (s.metadata as Record<string, unknown>)?.next_action;
+                const nextAction = s.next_action;
                 return (
                   <tr key={s.id} style={{ borderBottom: i < systems.length - 1 ? `1px solid ${C.border}` : undefined, background: C.panel }}>
                     <td style={{ ...TD, maxWidth: 220 }}>
@@ -260,7 +259,7 @@ export default async function RuntimeDashboardPage() {
                         <p style={{ margin: "2px 0 0", fontSize: 11, color: C.faint, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.description}</p>
                       )}
                     </td>
-                    <td style={TD}><span style={{ color: C.muted, fontSize: 11 }}>{fmt(s.type)}</span></td>
+                    <td style={TD}><span style={{ color: C.muted, fontSize: 11 }}>{fmt(s.system_type)}</span></td>
                     <td style={TD}><Badge value={s.status} colorMap={{ active: "#4ade80", planned: "#00E0FF", paused: "#fbbf24", deprecated: "#94a3b8", broken: "#f87171", archived: "#475569" }} /></td>
                     <td style={TD}>
                       <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
@@ -270,14 +269,14 @@ export default async function RuntimeDashboardPage() {
                     </td>
                     <td style={TD}><Badge value={s.sync_status} colorMap={SYNC_COLOR} /></td>
                     <td style={TD}>
-                      {s.reversibility_class
-                        ? <span style={{ padding: "2px 8px", borderRadius: 4, background: `${RISK_COLOR[s.reversibility_class] ?? C.faint}18`, color: RISK_COLOR[s.reversibility_class] ?? C.faint, fontSize: 10, fontWeight: 800 }}>{s.reversibility_class}</span>
+                      {s.risk_level
+                        ? <span style={{ padding: "2px 8px", borderRadius: 4, background: `${RISK_COLOR[s.risk_level] ?? C.faint}18`, color: RISK_COLOR[s.risk_level] ?? C.faint, fontSize: 10, fontWeight: 800 }}>{s.risk_level}</span>
                         : <span style={{ color: C.faint }}>—</span>}
                     </td>
-                    <td style={{ ...TD, color: s.monthly_cost_usd ? C.text : C.faint }}>{fmtCost(s.monthly_cost_usd)}</td>
-                    <td style={{ ...TD, color: C.faint, fontSize: 11 }}>{timeAgo(s.last_health_check_at)}</td>
+                    <td style={{ ...TD, color: s.cost_monthly ? C.text : C.faint }}>{fmtCost(s.cost_monthly)}</td>
+                    <td style={{ ...TD, color: C.faint, fontSize: 11 }}>{timeAgo(s.last_health_check)}</td>
                     <td style={{ ...TD, color: C.faint, fontSize: 11 }}>
-                      {typeof nextAction === "string" ? nextAction : "—"}
+                      {nextAction ?? "—"}
                     </td>
                   </tr>
                 );
