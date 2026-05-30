@@ -115,10 +115,11 @@ Revenue decay detection engine — identifies stalling sales opportunities and g
 - Pipeline: `POST /api/drift/score` scores all open opportunities → `POST /api/drift/interventions` generates intervention rows for moderate/high/critical deals → `/admin/drift` dashboard reads via `GET /api/drift/overview`
 - Drift levels: `low` / `moderate` / `high` / `critical` (thresholds: 35 / 60 / 80)
 
-**3. Runtime** (`/admin/runtime`, `/api/runtime/`)
-Internal operational registry — CE's own systems, decisions, tasks, and workflows.
-- Supabase tables: `runtime_systems`, `runtime_project_states`, `runtime_decisions`, `runtime_tasks`, `runtime_workflows`
-- Read-only dashboard; no write operations from the app
+**3. Runtime** (`/ce-admin/runtime`, `/api/runtime/`)
+Internal operational registry — CE's own systems, memories, decisions, approvals, conflicts, and doctrine references.
+- Supabase tables: `runtime_systems`, `runtime_memories`, `runtime_tasks`, `runtime_projects`, `runtime_approvals`, `runtime_conflicts`, `runtime_health_checks`, `runtime_doctrine_documents`, `runtime_doctrine_concepts`, `runtime_doctrine_references`
+- Health Dashboard (`/ce-admin/runtime`) — read-only server component; queries all runtime tables directly via service role
+- Control Panel (`/ce-admin/runtime/control`) — write-enabled client component; 6 actions: health check, create memory, resolve conflict, review approvals, register system, generate state snapshot
 
 ### Routing
 
