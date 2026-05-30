@@ -1,4 +1,5 @@
-// CE Runtime — TypeScript types for all runtime tables.
+// CE Runtime — TypeScript types aligned to actual DB schema.
+// Last verified: 2026-05-31 via live Supabase probe.
 // Usage: createClient<RuntimeDatabase>(url, key)
 
 // ============================================================
@@ -91,33 +92,7 @@ export type ApprovalStatus =
   | "cancelled"
   | "expired";
 
-export type ConflictType =
-  | "memory"
-  | "sync"
-  | "schema"
-  | "authority"
-  | "state"
-  | "doctrine";
-
 export type ConflictStatus = "open" | "investigating" | "resolved" | "dismissed";
-
-export type DoctrineDocumentType =
-  | "doctrine"
-  | "paper"
-  | "report"
-  | "note"
-  | "methodology"
-  | "standard";
-
-export type DoctrineConceptType =
-  | "law"
-  | "principle"
-  | "vector"
-  | "rule"
-  | "framework"
-  | "metric"
-  | "methodology"
-  | "constraint";
 
 export type DoctrineStatus =
   | "draft"
@@ -155,13 +130,21 @@ export type PaymentProvider =
   | "unknown"
   | "none";
 
+export type RuntimeTaskStatus =
+  | "pending"
+  | "in_progress"
+  | "blocked"
+  | "done"
+  | "cancelled";
+
 // ============================================================
 // TABLE: runtime_memories
+// Actual cols verified 2026-05-31
 // ============================================================
 
 export type RuntimeMemoryRow = {
   id: string;
-  type: MemoryType;
+  memory_type: MemoryType;
   confidence: MemoryConfidence;
   lifecycle_status: MemoryLifecycleStatus;
   source_type: MemorySourceType;
@@ -169,19 +152,27 @@ export type RuntimeMemoryRow = {
   content: string;
   tags: string[] | null;
   source_ref: string | null;
-  entity_type: string | null;
-  entity_id: string | null;
-  expires_at: string | null;
-  metadata: Record<string, unknown>;
+  source_timestamp: string | null;
+  related_entity_type: string | null;
+  related_entity_id: string | null;
+  related_system_id: string | null;
+  stale_after_days: number | null;
+  supersedes_id: string | null;
+  superseded_by_id: string | null;
+  locked: boolean;
+  locked_at: string | null;
+  locked_by: string | null;
+  lock_reason: string | null;
+  last_verified_at: string | null;
+  verified_by: string | null;
+  verification_notes: string | null;
+  notes: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
 };
 
-export type RuntimeMemoryInsert = Omit<
-  RuntimeMemoryRow,
-  "id" | "created_at" | "updated_at"
-> & {
+export type RuntimeMemoryInsert = Omit<RuntimeMemoryRow, "id" | "created_at" | "updated_at"> & {
   id?: string;
   created_at?: string;
   updated_at?: string;
@@ -191,13 +182,14 @@ export type RuntimeMemoryUpdate = Partial<RuntimeMemoryInsert>;
 
 // ============================================================
 // TABLE: runtime_systems
+// Actual cols verified via working API route
 // ============================================================
 
 export type RuntimeSystemRow = {
   id: string;
   name: string;
   system_slug: string;
-  system_type: SystemType;
+  system_type: SystemType | null;
   status: SystemStatus;
   description: string | null;
   health_status: HealthStatus;
@@ -238,10 +230,7 @@ export type RuntimeSystemRow = {
   updated_at: string;
 };
 
-export type RuntimeSystemInsert = Omit<
-  RuntimeSystemRow,
-  "id" | "created_at" | "updated_at"
-> & {
+export type RuntimeSystemInsert = Omit<RuntimeSystemRow, "id" | "created_at" | "updated_at"> & {
   id?: string;
   created_at?: string;
   updated_at?: string;
@@ -251,38 +240,31 @@ export type RuntimeSystemUpdate = Partial<RuntimeSystemInsert>;
 
 // ============================================================
 // TABLE: runtime_tasks
+// Actual cols verified 2026-05-31
+// Note: task category stored in 'system' col (no task_type col)
 // ============================================================
-
-export type RuntimeTaskStatus =
-  | "pending"
-  | "in_progress"
-  | "blocked"
-  | "done"
-  | "cancelled";
 
 export type RuntimeTaskRow = {
   id: string;
   title: string;
   description: string | null;
+  system: string | null;         // task category / area (e.g. "runtime", "signals")
   status: RuntimeTaskStatus;
   priority: number | null;
-  impact_level: ImpactLevel | null;
-  reversibility_class: ReversibilityClass | null;
-  system_id: string | null;
-  project_id: string | null;
   assigned_to: string | null;
-  due_at: string | null;
+  due_date: string | null;       // date string, not timestamp
+  dependencies: string[] | null;
+  related_system_id: string | null;
   completed_at: string | null;
-  metadata: Record<string, unknown>;
+  blocked_reason: string | null;
+  reversibility_class: ReversibilityClass | null;
+  notes: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
 };
 
-export type RuntimeTaskInsert = Omit<
-  RuntimeTaskRow,
-  "id" | "created_at" | "updated_at"
-> & {
+export type RuntimeTaskInsert = Omit<RuntimeTaskRow, "id" | "created_at" | "updated_at"> & {
   id?: string;
   created_at?: string;
   updated_at?: string;
@@ -291,112 +273,8 @@ export type RuntimeTaskInsert = Omit<
 export type RuntimeTaskUpdate = Partial<RuntimeTaskInsert>;
 
 // ============================================================
-// TABLE: runtime_projects
-// ============================================================
-
-export type RuntimeProjectStatus =
-  | "planned"
-  | "active"
-  | "paused"
-  | "completed"
-  | "archived";
-
-export type RuntimeProjectRow = {
-  id: string;
-  name: string;
-  slug: string;
-  description: string | null;
-  status: RuntimeProjectStatus;
-  impact_level: ImpactLevel;
-  data_sensitivity: DataSensitivity;
-  owner: string | null;
-  started_at: string | null;
-  completed_at: string | null;
-  metadata: Record<string, unknown>;
-  created_at: string;
-  updated_at: string;
-};
-
-export type RuntimeProjectInsert = Omit<
-  RuntimeProjectRow,
-  "id" | "created_at" | "updated_at"
-> & {
-  id?: string;
-  created_at?: string;
-  updated_at?: string;
-};
-
-export type RuntimeProjectUpdate = Partial<RuntimeProjectInsert>;
-
-// ============================================================
-// TABLE: runtime_approvals
-// ============================================================
-
-export type RuntimeApprovalRow = {
-  id: string;
-  entity_type: string;
-  entity_id: string;
-  status: ApprovalStatus;
-  reversibility_class: ReversibilityClass;
-  impact_level: ImpactLevel;
-  title: string;
-  description: string | null;
-  requested_by: string | null;
-  requested_at: string;
-  reviewed_by: string | null;
-  reviewed_at: string | null;
-  notes: string | null;
-  expires_at: string | null;
-  metadata: Record<string, unknown>;
-  created_at: string;
-};
-
-export type RuntimeApprovalInsert = Omit<
-  RuntimeApprovalRow,
-  "id" | "requested_at" | "created_at"
-> & {
-  id?: string;
-  requested_at?: string;
-  created_at?: string;
-};
-
-export type RuntimeApprovalUpdate = Partial<RuntimeApprovalInsert>;
-
-// ============================================================
-// TABLE: runtime_conflicts
-// ============================================================
-
-export type RuntimeConflictRow = {
-  id: string;
-  type: ConflictType;
-  status: ConflictStatus;
-  title: string;
-  description: string | null;
-  entity_type: string | null;
-  entity_id: string | null;
-  detected_at: string;
-  resolved_at: string | null;
-  resolved_by: string | null;
-  resolution_notes: string | null;
-  metadata: Record<string, unknown>;
-  created_at: string;
-  updated_at: string;
-};
-
-export type RuntimeConflictInsert = Omit<
-  RuntimeConflictRow,
-  "id" | "detected_at" | "created_at" | "updated_at"
-> & {
-  id?: string;
-  detected_at?: string;
-  created_at?: string;
-  updated_at?: string;
-};
-
-export type RuntimeConflictUpdate = Partial<RuntimeConflictInsert>;
-
-// ============================================================
 // TABLE: runtime_health_checks
+// Actual cols verified via route implementation
 // ============================================================
 
 export type RuntimeHealthCheckRow = {
@@ -411,10 +289,7 @@ export type RuntimeHealthCheckRow = {
   created_at: string;
 };
 
-export type RuntimeHealthCheckInsert = Omit<
-  RuntimeHealthCheckRow,
-  "id" | "checked_at" | "created_at"
-> & {
+export type RuntimeHealthCheckInsert = Omit<RuntimeHealthCheckRow, "id" | "checked_at" | "created_at"> & {
   id?: string;
   checked_at?: string;
   created_at?: string;
@@ -423,30 +298,142 @@ export type RuntimeHealthCheckInsert = Omit<
 export type RuntimeHealthCheckUpdate = Partial<RuntimeHealthCheckInsert>;
 
 // ============================================================
+// TABLE: runtime_approvals
+// Actual cols verified 2026-05-31
+// Note: no impact_level col; uses action_requested + assigned_to
+// ============================================================
+
+export type RuntimeApprovalRow = {
+  id: string;
+  title: string;
+  description: string | null;
+  entity_type: string;
+  entity_id: string;
+  action_requested: string;
+  status: ApprovalStatus;
+  reversibility_class: ReversibilityClass | null;
+  priority: number | null;
+  requested_by: string | null;
+  requested_at: string;
+  assigned_to: string | null;
+  resolved_by: string | null;
+  resolved_at: string | null;
+  resolution_notes: string | null;
+  expires_at: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type RuntimeApprovalInsert = Omit<RuntimeApprovalRow, "id" | "requested_at" | "created_at" | "updated_at"> & {
+  id?: string;
+  requested_at?: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type RuntimeApprovalUpdate = Partial<RuntimeApprovalInsert>;
+
+// ============================================================
+// TABLE: runtime_conflicts
+// Actual cols verified 2026-05-31
+// Note: uses conflict_type + entity_a/b pattern; no single 'type' col
+// ============================================================
+
+export type RuntimeConflictRow = {
+  id: string;
+  title: string;
+  description: string;            // NOT NULL in DB
+  conflict_type: string;          // NOT NULL in DB
+  status: ConflictStatus;
+  entity_a_type: string;          // NOT NULL in DB
+  entity_a_id: string | null;
+  entity_a_value: string | null;
+  entity_b_type: string;          // NOT NULL in DB
+  entity_b_id: string | null;
+  entity_b_value: string | null;
+  detected_by: string | null;
+  detected_at: string;
+  resolved_by: string | null;
+  resolved_at: string | null;
+  resolution: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type RuntimeConflictInsert = Omit<RuntimeConflictRow, "id" | "detected_at" | "created_at" | "updated_at"> & {
+  id?: string;
+  detected_at?: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type RuntimeConflictUpdate = Partial<RuntimeConflictInsert>;
+
+// ============================================================
+// TABLE: runtime_projects
+// Actual cols verified 2026-05-31
+// Note: uses phase/current_state/blockers; no data_sensitivity/impact_level
+// ============================================================
+
+export type RuntimeProjectRow = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  status: string;
+  priority: number | null;
+  owner_role: string | null;
+  related_system_id: string | null;
+  phase: string | null;
+  current_state: string | null;
+  next_action: string | null;
+  blockers: string | null;
+  risk_level: string | null;
+  requires_founder_review: boolean | null;
+  start_date: string | null;
+  target_date: string | null;
+  completed_at: string | null;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type RuntimeProjectInsert = Omit<RuntimeProjectRow, "id" | "created_at" | "updated_at"> & {
+  id?: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type RuntimeProjectUpdate = Partial<RuntimeProjectInsert>;
+
+// ============================================================
 // TABLE: runtime_doctrine_documents
+// Actual cols verified 2026-05-31
+// Note: document_type col (not 'type'); canonical_url/storage_ref instead of content
 // ============================================================
 
 export type RuntimeDoctrineDocumentRow = {
   id: string;
   title: string;
   slug: string;
-  type: DoctrineDocumentType;
-  status: DoctrineStatus;
+  document_type: string;
   version: string | null;
+  status: DoctrineStatus;
   summary: string | null;
-  content: string | null;
-  author: string | null;
-  data_sensitivity: DataSensitivity;
+  canonical_url: string | null;
+  storage_ref: string | null;
   published_at: string | null;
-  metadata: Record<string, unknown>;
+  effective_date: string | null;
+  supersedes_id: string | null;
+  superseded_by_id: string | null;
   created_at: string;
   updated_at: string;
 };
 
-export type RuntimeDoctrineDocumentInsert = Omit<
-  RuntimeDoctrineDocumentRow,
-  "id" | "created_at" | "updated_at"
-> & {
+export type RuntimeDoctrineDocumentInsert = Omit<RuntimeDoctrineDocumentRow, "id" | "created_at" | "updated_at"> & {
   id?: string;
   created_at?: string;
   updated_at?: string;
@@ -456,28 +443,25 @@ export type RuntimeDoctrineDocumentUpdate = Partial<RuntimeDoctrineDocumentInser
 
 // ============================================================
 // TABLE: runtime_doctrine_concepts
+// Actual cols verified 2026-05-31
+// Note: concept_name/concept_slug/concept_type (not name/slug/type); requires definition
 // ============================================================
 
 export type RuntimeDoctrineConceptRow = {
   id: string;
   document_id: string | null;
-  name: string;
-  slug: string;
-  type: DoctrineConceptType;
+  concept_name: string;           // NOT NULL
+  concept_slug: string;           // NOT NULL
+  concept_type: string;           // NOT NULL
+  definition: string;             // NOT NULL
+  summary: string | null;
+  version: string | null;
   status: DoctrineStatus;
-  description: string | null;
-  full_text: string | null;
-  display_order: number | null;
-  is_active: boolean;
-  metadata: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 };
 
-export type RuntimeDoctrineConceptInsert = Omit<
-  RuntimeDoctrineConceptRow,
-  "id" | "created_at" | "updated_at"
-> & {
+export type RuntimeDoctrineConceptInsert = Omit<RuntimeDoctrineConceptRow, "id" | "created_at" | "updated_at"> & {
   id?: string;
   created_at?: string;
   updated_at?: string;
@@ -486,26 +470,25 @@ export type RuntimeDoctrineConceptInsert = Omit<
 export type RuntimeDoctrineConceptUpdate = Partial<RuntimeDoctrineConceptInsert>;
 
 // ============================================================
-// TABLE: runtime_doctrine_references  (junction)
+// TABLE: runtime_doctrine_references
+// Actual cols verified 2026-05-31
+// Note: doctrine_document_id FK; referenced_entity_type/id (not entity_type/id)
 // ============================================================
 
 export type RuntimeDoctrineReferenceRow = {
   id: string;
-  concept_id: string;
-  entity_type: string;
-  entity_id: string;
-  context: string | null;
-  referenced_by: string | null;
-  referenced_at: string;
+  doctrine_document_id: string;
+  doctrine_concept_id: string | null;
+  referenced_entity_type: string;   // NOT NULL
+  referenced_entity_id: string | null;
+  reference_reason: string | null;
+  impact_level: ImpactLevel | null;
+  created_by: string | null;
   created_at: string;
 };
 
-export type RuntimeDoctrineReferenceInsert = Omit<
-  RuntimeDoctrineReferenceRow,
-  "id" | "referenced_at" | "created_at"
-> & {
+export type RuntimeDoctrineReferenceInsert = Omit<RuntimeDoctrineReferenceRow, "id" | "created_at"> & {
   id?: string;
-  referenced_at?: string;
   created_at?: string;
 };
 
@@ -534,10 +517,10 @@ export type RuntimeDatabase = {
         Insert: RuntimeTaskInsert;
         Update: RuntimeTaskUpdate;
       };
-      runtime_projects: {
-        Row: RuntimeProjectRow;
-        Insert: RuntimeProjectInsert;
-        Update: RuntimeProjectUpdate;
+      runtime_health_checks: {
+        Row: RuntimeHealthCheckRow;
+        Insert: RuntimeHealthCheckInsert;
+        Update: RuntimeHealthCheckUpdate;
       };
       runtime_approvals: {
         Row: RuntimeApprovalRow;
@@ -549,10 +532,10 @@ export type RuntimeDatabase = {
         Insert: RuntimeConflictInsert;
         Update: RuntimeConflictUpdate;
       };
-      runtime_health_checks: {
-        Row: RuntimeHealthCheckRow;
-        Insert: RuntimeHealthCheckInsert;
-        Update: RuntimeHealthCheckUpdate;
+      runtime_projects: {
+        Row: RuntimeProjectRow;
+        Insert: RuntimeProjectInsert;
+        Update: RuntimeProjectUpdate;
       };
       runtime_doctrine_documents: {
         Row: RuntimeDoctrineDocumentRow;
@@ -582,15 +565,13 @@ export type RuntimeDatabase = {
       data_sensitivity: DataSensitivity;
       reversibility_class: ReversibilityClass;
       approval_status: ApprovalStatus;
-      conflict_type: ConflictType;
       conflict_status: ConflictStatus;
-      doctrine_document_type: DoctrineDocumentType;
-      doctrine_concept_type: DoctrineConceptType;
       doctrine_status: DoctrineStatus;
       impact_level: ImpactLevel;
       cost_type: CostType;
       billing_status: BillingStatus;
       payment_provider: PaymentProvider;
+      runtime_task_status: RuntimeTaskStatus;
     };
   };
 };

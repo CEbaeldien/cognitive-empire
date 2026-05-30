@@ -333,9 +333,9 @@ export default async function RuntimeDashboardPage() {
               <div key={a.id} style={{ padding: "10px 16px", borderBottom: `1px solid ${C.border}` }}>
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
                   <p style={{ margin: 0, fontSize: 12, color: C.text, fontWeight: 500 }}>{a.title}</p>
-                  {a.impact_level && (
-                    <span style={{ padding: "2px 7px", borderRadius: 4, background: `${IMPACT_COLOR[a.impact_level] ?? C.faint}18`, color: IMPACT_COLOR[a.impact_level] ?? C.faint, fontSize: 9, fontWeight: 800, textTransform: "uppercase", whiteSpace: "nowrap" }}>
-                      {a.impact_level}
+                  {a.reversibility_class && (
+                    <span style={{ padding: "2px 7px", borderRadius: 4, background: "rgba(148,163,184,0.12)", color: C.faint, fontSize: 9, fontWeight: 800, textTransform: "uppercase", whiteSpace: "nowrap" }}>
+                      {a.reversibility_class}
                     </span>
                   )}
                 </div>
@@ -355,7 +355,7 @@ export default async function RuntimeDashboardPage() {
               <div key={cf.id} style={{ padding: "10px 16px", borderBottom: `1px solid ${C.border}` }}>
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
                   <p style={{ margin: 0, fontSize: 12, color: C.text, fontWeight: 500 }}>{cf.title}</p>
-                  <Badge value={cf.type} colorMap={{ memory: "#f87171", sync: "#fbbf24", schema: "#fb923c", authority: "#a78bfa", state: "#94a3b8", doctrine: "#00E0FF" }} />
+                  <Badge value={cf.conflict_type} colorMap={{ memory: "#f87171", sync: "#fbbf24", schema: "#fb923c", authority: "#a78bfa", state: "#94a3b8", doctrine: "#00E0FF" }} />
                 </div>
                 <p style={{ margin: "3px 0 0", fontSize: 10, color: C.faint }}>{timeAgo(cf.detected_at)}</p>
               </div>

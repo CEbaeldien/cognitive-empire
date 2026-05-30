@@ -427,7 +427,7 @@ export default function RuntimeControlPage() {
                       />
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: C.text }}>{cf.title}</p>
-                        <p style={{ margin: "2px 0 0", fontSize: 10, color: C.faint }}>{fmt(cf.type)} · {timeAgo(cf.detected_at)}</p>
+                        <p style={{ margin: "2px 0 0", fontSize: 10, color: C.faint }}>{fmt(cf.conflict_type)} · {timeAgo(cf.detected_at)}</p>
                       </div>
                     </label>
                   ))}
@@ -470,11 +470,13 @@ export default function RuntimeControlPage() {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: C.text }}>{a.title}</p>
                       {a.description && <p style={{ margin: "3px 0 0", fontSize: 11, color: C.faint }}>{a.description}</p>}
-                      <p style={{ margin: "4px 0 0", fontSize: 10, color: C.faint }}>{fmt(a.entity_type)} · {fmt(a.reversibility_class)} · {timeAgo(a.requested_at)}</p>
+                      <p style={{ margin: "4px 0 0", fontSize: 10, color: C.faint }}>{fmt(a.entity_type)} · {a.reversibility_class ? fmt(a.reversibility_class) : "—"} · {timeAgo(a.requested_at)}</p>
                     </div>
-                    <span style={{ padding: "3px 9px", borderRadius: 5, background: `${IMPACT_COLOR[a.impact_level] ?? C.faint}18`, color: IMPACT_COLOR[a.impact_level] ?? C.faint, fontSize: 10, fontWeight: 800, textTransform: "uppercase", whiteSpace: "nowrap" }}>
-                      {a.impact_level}
-                    </span>
+                    {a.reversibility_class && (
+                      <span style={{ padding: "3px 9px", borderRadius: 5, background: "rgba(148,163,184,0.12)", color: C.faint, fontSize: 10, fontWeight: 800, textTransform: "uppercase", whiteSpace: "nowrap" }}>
+                        {a.reversibility_class}
+                      </span>
+                    )}
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     {msg ? (
