@@ -1,0 +1,225 @@
+{
+  "name": "CE Signals — Source Health",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 4 * * *"
+            }
+          ]
+        }
+      },
+      "id": "c3000006-0001-4000-8000-000000000006",
+      "name": "Daily 04:00 UTC",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/sources?is_active=eq.true&select=id,name,fetch_interval,last_fetched_at,ingestion_status",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c3000006-0002-4000-8000-000000000006",
+      "name": "Get Active Sources",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const sources = $input.first().json;\nconst sourceArr = Array.isArray(sources) ? sources : [];\nconst now = Date.now();\nconst blocked = [];\n\nfor (const source of sourceArr) {\n  if (!source.last_fetched_at) {\n    blocked.push({ ...source, found: true, blocked_reason: 'Never fetched' });\n    continue;\n  }\n  const lastFetchMs = new Date(source.last_fetched_at).getTime();\n  const intervalMs = (source.fetch_interval || 60) * 2 * 60 * 1000;\n  if (now - lastFetchMs > intervalMs) {\n    const minAgo = Math.round((now - lastFetchMs) / 60000);\n    blocked.push({ ...source, found: true, blocked_reason: `Last fetched ${minAgo} minutes ago` });\n  }\n}\n\nif (blocked.length === 0) {\n  console.log(`[Source Health] All ${sourceArr.length} source(s) healthy`);\n  return [{ json: { found: false, message: 'all_sources_healthy', checked: sourceArr.length } }];\n}\nconsole.log(`[Source Health] ${blocked.length} source(s) blocked`);\nreturn blocked.map(s => ({ json: s }));"
+      },
+      "id": "c3000006-0003-4000-8000-000000000006",
+      "name": "Check Source Health",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c3000006-cond-0001",
+              "leftValue": "={{ $json.found }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c3000006-0004-4000-8000-000000000006",
+      "name": "Sources Blocked?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ `${$env.SUPABASE_URL}/rest/v1/sources?id=eq.${$json.id}` }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "ingestion_status",
+              "value": "blocked"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c3000006-0005-4000-8000-000000000006",
+      "name": "Mark Source Blocked",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1120, 180]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c3000006-asgn-0001",
+              "name": "alert",
+              "value": "=Source blocked: {{ $('Check Source Health').item.json.name }} — {{ $('Check Source Health').item.json.blocked_reason }}",
+              "type": "string"
+            },
+            {
+              "id": "c3000006-asgn-0002",
+              "name": "source_id",
+              "value": "={{ $('Check Source Health').item.json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "c3000006-asgn-0003",
+              "name": "notify_email",
+              "value": "={{ $env.CE_NOTIFY_EMAIL }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c3000006-0006-4000-8000-000000000006",
+      "name": "Alert: Source Blocked",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1340, 180]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c3000006-asgn-0002",
+              "name": "result",
+              "value": "all_sources_healthy",
+              "type": "string"
+            },
+            {
+              "id": "c3000006-asgn-0003",
+              "name": "sources_checked",
+              "value": "={{ $json.checked }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c3000006-0007-4000-8000-000000000006",
+      "name": "Log All Healthy",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1120, 420]
+    }
+  ],
+  "connections": {
+    "Daily 04:00 UTC": {
+      "main": [
+        [{ "node": "Get Active Sources", "type": "main", "index": 0 }]
+      ]
+    },
+    "Get Active Sources": {
+      "main": [
+        [{ "node": "Check Source Health", "type": "main", "index": 0 }]
+      ]
+    },
+    "Check Source Health": {
+      "main": [
+        [{ "node": "Sources Blocked?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Sources Blocked?": {
+      "main": [
+        [{ "node": "Mark Source Blocked", "type": "main", "index": 0 }],
+        [{ "node": "Log All Healthy", "type": "main", "index": 0 }]
+      ]
+    },
+    "Mark Source Blocked": {
+      "main": [
+        [{ "node": "Alert: Source Blocked", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "meta": {
+    "instanceId": "ce-runtime"
+  },
+  "id": "c3000006-0000-4000-8000-000000000006",
+  "tags": []
+}

@@ -1,0 +1,169 @@
+{
+  "name": "CE Signals — Ingestion",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 */6 * * *"
+            }
+          ]
+        }
+      },
+      "id": "c3000001-0001-4000-8000-000000000001",
+      "name": "Every 6 Hours",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://cognitiveempire.com/api/mesodma/trigger",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.MESODMA_API_KEY }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "c3000001-0002-4000-8000-000000000001",
+      "name": "Trigger Mesodma Ingest",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c3000001-cond-0001",
+              "leftValue": "={{ $json.statusCode }}",
+              "rightValue": 200,
+              "operator": {
+                "type": "number",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c3000001-0003-4000-8000-000000000001",
+      "name": "Status != 200?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c3000001-asgn-0001",
+              "name": "error",
+              "value": "=Mesodma ingest failed with status {{ $json.statusCode }}",
+              "type": "string"
+            },
+            {
+              "id": "c3000001-asgn-0002",
+              "name": "body",
+              "value": "={{ JSON.stringify($json.body) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c3000001-0004-4000-8000-000000000001",
+      "name": "Log Error",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [900, 180]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c3000001-asgn-0003",
+              "name": "sources_processed",
+              "value": "={{ $json.body.sources_processed }}",
+              "type": "number"
+            },
+            {
+              "id": "c3000001-asgn-0004",
+              "name": "items_extracted",
+              "value": "={{ $json.body.items_extracted }}",
+              "type": "number"
+            },
+            {
+              "id": "c3000001-asgn-0005",
+              "name": "errors",
+              "value": "={{ $json.body.errors }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c3000001-0005-4000-8000-000000000001",
+      "name": "Log Success",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [900, 420]
+    }
+  ],
+  "connections": {
+    "Every 6 Hours": {
+      "main": [
+        [{ "node": "Trigger Mesodma Ingest", "type": "main", "index": 0 }]
+      ]
+    },
+    "Trigger Mesodma Ingest": {
+      "main": [
+        [{ "node": "Status != 200?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Status != 200?": {
+      "main": [
+        [{ "node": "Log Error", "type": "main", "index": 0 }],
+        [{ "node": "Log Success", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "meta": {
+    "instanceId": "ce-runtime"
+  },
+  "id": "c3000001-0000-4000-8000-000000000001",
+  "tags": []
+}

@@ -1,0 +1,157 @@
+{
+  "name": "CE Signals — Decay",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 6 * * 0"
+            }
+          ]
+        }
+      },
+      "id": "c3000004-0001-4000-8000-000000000004",
+      "name": "Weekly Sunday 06:00 UTC",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ `${$env.SUPABASE_URL}/rest/v1/signals?status=eq.published&published_at=lt.${new Date(Date.now() - 14*24*60*60*1000).toISOString()}&select=id,decay_factor` }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c3000004-0002-4000-8000-000000000004",
+      "name": "Get Stale Published Signals",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const signals = $input.first().json;\nif (!Array.isArray(signals) || signals.length === 0) {\n  console.log('[Decay] No signals eligible for decay');\n  return [];\n}\nreturn signals.map(signal => {\n  const current = typeof signal.decay_factor === 'number' ? signal.decay_factor : 0;\n  const newDecay = Math.min(parseFloat((current + 0.1).toFixed(2)), 1.0);\n  const updateBody = { decay_factor: newDecay };\n  if (newDecay >= 0.8) updateBody.status = 'decaying';\n  return {\n    json: {\n      id: signal.id,\n      old_decay: current,\n      new_decay: newDecay,\n      marking_decaying: newDecay >= 0.8,\n      update_body: JSON.stringify(updateBody)\n    }\n  };\n});"
+      },
+      "id": "c3000004-0003-4000-8000-000000000004",
+      "name": "Compute Decay Values",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ `${$env.SUPABASE_URL}/rest/v1/signals?id=eq.${$json.id}` }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={{ $json.update_body }}",
+        "options": {}
+      },
+      "id": "c3000004-0004-4000-8000-000000000004",
+      "name": "PATCH Signal Decay",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c3000004-asgn-0001",
+              "name": "signal_id",
+              "value": "={{ $('Compute Decay Values').item.json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "c3000004-asgn-0002",
+              "name": "new_decay_factor",
+              "value": "={{ $('Compute Decay Values').item.json.new_decay }}",
+              "type": "number"
+            },
+            {
+              "id": "c3000004-asgn-0003",
+              "name": "marked_decaying",
+              "value": "={{ $('Compute Decay Values').item.json.marking_decaying }}",
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c3000004-0005-4000-8000-000000000004",
+      "name": "Log Decayed Signal",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1120, 300]
+    }
+  ],
+  "connections": {
+    "Weekly Sunday 06:00 UTC": {
+      "main": [
+        [{ "node": "Get Stale Published Signals", "type": "main", "index": 0 }]
+      ]
+    },
+    "Get Stale Published Signals": {
+      "main": [
+        [{ "node": "Compute Decay Values", "type": "main", "index": 0 }]
+      ]
+    },
+    "Compute Decay Values": {
+      "main": [
+        [{ "node": "PATCH Signal Decay", "type": "main", "index": 0 }]
+      ]
+    },
+    "PATCH Signal Decay": {
+      "main": [
+        [{ "node": "Log Decayed Signal", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "meta": {
+    "instanceId": "ce-runtime"
+  },
+  "id": "c3000004-0000-4000-8000-000000000004",
+  "tags": []
+}

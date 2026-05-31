@@ -1,0 +1,220 @@
+{
+  "name": "CE Signals — Weekly Summary",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * 5"
+            }
+          ]
+        }
+      },
+      "id": "c3000007-0001-4000-8000-000000000007",
+      "name": "Friday 09:00 UTC",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://cognitiveempire.com/api/runtime/state",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.MESODMA_API_KEY }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c3000007-0002-4000-8000-000000000007",
+      "name": "Get Runtime State",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ `${$env.SUPABASE_URL}/rest/v1/signals?status=eq.published&published_at=gt.${new Date(Date.now() - 7*24*60*60*1000).toISOString()}&select=id` }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c3000007-0003-4000-8000-000000000007",
+      "name": "Get Published This Week",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ `${$env.SUPABASE_URL}/rest/v1/raw_items?fetched_at=gt.${new Date(Date.now() - 7*24*60*60*1000).toISOString()}&select=id` }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c3000007-0004-4000-8000-000000000007",
+      "name": "Get Raw Items This Week",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/signals?status=eq.in_review&select=id",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c3000007-0005-4000-8000-000000000007",
+      "name": "Get In-Review Signals",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const runtimeState = $node['Get Runtime State'].first()?.json || {};\nconst publishedSignals = $node['Get Published This Week'].first()?.json;\nconst rawItems = $node['Get Raw Items This Week'].first()?.json;\nconst inReview = $node['Get In-Review Signals'].first()?.json;\n\nconst publishedCount = Array.isArray(publishedSignals) ? publishedSignals.length : 0;\nconst rawCount = Array.isArray(rawItems) ? rawItems.length : 0;\nconst reviewCount = Array.isArray(inReview) ? inReview.length : 0;\nconst runtimeStatus = runtimeState.state || runtimeState.status || runtimeState.overall_status || 'unknown';\n\nconst summary = [\n  'CE Signals Weekly Summary',\n  `Published: ${publishedCount} | In Review: ${reviewCount} | Raw Items: ${rawCount}`,\n  `Active Sources: X/18 | Runtime State: ${runtimeStatus}`\n].join('\\n');\n\nconsole.log('[Weekly Summary]', summary);\nreturn [{ json: { summary, publishedCount, reviewCount, rawCount, runtimeStatus, generated_at: new Date().toISOString() } }];"
+      },
+      "id": "c3000007-0006-4000-8000-000000000007",
+      "name": "Build Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1340, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c3000007-asgn-0001",
+              "name": "weekly_summary",
+              "value": "={{ $json.summary }}",
+              "type": "string"
+            },
+            {
+              "id": "c3000007-asgn-0002",
+              "name": "published_count",
+              "value": "={{ $json.publishedCount }}",
+              "type": "number"
+            },
+            {
+              "id": "c3000007-asgn-0003",
+              "name": "in_review_count",
+              "value": "={{ $json.reviewCount }}",
+              "type": "number"
+            },
+            {
+              "id": "c3000007-asgn-0004",
+              "name": "raw_items_count",
+              "value": "={{ $json.rawCount }}",
+              "type": "number"
+            },
+            {
+              "id": "c3000007-asgn-0005",
+              "name": "runtime_status",
+              "value": "={{ $json.runtimeStatus }}",
+              "type": "string"
+            },
+            {
+              "id": "c3000007-asgn-0006",
+              "name": "generated_at",
+              "value": "={{ $json.generated_at }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c3000007-0007-4000-8000-000000000007",
+      "name": "Log Weekly Summary",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1560, 300]
+    }
+  ],
+  "connections": {
+    "Friday 09:00 UTC": {
+      "main": [
+        [{ "node": "Get Runtime State", "type": "main", "index": 0 }]
+      ]
+    },
+    "Get Runtime State": {
+      "main": [
+        [{ "node": "Get Published This Week", "type": "main", "index": 0 }]
+      ]
+    },
+    "Get Published This Week": {
+      "main": [
+        [{ "node": "Get Raw Items This Week", "type": "main", "index": 0 }]
+      ]
+    },
+    "Get Raw Items This Week": {
+      "main": [
+        [{ "node": "Get In-Review Signals", "type": "main", "index": 0 }]
+      ]
+    },
+    "Get In-Review Signals": {
+      "main": [
+        [{ "node": "Build Summary", "type": "main", "index": 0 }]
+      ]
+    },
+    "Build Summary": {
+      "main": [
+        [{ "node": "Log Weekly Summary", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "meta": {
+    "instanceId": "ce-runtime"
+  },
+  "id": "c3000007-0000-4000-8000-000000000007",
+  "tags": []
+}

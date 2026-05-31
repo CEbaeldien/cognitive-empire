@@ -1,0 +1,230 @@
+{
+  "name": "CE Signals — Convergence Scanner",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 5 * * 1"
+            }
+          ]
+        }
+      },
+      "id": "c3000005-0001-4000-8000-000000000005",
+      "name": "Weekly Monday 05:00 UTC",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/signals?status=eq.published&select=id,category,title",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c3000005-0002-4000-8000-000000000005",
+      "name": "Get Published Signals",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/signal_doctrine_vectors?select=signal_id,vector_id",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c3000005-0003-4000-8000-000000000005",
+      "name": "Get Doctrine Vectors",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const signals = $node['Get Published Signals'].first()?.json;\nconst vectors = $input.first().json;\n\nconst signalArr = Array.isArray(signals) ? signals : [];\nconst vectorArr = Array.isArray(vectors) ? vectors : [];\n\nif (signalArr.length === 0 || vectorArr.length === 0) {\n  return [{ json: { found: false, message: 'No convergences this week — insufficient data' } }];\n}\n\nconst signalMap = {};\nfor (const s of signalArr) signalMap[s.id] = s;\n\nconst vectorGroups = {};\nfor (const v of vectorArr) {\n  if (!vectorGroups[v.vector_id]) vectorGroups[v.vector_id] = [];\n  vectorGroups[v.vector_id].push(v.signal_id);\n}\n\nconst candidates = [];\nfor (const [vectorId, signalIds] of Object.entries(vectorGroups)) {\n  if (signalIds.length < 2) continue;\n  const relatedSignals = signalIds.map(id => signalMap[id]).filter(Boolean);\n  const categories = [...new Set(relatedSignals.map(s => s.category))];\n  if (categories.length < 2) continue;\n  const title = `Convergence candidate — vector ${vectorId}`;\n  candidates.push({\n    json: {\n      found: true,\n      title,\n      vector_id: vectorId,\n      signal_ids: signalIds,\n      categories,\n      post_body: JSON.stringify({\n        title,\n        summary: 'Auto-detected convergence candidate',\n        law_id: vectorId,\n        status: 'candidate'\n      })\n    }\n  });\n}\n\nif (candidates.length === 0) {\n  return [{ json: { found: false, message: 'No convergences this week' } }];\n}\nconsole.log(`[Convergence Scanner] ${candidates.length} candidate(s) found`);\nreturn candidates;"
+      },
+      "id": "c3000005-0004-4000-8000-000000000005",
+      "name": "Find Convergence Candidates",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c3000005-cond-0001",
+              "leftValue": "={{ $json.found }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c3000005-0005-4000-8000-000000000005",
+      "name": "Candidates Found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/convergences",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={{ $json.post_body }}",
+        "options": {}
+      },
+      "id": "c3000005-0006-4000-8000-000000000005",
+      "name": "POST Convergence",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 180]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c3000005-asgn-0001",
+              "name": "candidates_created",
+              "value": "={{ $json.title }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c3000005-0007-4000-8000-000000000005",
+      "name": "Log Candidate Created",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1560, 180]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c3000005-asgn-0002",
+              "name": "result",
+              "value": "={{ $json.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c3000005-0008-4000-8000-000000000005",
+      "name": "Log No Convergences",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1340, 420]
+    }
+  ],
+  "connections": {
+    "Weekly Monday 05:00 UTC": {
+      "main": [
+        [{ "node": "Get Published Signals", "type": "main", "index": 0 }]
+      ]
+    },
+    "Get Published Signals": {
+      "main": [
+        [{ "node": "Get Doctrine Vectors", "type": "main", "index": 0 }]
+      ]
+    },
+    "Get Doctrine Vectors": {
+      "main": [
+        [{ "node": "Find Convergence Candidates", "type": "main", "index": 0 }]
+      ]
+    },
+    "Find Convergence Candidates": {
+      "main": [
+        [{ "node": "Candidates Found?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Candidates Found?": {
+      "main": [
+        [{ "node": "POST Convergence", "type": "main", "index": 0 }],
+        [{ "node": "Log No Convergences", "type": "main", "index": 0 }]
+      ]
+    },
+    "POST Convergence": {
+      "main": [
+        [{ "node": "Log Candidate Created", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "meta": {
+    "instanceId": "ce-runtime"
+  },
+  "id": "c3000005-0000-4000-8000-000000000005",
+  "tags": []
+}

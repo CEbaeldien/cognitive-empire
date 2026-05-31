@@ -1,0 +1,117 @@
+{
+  "name": "CE Signals — Stale Cleanup",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 5 * * *"
+            }
+          ]
+        }
+      },
+      "id": "c3000002-0001-4000-8000-000000000002",
+      "name": "Daily 05:00 UTC",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ `${$env.SUPABASE_URL}/rest/v1/raw_items?ingestion_status=eq.pending&fetched_at=lt.${new Date(Date.now() - 7*24*60*60*1000).toISOString()}` }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "ingestion_status",
+              "value": "failed"
+            },
+            {
+              "name": "error_message",
+              "value": "Stale — auto-cleaned after 7 days"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c3000002-0002-4000-8000-000000000002",
+      "name": "Mark Stale Items Failed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c3000002-asgn-0001",
+              "name": "rows_cleaned",
+              "value": "={{ Array.isArray($json) ? $json.length : 0 }}",
+              "type": "number"
+            },
+            {
+              "id": "c3000002-asgn-0002",
+              "name": "cleaned_at",
+              "value": "={{ new Date().toISOString() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c3000002-0003-4000-8000-000000000002",
+      "name": "Log Cleaned",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [680, 300]
+    }
+  ],
+  "connections": {
+    "Daily 05:00 UTC": {
+      "main": [
+        [{ "node": "Mark Stale Items Failed", "type": "main", "index": 0 }]
+      ]
+    },
+    "Mark Stale Items Failed": {
+      "main": [
+        [{ "node": "Log Cleaned", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "meta": {
+    "instanceId": "ce-runtime"
+  },
+  "id": "c3000002-0000-4000-8000-000000000002",
+  "tags": []
+}
