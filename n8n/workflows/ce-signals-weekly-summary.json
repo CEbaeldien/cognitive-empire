@@ -27,7 +27,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $env.MESODMA_API_KEY }}"
+              "value": "Bearer ce-mesodma-2026"
             }
           ]
         },
@@ -42,17 +42,17 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "={{ `${$env.SUPABASE_URL}/rest/v1/signals?status=eq.published&published_at=gt.${new Date(Date.now() - 7*24*60*60*1000).toISOString()}&select=id` }}",
+        "url": "={{ `https://qgykfjnuaowcyiuzdvsa.supabase.co/rest/v1/signals?status=eq.published&published_at=gt.${new Date(Date.now() - 7*24*60*60*1000).toISOString()}&select=id` }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "apikey",
-              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
+              "value": "sb_secret_nGFx1BL5M8sreweA_GZtCQ_usvvMF0S"
             },
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+              "value": "Bearer sb_secret_nGFx1BL5M8sreweA_GZtCQ_usvvMF0S"
             }
           ]
         },
@@ -67,17 +67,17 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "={{ `${$env.SUPABASE_URL}/rest/v1/raw_items?fetched_at=gt.${new Date(Date.now() - 7*24*60*60*1000).toISOString()}&select=id` }}",
+        "url": "={{ `https://qgykfjnuaowcyiuzdvsa.supabase.co/rest/v1/raw_items?fetched_at=gt.${new Date(Date.now() - 7*24*60*60*1000).toISOString()}&select=id` }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "apikey",
-              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
+              "value": "sb_secret_nGFx1BL5M8sreweA_GZtCQ_usvvMF0S"
             },
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+              "value": "Bearer sb_secret_nGFx1BL5M8sreweA_GZtCQ_usvvMF0S"
             }
           ]
         },
@@ -92,17 +92,17 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "={{ $env.SUPABASE_URL }}/rest/v1/signals?status=eq.in_review&select=id",
+        "url": "https://qgykfjnuaowcyiuzdvsa.supabase.co/rest/v1/signals?status=eq.in_review&select=id",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "apikey",
-              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
+              "value": "sb_secret_nGFx1BL5M8sreweA_GZtCQ_usvvMF0S"
             },
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+              "value": "Bearer sb_secret_nGFx1BL5M8sreweA_GZtCQ_usvvMF0S"
             }
           ]
         },

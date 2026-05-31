@@ -21,7 +21,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://cognitiveempire.com/api/mesodma/trigger",
+        "url": "https://cognitiveempire.com/api/mesodma/ingest",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -31,7 +31,7 @@
             },
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $env.MESODMA_API_KEY }}"
+              "value": "Bearer ce-mesodma-2026"
             }
           ]
         },

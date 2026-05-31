@@ -21,17 +21,17 @@
     {
       "parameters": {
         "method": "PATCH",
-        "url": "={{ `${$env.SUPABASE_URL}/rest/v1/raw_items?ingestion_status=eq.pending&fetched_at=lt.${new Date(Date.now() - 7*24*60*60*1000).toISOString()}` }}",
+        "url": "={{ `https://qgykfjnuaowcyiuzdvsa.supabase.co/rest/v1/raw_items?ingestion_status=eq.pending&fetched_at=lt.${new Date(Date.now() - 7*24*60*60*1000).toISOString()}` }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "apikey",
-              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
+              "value": "sb_secret_nGFx1BL5M8sreweA_GZtCQ_usvvMF0S"
             },
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+              "value": "Bearer sb_secret_nGFx1BL5M8sreweA_GZtCQ_usvvMF0S"
             },
             {
               "name": "Content-Type",

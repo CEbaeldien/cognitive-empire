@@ -21,17 +21,17 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "={{ $env.SUPABASE_URL }}/rest/v1/signals?status=eq.in_review&select=id,title,category,created_at",
+        "url": "https://qgykfjnuaowcyiuzdvsa.supabase.co/rest/v1/signals?status=eq.in_review&select=id,title,category,created_at",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "apikey",
-              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
+              "value": "sb_secret_nGFx1BL5M8sreweA_GZtCQ_usvvMF0S"
             },
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+              "value": "Bearer sb_secret_nGFx1BL5M8sreweA_GZtCQ_usvvMF0S"
             }
           ]
         },
@@ -101,7 +101,7 @@
             {
               "id": "c3000003-asgn-0003",
               "name": "notify_email",
-              "value": "={{ $env.CE_NOTIFY_EMAIL }}",
+              "value": "founder@cognitiveempire.com",
               "type": "string"
             }
           ]

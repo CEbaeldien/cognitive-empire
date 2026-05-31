@@ -21,17 +21,17 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "={{ $env.SUPABASE_URL }}/rest/v1/signals?status=eq.published&select=id,category,title",
+        "url": "https://qgykfjnuaowcyiuzdvsa.supabase.co/rest/v1/signals?status=eq.published&select=id,category,title",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "apikey",
-              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
+              "value": "sb_secret_nGFx1BL5M8sreweA_GZtCQ_usvvMF0S"
             },
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+              "value": "Bearer sb_secret_nGFx1BL5M8sreweA_GZtCQ_usvvMF0S"
             }
           ]
         },
@@ -46,17 +46,17 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "={{ $env.SUPABASE_URL }}/rest/v1/signal_doctrine_vectors?select=signal_id,vector_id",
+        "url": "https://qgykfjnuaowcyiuzdvsa.supabase.co/rest/v1/signal_doctrine_vectors?select=signal_id,vector_id",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "apikey",
-              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
+              "value": "sb_secret_nGFx1BL5M8sreweA_GZtCQ_usvvMF0S"
             },
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+              "value": "Bearer sb_secret_nGFx1BL5M8sreweA_GZtCQ_usvvMF0S"
             }
           ]
         },
@@ -110,17 +110,17 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.SUPABASE_URL }}/rest/v1/convergences",
+        "url": "https://qgykfjnuaowcyiuzdvsa.supabase.co/rest/v1/convergences",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "apikey",
-              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
+              "value": "sb_secret_nGFx1BL5M8sreweA_GZtCQ_usvvMF0S"
             },
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+              "value": "Bearer sb_secret_nGFx1BL5M8sreweA_GZtCQ_usvvMF0S"
             },
             {
               "name": "Content-Type",

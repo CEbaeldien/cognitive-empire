@@ -21,17 +21,17 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "={{ `${$env.SUPABASE_URL}/rest/v1/signals?status=eq.published&published_at=lt.${new Date(Date.now() - 14*24*60*60*1000).toISOString()}&select=id,decay_factor` }}",
+        "url": "={{ `https://qgykfjnuaowcyiuzdvsa.supabase.co/rest/v1/signals?status=eq.published&published_at=lt.${new Date(Date.now() - 14*24*60*60*1000).toISOString()}&select=id,decay_factor` }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "apikey",
-              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
+              "value": "sb_secret_nGFx1BL5M8sreweA_GZtCQ_usvvMF0S"
             },
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+              "value": "Bearer sb_secret_nGFx1BL5M8sreweA_GZtCQ_usvvMF0S"
             }
           ]
         },
@@ -56,17 +56,17 @@
     {
       "parameters": {
         "method": "PATCH",
-        "url": "={{ `${$env.SUPABASE_URL}/rest/v1/signals?id=eq.${$json.id}` }}",
+        "url": "={{ `https://qgykfjnuaowcyiuzdvsa.supabase.co/rest/v1/signals?id=eq.${$json.id}` }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "apikey",
-              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
+              "value": "sb_secret_nGFx1BL5M8sreweA_GZtCQ_usvvMF0S"
             },
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+              "value": "Bearer sb_secret_nGFx1BL5M8sreweA_GZtCQ_usvvMF0S"
             },
             {
               "name": "Content-Type",
