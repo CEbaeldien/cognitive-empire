@@ -18,6 +18,8 @@ export async function GET(req: Request) {
   const status    = searchParams.get("status");
   const source_id = searchParams.get("source_id");
 
+  const sig_proc = searchParams.get("signal_processing_status");
+
   let q = sb()
     .from("raw_items")
     .select("*, sources(name, category)", { count: "exact" })
@@ -26,6 +28,11 @@ export async function GET(req: Request) {
 
   if (status)    q = q.eq("status",    status);
   if (source_id) q = q.eq("source_id", source_id);
+  if (sig_proc === "null") {
+    q = q.is("signal_processing_status", null);
+  } else if (sig_proc) {
+    q = q.eq("signal_processing_status", sig_proc);
+  }
 
   const { data, error, count } = await q;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

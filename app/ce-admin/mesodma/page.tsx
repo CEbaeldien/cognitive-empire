@@ -49,9 +49,16 @@ type SourceFormData = {
   use_case: string; priority: string; notes: string;
 };
 
+type ExtractedFields = {
+  clean_title?: string;
+  clean_summary?: string;
+  possible_category?: string;
+  extraction_confidence?: number;
+};
+
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const CATEGORIES: SignalCategory[] = [
+const SIGNAL_CATEGORIES: SignalCategory[] = [
   "intelligence", "physical_systems", "infrastructure", "energy",
   "science_frontier", "governance_stability", "markets_human_prosperity", "resources_continuity",
 ];
@@ -65,6 +72,13 @@ const BLANK_FORM: SourceFormData = {
   endpoint_url: "", trust_tier: "2", ingestion_mode: "automatic",
   use_case: "", priority: "5", notes: "",
 };
+
+const SIG_PROC_OPTIONS = [
+  { value: "pending", label: "Pending" },
+  { value: "drafted", label: "Drafted" },
+  { value: "dismissed", label: "Dismissed" },
+  { value: "", label: "All" },
+];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -85,6 +99,10 @@ function timeAgo(iso: string | null | undefined): string {
 function fmtTime(iso: string | null | undefined): string {
   if (!iso) return "—";
   return new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+}
+
+function ef(item: RawItemWithSource): ExtractedFields {
+  return (item.extracted_fields as ExtractedFields) ?? {};
 }
 
 // ── Small Components ──────────────────────────────────────────────────────────
@@ -122,6 +140,13 @@ function ItemStatusBadge({ status }: { status: string | null }) {
   return <Badge label={status ?? "—"} bg="rgba(100,116,139,0.1)" color={C.faint} />;
 }
 
+function SigProcBadge({ status }: { status: string | null }) {
+  if (status === "drafted")   return <Badge label="drafted"   bg={C.greenBg}   color={C.green} />;
+  if (status === "dismissed") return <Badge label="dismissed" bg="rgba(100,116,139,0.1)" color={C.faint} />;
+  if (status === "pending")   return <Badge label="pending"   bg={C.yellowBg}  color={C.yellow} />;
+  return <Badge label={status ?? "—"} bg="rgba(100,116,139,0.1)" color={C.faint} />;
+}
+
 function TierBadge({ tier }: { tier: number | null }) {
   if (!tier) return <span style={{ color: C.faint, fontSize: 11 }}>—</span>;
   const colors: Record<number, [string, string]> = {
@@ -131,6 +156,193 @@ function TierBadge({ tier }: { tier: number | null }) {
   };
   const [bg, color] = colors[tier] ?? ["rgba(100,116,139,0.1)", C.muted];
   return <Badge label={`T${tier}`} bg={bg} color={color} />;
+}
+
+// ── Promote Modal ─────────────────────────────────────────────────────────────
+
+type PromoteFormState = {
+  title: string;
+  summary: string;
+  implication: string;
+  category: SignalCategory;
+};
+
+function PromoteModal({
+  item,
+  onClose,
+  onPromoted,
+}: {
+  item: RawItemWithSource;
+  onClose: () => void;
+  onPromoted: (signalId: string) => void;
+}) {
+  const fields = ef(item);
+  const sourceCategory = item.sources?.category as SignalCategory | undefined;
+
+  const [form, setForm] = useState<PromoteFormState>({
+    title:       fields.clean_title  || item.title,
+    summary:     fields.clean_summary || "",
+    implication: "",
+    category:    sourceCategory && SIGNAL_CATEGORIES.includes(sourceCategory) ? sourceCategory : "intelligence",
+  });
+  const [saving, setSaving] = useState(false);
+  const [error,  setError]  = useState<string | null>(null);
+
+  function update<K extends keyof PromoteFormState>(key: K, val: PromoteFormState[K]) {
+    setForm(prev => ({ ...prev, [key]: val }));
+  }
+
+  async function handlePromote() {
+    if (!form.title.trim() || !form.summary.trim() || !form.implication.trim()) {
+      setError("Title, Summary, and Implication are required."); return;
+    }
+    setSaving(true); setError(null);
+    try {
+      const sigRes = await fetch("/api/signals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title:       form.title.trim(),
+          summary:     form.summary.trim(),
+          implication: form.implication.trim(),
+          category:    form.category,
+          raw_item_id: item.id,
+        }),
+      });
+      if (!sigRes.ok) {
+        const d = await sigRes.json().catch(() => ({}));
+        throw new Error(d.error ?? `HTTP ${sigRes.status}`);
+      }
+      const signal = await sigRes.json();
+
+      await fetch(`/api/mesodma/raw-items/${item.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ signal_processing_status: "drafted" }),
+      });
+
+      onPromoted(signal.id);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const inputStyle: React.CSSProperties = {
+    width: "100%", padding: "9px 12px", borderRadius: 7,
+    border: `1px solid ${C.border}`, background: C.input, color: C.text,
+    fontSize: 13, outline: "none", boxSizing: "border-box",
+    fontFamily: "system-ui, -apple-system, sans-serif",
+  };
+  const labelStyle: React.CSSProperties = {
+    display: "block", fontSize: 10, fontWeight: 700, letterSpacing: "0.3em",
+    textTransform: "uppercase", color: C.faint, marginBottom: 5,
+  };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.75)", padding: 24 }}>
+      <div style={{ width: "100%", maxWidth: 640, maxHeight: "92vh", overflow: "auto", background: C.panelDark, borderRadius: 14, border: `1px solid ${C.border}`, boxShadow: "0 24px 80px rgba(0,0,0,0.6)" }}>
+
+        {/* Header */}
+        <div style={{ padding: "20px 24px 16px", borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+          <div>
+            <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.4em", textTransform: "uppercase", color: C.faint, margin: "0 0 4px" }}>Promote to Signal Draft</p>
+            <h2 style={{ fontSize: 16, fontWeight: 700, color: C.text, margin: "0 0 4px", lineHeight: 1.3 }}>{item.title.slice(0, 80)}{item.title.length > 80 ? "…" : ""}</h2>
+            <p style={{ fontSize: 11, color: C.faint, margin: 0 }}>
+              Source: {item.sources?.name ?? "Unknown"} · Fetched {timeAgo(item.fetched_at)}
+            </p>
+          </div>
+          <button onClick={onClose} style={{ background: "none", border: "none", color: C.faint, cursor: "pointer", fontSize: 22, lineHeight: 1, padding: "2px 6px", flexShrink: 0 }}>×</button>
+        </div>
+
+        {/* Extracted confidence note */}
+        {typeof fields.extraction_confidence === "number" && (
+          <div style={{ margin: "14px 24px 0", padding: "8px 12px", borderRadius: 7, background: C.accentBg, border: `1px solid ${C.accentBorder}` }}>
+            <span style={{ fontSize: 11, color: C.accent }}>Extraction confidence: {Math.round(fields.extraction_confidence * 100)}% · Edit all fields before saving.</span>
+          </div>
+        )}
+
+        {/* Form */}
+        <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 16 }}>
+
+          {/* Category */}
+          <div>
+            <label style={labelStyle}>Signal Category *</label>
+            <select
+              value={form.category}
+              onChange={e => update("category", e.target.value as SignalCategory)}
+              style={{ ...inputStyle, cursor: "pointer" }}
+            >
+              {SIGNAL_CATEGORIES.map(c => (
+                <option key={c} value={c}>{fmt(c)}</option>
+              ))}
+            </select>
+            {fields.possible_category && (
+              <p style={{ fontSize: 10, color: C.faint, marginTop: 4 }}>
+                Mesodma suggested: <em>{fields.possible_category}</em> (legacy enum — verify above)
+              </p>
+            )}
+          </div>
+
+          {/* Title */}
+          <div>
+            <label style={labelStyle}>Title *</label>
+            <input
+              type="text"
+              value={form.title}
+              onChange={e => update("title", e.target.value)}
+              style={inputStyle}
+            />
+          </div>
+
+          {/* Summary */}
+          <div>
+            <label style={labelStyle}>Summary * <span style={{ color: C.faint, fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>(2–3 sentences, CE voice)</span></label>
+            <textarea
+              value={form.summary}
+              onChange={e => update("summary", e.target.value)}
+              rows={4}
+              style={{ ...inputStyle, resize: "vertical" }}
+              placeholder="What happened. State it plainly."
+            />
+          </div>
+
+          {/* Implication */}
+          <div>
+            <label style={labelStyle}>Implication * <span style={{ color: C.faint, fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>(so-what for the CE reader)</span></label>
+            <textarea
+              value={form.implication}
+              onChange={e => update("implication", e.target.value)}
+              rows={3}
+              style={{ ...inputStyle, resize: "vertical" }}
+              placeholder="Why this matters. What it signals structurally."
+            />
+          </div>
+
+          {error && (
+            <p style={{ fontSize: 12, color: C.red, margin: 0 }}>{error}</p>
+          )}
+
+          <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", paddingTop: 4 }}>
+            <button
+              onClick={onClose}
+              style={{ padding: "9px 18px", borderRadius: 7, border: `1px solid ${C.border}`, background: "transparent", color: C.muted, fontSize: 13, cursor: "pointer" }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handlePromote}
+              disabled={saving}
+              style={{ padding: "9px 22px", borderRadius: 7, border: "none", background: C.accent, color: "#000", fontSize: 13, fontWeight: 700, cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.7 : 1 }}
+            >
+              {saving ? "Creating draft…" : "Create Signal Draft"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // ── Form fields (shared between Add + Edit modals) ────────────────────────────
@@ -166,7 +378,7 @@ function SourceFormFields({
       {field("Category *", "category",
         <select style={{ ...inputStyle, cursor: "pointer" }} value={data.category} onChange={e => onChange("category", e.target.value)}>
           <option value="">Select category…</option>
-          {CATEGORIES.map(c => <option key={c} value={c}>{fmt(c)}</option>)}
+          {SIGNAL_CATEGORIES.map(c => <option key={c} value={c}>{fmt(c)}</option>)}
         </select>
       )}
       {field("Subcategory", "subcategory",
@@ -366,13 +578,14 @@ export default function MesodmaCockpit() {
   const [toggling,    setToggling]    = useState<string | null>(null);
 
   // Raw items
-  const [items,       setItems]       = useState<RawItemWithSource[]>([]);
-  const [itemTotal,   setItemTotal]   = useState(0);
-  const [itemsLoading,setItemsLoading]= useState(true);
-  const [itemsErr,    setItemsErr]    = useState<string | null>(null);
-  const [itemStFilter,setItemStFilter]= useState("");
-  const [draftingId,  setDraftingId]  = useState<string | null>(null);
-  const [skippingId,  setSkippingId]  = useState<string | null>(null);
+  const [items,        setItems]       = useState<RawItemWithSource[]>([]);
+  const [itemTotal,    setItemTotal]   = useState(0);
+  const [itemsLoading, setItemsLoading]= useState(true);
+  const [itemsErr,     setItemsErr]    = useState<string | null>(null);
+  const [itemStFilter, setItemStFilter]= useState("extracted");
+  const [sigProcFilter,setSigProcFilter]= useState("pending");
+  const [dismissingId, setDismissingId]= useState<string | null>(null);
+  const [promoteItem,  setPromoteItem] = useState<RawItemWithSource | null>(null);
 
   // Ingest
   const [ingestRunning, setIngestRunning] = useState(false);
@@ -409,12 +622,13 @@ export default function MesodmaCockpit() {
   const loadItems = useCallback(() => {
     setItemsLoading(true); setItemsErr(null);
     const p = new URLSearchParams({ limit: "50" });
-    if (itemStFilter) p.set("status", itemStFilter);
+    if (itemStFilter)  p.set("status",                    itemStFilter);
+    if (sigProcFilter) p.set("signal_processing_status",  sigProcFilter);
     fetch(`/api/mesodma/raw-items?${p}`)
       .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
       .then(d => { setItems(d.items ?? []); setItemTotal(d.total ?? 0); setItemsLoading(false); })
       .catch(e => { setItemsErr(String(e)); setItemsLoading(false); });
-  }, [itemStFilter]);
+  }, [itemStFilter, sigProcFilter]);
 
   useEffect(() => { loadStats(); loadSources(); loadItems(); }, [loadStats, loadSources, loadItems]);
 
@@ -440,56 +654,30 @@ export default function MesodmaCockpit() {
     }
   }
 
-  // ── Draft signal from raw item ────────────────────────────────────────────────
+  // ── Dismiss raw item ──────────────────────────────────────────────────────────
 
-  async function draftSignal(item: RawItemWithSource) {
-    setDraftingId(item.id);
-    try {
-      const ef = item.extracted_fields as Record<string, unknown>;
-      const title     = (ef.clean_title  as string) || item.title;
-      const summary   = (ef.clean_summary as string) || (item.body?.slice(0, 400) ?? "Draft — fill in summary.");
-      const category  = (item.sources?.category as SignalCategory) || "intelligence";
-
-      const res = await fetch("/api/signals", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title, summary, category,
-          implication: "Pending analysis.",
-          raw_item_id: item.id,
-        }),
-      });
-      if (!res.ok) { const d = await res.json(); throw new Error(d.error ?? `HTTP ${res.status}`); }
-      const signal = await res.json();
-
-      // Mark item as drafted
-      await fetch(`/api/mesodma/raw-items/${item.id}`, {
-        method: "PATCH", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ signal_processing_status: "drafted" }),
-      });
-
-      router.push(`/ce-admin/signals/${signal.id}`);
-    } catch (e) {
-      alert(`Draft signal failed: ${e instanceof Error ? e.message : String(e)}`);
-    } finally {
-      setDraftingId(null);
-    }
-  }
-
-  // ── Skip raw item ─────────────────────────────────────────────────────────────
-
-  async function skipItem(item: RawItemWithSource) {
-    setSkippingId(item.id);
+  async function dismissItem(item: RawItemWithSource) {
+    setDismissingId(item.id);
     try {
       const res = await fetch(`/api/mesodma/raw-items/${item.id}`, {
         method: "PATCH", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "skipped" }),
+        body: JSON.stringify({ signal_processing_status: "dismissed" }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      setItems(prev => prev.map(it => it.id === item.id ? { ...it, status: "skipped" } : it));
-      loadStats();
+      setItems(prev => prev.map(it => it.id === item.id
+        ? { ...it, signal_processing_status: "dismissed" }
+        : it
+      ));
     } finally {
-      setSkippingId(null);
+      setDismissingId(null);
     }
+  }
+
+  // ── Promote callback ───────────────────────────────────────────────────────────
+
+  function handlePromoted(signalId: string) {
+    setPromoteItem(null);
+    router.push(`/ce-admin/signals/${signalId}`);
   }
 
   // ── Run ingest ────────────────────────────────────────────────────────────────
@@ -601,10 +789,112 @@ export default function MesodmaCockpit() {
         )}
       </div>
 
-      {/* ── 2. SOURCE REGISTRY ──────────────────────────────────────────────── */}
+      {/* ── 2. RAW ITEMS — SIGNAL PROMOTION QUEUE ───────────────────────────── */}
       <div style={{ marginBottom: 36 }}>
         <SectionHeader
-          label="Section 2"
+          label="Section 2 — Signal Promotion"
+          title={`Raw Items Queue${itemTotal > 0 ? ` — ${itemTotal} shown` : ""}`}
+          right={
+            <div style={{ display: "flex", gap: 8 }}>
+              <select
+                value={itemStFilter}
+                onChange={e => setItemStFilter(e.target.value)}
+                style={{ padding: "7px 11px", borderRadius: 7, border: `1px solid ${C.border}`, background: C.input, color: itemStFilter ? C.text : C.faint, fontSize: 12, outline: "none", cursor: "pointer" }}
+              >
+                <option value="">All ingest statuses</option>
+                <option value="pending">Pending</option>
+                <option value="extracted">Extracted</option>
+                <option value="error">Error</option>
+                <option value="skipped">Skipped</option>
+              </select>
+              <select
+                value={sigProcFilter}
+                onChange={e => setSigProcFilter(e.target.value)}
+                style={{ padding: "7px 11px", borderRadius: 7, border: `1px solid ${C.border}`, background: C.input, color: sigProcFilter ? C.text : C.faint, fontSize: 12, outline: "none", cursor: "pointer" }}
+              >
+                {SIG_PROC_OPTIONS.map(o => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </div>
+          }
+        />
+
+        {/* Category mismatch notice */}
+        <div style={{ marginBottom: 12, padding: "10px 14px", borderRadius: 8, border: `1px solid rgba(251,191,36,0.25)`, background: "rgba(251,191,36,0.05)", fontSize: 11, color: C.yellow }}>
+          Category note: Mesodma extracted items using a legacy category enum. The Promote modal lets you assign the correct current signal category before creating the draft.
+        </div>
+
+        {itemsLoading ? (
+          <p style={{ color: C.faint, fontSize: 13, padding: "24px 0" }}>Loading items…</p>
+        ) : itemsErr ? (
+          <p style={{ color: C.red, fontSize: 13 }}>{itemsErr}</p>
+        ) : (
+          <TableWrap
+            headers={["Title / Summary", "Source", "Ingest", "Signal", "Fetched", ""]}
+            empty={items.length === 0}
+          >
+            {items.map(item => {
+              const fields = ef(item);
+              const summary = fields.clean_summary || item.body?.slice(0, 160) || null;
+              const canPromote = item.signal_processing_status !== "drafted" && item.signal_processing_status !== "dismissed";
+              const canDismiss = item.signal_processing_status !== "dismissed" && item.signal_processing_status !== "drafted";
+              return (
+                <tr key={item.id} style={{ background: C.panel }}>
+                  <td style={{ ...TD, maxWidth: 340 }}>
+                    {item.url ? (
+                      <a href={item.url} target="_blank" rel="noopener noreferrer" style={{ color: C.text, fontWeight: 600, fontSize: 12, textDecoration: "none", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {item.title}
+                      </a>
+                    ) : (
+                      <p style={{ margin: 0, fontWeight: 600, fontSize: 12, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</p>
+                    )}
+                    {summary && (
+                      <p style={{ margin: "4px 0 0", fontSize: 11, color: C.faint, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
+                        {summary}
+                      </p>
+                    )}
+                    {item.author && <p style={{ margin: "3px 0 0", fontSize: 10, color: C.faint, opacity: 0.7 }}>{item.author}</p>}
+                  </td>
+                  <td style={TD}><span style={{ fontSize: 11, color: C.muted }}>{item.sources?.name ?? <em style={{ color: C.faint }}>unknown</em>}</span></td>
+                  <td style={TD}><ItemStatusBadge status={item.status} /></td>
+                  <td style={TD}><SigProcBadge status={item.signal_processing_status} /></td>
+                  <td style={TD}><span style={{ fontSize: 11, color: C.faint }}>{timeAgo(item.fetched_at)}</span></td>
+                  <td style={{ ...TD, whiteSpace: "nowrap" }}>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      {canPromote && (
+                        <button
+                          onClick={() => setPromoteItem(item)}
+                          style={{ ...btnBase, padding: "5px 11px", background: C.accentBg, border: `1px solid ${C.accentBorder}`, color: C.accent }}
+                        >
+                          Promote
+                        </button>
+                      )}
+                      {canDismiss && (
+                        <button
+                          onClick={() => dismissItem(item)}
+                          disabled={dismissingId === item.id}
+                          style={{ ...btnBase, padding: "5px 11px", background: "transparent", border: `1px solid ${C.border}`, color: C.faint, opacity: dismissingId === item.id ? 0.5 : 1 }}
+                        >
+                          {dismissingId === item.id ? "…" : "Dismiss"}
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </TableWrap>
+        )}
+        {!itemsLoading && itemTotal > 50 && (
+          <p style={{ marginTop: 10, fontSize: 11, color: C.faint }}>Showing 50 of {itemTotal}. Adjust filters to narrow.</p>
+        )}
+      </div>
+
+      {/* ── 3. SOURCE REGISTRY ──────────────────────────────────────────────── */}
+      <div style={{ marginBottom: 36 }}>
+        <SectionHeader
+          label="Section 3"
           title="Source Registry"
           right={
             <button
@@ -621,7 +911,7 @@ export default function MesodmaCockpit() {
         <div style={{ display: "flex", gap: 9, marginBottom: 14 }}>
           <select value={catFilter} onChange={e => setCatFilter(e.target.value)} style={{ padding: "7px 11px", borderRadius: 7, border: `1px solid ${C.border}`, background: C.input, color: catFilter ? C.text : C.faint, fontSize: 12, outline: "none", cursor: "pointer" }}>
             <option value="">All categories</option>
-            {CATEGORIES.map(c => <option key={c} value={c}>{fmt(c)}</option>)}
+            {SIGNAL_CATEGORIES.map(c => <option key={c} value={c}>{fmt(c)}</option>)}
           </select>
           <select value={tierFilter} onChange={e => setTierFilter(e.target.value)} style={{ padding: "7px 11px", borderRadius: 7, border: `1px solid ${C.border}`, background: C.input, color: tierFilter ? C.text : C.faint, fontSize: 12, outline: "none", cursor: "pointer" }}>
             <option value="">All tiers</option>
@@ -681,84 +971,6 @@ export default function MesodmaCockpit() {
               </tr>
             ))}
           </TableWrap>
-        )}
-      </div>
-
-      {/* ── 3. RAW ITEMS QUEUE ──────────────────────────────────────────────── */}
-      <div style={{ marginBottom: 36 }}>
-        <SectionHeader
-          label="Section 3"
-          title={`Raw Items Queue${itemTotal > 0 ? ` — ${itemTotal} total` : ""}`}
-          right={
-            <select value={itemStFilter} onChange={e => setItemStFilter(e.target.value)} style={{ padding: "7px 11px", borderRadius: 7, border: `1px solid ${C.border}`, background: C.input, color: itemStFilter ? C.text : C.faint, fontSize: 12, outline: "none", cursor: "pointer" }}>
-              <option value="">All statuses</option>
-              <option value="pending">Pending</option>
-              <option value="extracted">Extracted</option>
-              <option value="error">Error</option>
-              <option value="skipped">Skipped</option>
-            </select>
-          }
-        />
-
-        {itemsLoading ? (
-          <p style={{ color: C.faint, fontSize: 13, padding: "24px 0" }}>Loading items…</p>
-        ) : itemsErr ? (
-          <p style={{ color: C.red, fontSize: 13 }}>{itemsErr}</p>
-        ) : (
-          <TableWrap
-            headers={["Title", "Source", "Ingest", "Enrichment", "Signal", "Fetched", ""]}
-            empty={items.length === 0}
-          >
-            {items.map(item => (
-              <tr key={item.id} style={{ background: C.panel }}>
-                <td style={{ ...TD, maxWidth: 300 }}>
-                  {item.url ? (
-                    <a href={item.url} target="_blank" rel="noopener noreferrer" style={{ color: C.text, fontWeight: 600, fontSize: 12, textDecoration: "none", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {item.title}
-                    </a>
-                  ) : (
-                    <p style={{ margin: 0, fontWeight: 600, fontSize: 12, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</p>
-                  )}
-                  {item.author && <p style={{ margin: "2px 0 0", fontSize: 10, color: C.faint }}>{item.author}</p>}
-                </td>
-                <td style={TD}><span style={{ fontSize: 11, color: C.muted }}>{item.sources?.name ?? "—"}</span></td>
-                <td style={TD}><ItemStatusBadge status={item.status} /></td>
-                <td style={TD}><ItemStatusBadge status={item.enrichment_status} /></td>
-                <td style={TD}>
-                  {item.signal_processing_status === "drafted"
-                    ? <Badge label="drafted" bg={C.greenBg} color={C.green} />
-                    : <span style={{ fontSize: 11, color: C.faint }}>{item.signal_processing_status ?? "—"}</span>
-                  }
-                </td>
-                <td style={TD}><span style={{ fontSize: 11, color: C.faint }}>{timeAgo(item.fetched_at)}</span></td>
-                <td style={{ ...TD, whiteSpace: "nowrap" }}>
-                  <div style={{ display: "flex", gap: 6 }}>
-                    {item.signal_processing_status !== "drafted" && item.status !== "skipped" && (
-                      <button
-                        onClick={() => draftSignal(item)}
-                        disabled={draftingId === item.id}
-                        style={{ ...btnBase, padding: "5px 11px", background: C.accentBg, border: `1px solid ${C.accentBorder}`, color: C.accent, opacity: draftingId === item.id ? 0.6 : 1 }}
-                      >
-                        {draftingId === item.id ? "…" : "Draft Signal"}
-                      </button>
-                    )}
-                    {item.status !== "skipped" && (
-                      <button
-                        onClick={() => skipItem(item)}
-                        disabled={skippingId === item.id}
-                        style={{ ...btnBase, padding: "5px 11px", background: "transparent", border: `1px solid ${C.border}`, color: C.faint, opacity: skippingId === item.id ? 0.5 : 1 }}
-                      >
-                        {skippingId === item.id ? "…" : "Skip"}
-                      </button>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </TableWrap>
-        )}
-        {!itemsLoading && itemTotal > 50 && (
-          <p style={{ marginTop: 10, fontSize: 11, color: C.faint }}>Showing 50 of {itemTotal}. Use status filter to narrow.</p>
         )}
       </div>
 
@@ -874,6 +1086,15 @@ export default function MesodmaCockpit() {
             setEditSource(null);
             loadStats();
           }}
+        />
+      )}
+
+      {/* ── Promote modal ────────────────────────────────────────────────────── */}
+      {promoteItem && (
+        <PromoteModal
+          item={promoteItem}
+          onClose={() => setPromoteItem(null)}
+          onPromoted={handlePromoted}
         />
       )}
 
