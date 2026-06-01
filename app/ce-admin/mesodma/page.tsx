@@ -180,13 +180,40 @@ function PromoteModal({
   const sourceCategory = item.sources?.category as SignalCategory | undefined;
 
   const [form, setForm] = useState<PromoteFormState>({
-    title:       fields.clean_title  || item.title,
-    summary:     fields.clean_summary || "",
+    title:       fields.clean_title || item.title,
+    summary:     "",
     implication: "",
     category:    sourceCategory && SIGNAL_CATEGORIES.includes(sourceCategory) ? sourceCategory : "intelligence",
   });
-  const [saving, setSaving] = useState(false);
-  const [error,  setError]  = useState<string | null>(null);
+  const [saving,     setSaving]     = useState(false);
+  const [generating, setGenerating] = useState(true);
+  const [aiError,    setAiError]    = useState<string | null>(null);
+  const [error,      setError]      = useState<string | null>(null);
+
+  // AI-generate summary + implication on mount
+  useEffect(() => {
+    const content = [
+      fields.clean_summary,
+      item.body,
+    ].filter(Boolean).join("\n\n").slice(0, 4000);
+
+    fetch("/api/ai/generate-signal-fields", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: fields.clean_title || item.title, content }),
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (d.error) {
+          setAiError(d.error);
+        } else {
+          setForm(prev => ({ ...prev, summary: d.summary ?? "", implication: d.implication ?? "" }));
+        }
+      })
+      .catch(e => setAiError(String(e)))
+      .finally(() => setGenerating(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function update<K extends keyof PromoteFormState>(key: K, val: PromoteFormState[K]) {
     setForm(prev => ({ ...prev, [key]: val }));
@@ -194,7 +221,7 @@ function PromoteModal({
 
   async function handlePromote() {
     if (!form.title.trim() || !form.summary.trim() || !form.implication.trim()) {
-      setError("Title, Summary, and Implication are required."); return;
+      setError("Title, Summary, and Structural Implication are required."); return;
     }
     setSaving(true); setError(null);
     try {
@@ -240,8 +267,12 @@ function PromoteModal({
     textTransform: "uppercase", color: C.faint, marginBottom: 5,
   };
 
+  // AI confidence: 75% if generated, 0% if empty
+  const aiConfidencePct = !generating && !aiError && form.summary ? 75 : 0;
+
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.75)", padding: 24 }}>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       <div style={{ width: "100%", maxWidth: 640, maxHeight: "92vh", overflow: "auto", background: C.panelDark, borderRadius: 14, border: `1px solid ${C.border}`, boxShadow: "0 24px 80px rgba(0,0,0,0.6)" }}>
 
         {/* Header */}
@@ -256,10 +287,21 @@ function PromoteModal({
           <button onClick={onClose} style={{ background: "none", border: "none", color: C.faint, cursor: "pointer", fontSize: 22, lineHeight: 1, padding: "2px 6px", flexShrink: 0 }}>×</button>
         </div>
 
-        {/* Extracted confidence note */}
-        {typeof fields.extraction_confidence === "number" && (
+        {/* AI generation status bar */}
+        {generating ? (
+          <div style={{ margin: "14px 24px 0", padding: "10px 14px", borderRadius: 7, background: C.accentBg, border: `1px solid ${C.accentBorder}`, display: "flex", alignItems: "center", gap: 10 }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2.5" strokeLinecap="round" style={{ flexShrink: 0, animation: "spin 1s linear infinite" }}>
+              <path d="M21 12a9 9 0 11-6.219-8.56" />
+            </svg>
+            <span style={{ fontSize: 11, color: C.accent }}>Generating CE analysis…</span>
+          </div>
+        ) : aiError ? (
+          <div style={{ margin: "14px 24px 0", padding: "10px 14px", borderRadius: 7, background: C.redBg, border: `1px solid rgba(248,113,113,0.3)` }}>
+            <p style={{ fontSize: 11, color: C.red, margin: 0 }}>AI generation failed: {aiError} — fill fields manually.</p>
+          </div>
+        ) : (
           <div style={{ margin: "14px 24px 0", padding: "8px 12px", borderRadius: 7, background: C.accentBg, border: `1px solid ${C.accentBorder}` }}>
-            <span style={{ fontSize: 11, color: C.accent }}>Extraction confidence: {Math.round(fields.extraction_confidence * 100)}% · Edit all fields before saving.</span>
+            <span style={{ fontSize: 11, color: C.accent }}>AI confidence: {aiConfidencePct}% · Review and edit all fields before saving.</span>
           </div>
         )}
 
@@ -303,20 +345,22 @@ function PromoteModal({
               value={form.summary}
               onChange={e => update("summary", e.target.value)}
               rows={4}
-              style={{ ...inputStyle, resize: "vertical" }}
-              placeholder="What happened. State it plainly."
+              disabled={generating}
+              style={{ ...inputStyle, resize: "vertical", opacity: generating ? 0.5 : 1 }}
+              placeholder={generating ? "Generating CE analysis…" : "What happened. State it plainly."}
             />
           </div>
 
-          {/* Implication */}
+          {/* Structural Implication */}
           <div>
-            <label style={labelStyle}>Implication * <span style={{ color: C.faint, fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>(so-what for the CE reader)</span></label>
+            <label style={labelStyle}>Structural Implication * <span style={{ color: C.faint, fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>(structural so-what for the CE reader)</span></label>
             <textarea
               value={form.implication}
               onChange={e => update("implication", e.target.value)}
               rows={3}
-              style={{ ...inputStyle, resize: "vertical" }}
-              placeholder="Why this matters. What it signals structurally."
+              disabled={generating}
+              style={{ ...inputStyle, resize: "vertical", opacity: generating ? 0.5 : 1 }}
+              placeholder={generating ? "Generating CE analysis…" : "Why this matters structurally."}
             />
           </div>
 
@@ -333,8 +377,8 @@ function PromoteModal({
             </button>
             <button
               onClick={handlePromote}
-              disabled={saving}
-              style={{ padding: "9px 22px", borderRadius: 7, border: "none", background: C.accent, color: "#000", fontSize: 13, fontWeight: 700, cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.7 : 1 }}
+              disabled={saving || generating}
+              style={{ padding: "9px 22px", borderRadius: 7, border: "none", background: C.accent, color: "#000", fontSize: 13, fontWeight: 700, cursor: (saving || generating) ? "not-allowed" : "pointer", opacity: (saving || generating) ? 0.7 : 1 }}
             >
               {saving ? "Creating draft…" : "Create Signal Draft"}
             </button>
