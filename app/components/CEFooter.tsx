@@ -61,7 +61,7 @@ export default function CEFooter() {
               </li>
               <li>
                 <Link href="/briefs" className="text-[#6b7280] text-xs hover:text-white transition-colors">
-                  CE Briefs
+                  CE Research
                 </Link>
               </li>
             </ul>

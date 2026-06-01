@@ -318,7 +318,7 @@ const CARDS: CardDef[] = [
   { id: 1, number: "01", Icon: IconDrift, title: "EXPLORE DRIFT", description: "Revenue decay detection and intervention systems for active pipeline environments." },
   { id: 2, number: "02", Icon: IconSignals, title: "EXPLORE SIGNALS", description: "Strategic signal intelligence and convergence analysis for informed advantage." },
   { id: 3, number: "03", Icon: IconOps, title: "DISCUSS OPERATIONAL SYSTEMS", description: "Execution, governance, and operational intelligence systems built for serious operators." },
-  { id: 4, number: "04", Icon: IconBriefs, title: "READ CE BRIEFS", description: "Operator-grade intelligence, execution reports, and structural analysis." },
+  { id: 4, number: "04", Icon: IconBriefs, title: "READ CE RESEARCH", description: "Operator-grade intelligence, execution reports, and structural analysis." },
   { id: 5, number: "05", Icon: IconContact, title: "CONTACT COGNITIVE EMPIRE", description: "Direct inquiries, partnerships, and strategic discussions." },
 ];
 
@@ -326,7 +326,7 @@ const NAV_LINKS = [
   { label: "Home", href: "/home" },
   { label: "Drift", href: "/drift" },
   { label: "Signals", href: "/signals" },
-  { label: "Briefs", href: "/briefs" },
+  { label: "CE Research", href: "/briefs" },
   { label: "Work", href: "/work" },
   { label: "FoundryLabs", href: "/foundrylabs" },
   { label: "Connect", href: "/connect", active: true },

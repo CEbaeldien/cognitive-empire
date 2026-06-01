@@ -186,19 +186,19 @@ export default function HomePage() {
 
       {/* ── Hero ────────────────────────────────────────────────────── */}
       <section className="border-b border-[#1a1a2e]">
-        <div className="max-w-7xl mx-auto px-8 py-24 grid grid-cols-2 gap-16 items-center">
+        <div className="max-w-7xl mx-auto px-6 md:px-8 py-16 md:py-24 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center">
           <div>
             <p className="text-[10px] text-[#6b7280] uppercase tracking-widest mb-6">
               Cognitive Empire
             </p>
-            <h1 className="text-5xl font-thin leading-tight text-white mb-6">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-thin leading-tight text-white mb-6">
               Operational intelligence systems for an{" "}
               <span className="text-[#00d4ff]">AI-native</span> world.
             </h1>
             <p className="text-base text-[#6b7280] leading-relaxed mb-10 max-w-lg">
               Cognitive Empire builds products, intelligence layers, and execution systems that turn abundant intelligence into structured operational power.
             </p>
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-4">
               <Link href="/drift"
                 className="px-6 py-3 bg-[#00d4ff] text-black text-sm font-bold uppercase tracking-wide hover:bg-[#00b8d9] transition-colors">
                 Explore Drift →
@@ -209,7 +209,7 @@ export default function HomePage() {
               </Link>
             </div>
           </div>
-          <div className="flex items-center justify-center h-[400px]">
+          <div className="hidden md:flex items-center justify-center h-[400px]">
             <HeroGeometry />
           </div>
         </div>
@@ -217,11 +217,11 @@ export default function HomePage() {
 
       {/* ── What We Build ──────────────────────────────────────────── */}
       <section className="border-b border-[#1a1a2e]">
-        <div className="max-w-7xl mx-auto px-8 py-20">
+        <div className="max-w-7xl mx-auto px-6 md:px-8 py-16 md:py-20">
           <p className="text-[10px] text-[#6b7280] uppercase tracking-widest mb-12">
             What We Build ——
           </p>
-          <div className="grid grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               {
                 Icon: IconProducts,
@@ -233,7 +233,7 @@ export default function HomePage() {
                 Icon: IconIntelligence,
                 title: "Intelligence",
                 body: "Structural signal intelligence and strategic briefings that translate signal into judgment.",
-                items: ["Signals", "CE Briefs"],
+                items: ["Signals", "CE Research"],
               },
               {
                 Icon: IconSystems,
@@ -266,8 +266,8 @@ export default function HomePage() {
 
       {/* ── Three Feature Panels ────────────────────────────────────── */}
       <section className="border-b border-[#1a1a2e]">
-        <div className="max-w-7xl mx-auto px-8 py-20">
-          <div className="grid grid-cols-3 gap-6">
+        <div className="max-w-7xl mx-auto px-6 md:px-8 py-16 md:py-20">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
             {/* Panel 1 — Drift */}
             <div className="p-8 bg-[#0a0a0f] border border-[#1a1a2e] flex flex-col">
@@ -305,13 +305,13 @@ export default function HomePage() {
                 </Link>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-white mb-2">CE Briefs</h3>
+                <h3 className="text-lg font-semibold text-white mb-2">CE Research</h3>
                 <p className="text-sm text-[#6b7280] leading-relaxed">
                   Translate signal into judgment, context, and operational meaning.
                 </p>
                 <Link href="/briefs"
                   className="inline-flex items-center text-[#00d4ff] text-xs uppercase tracking-widest border-b border-[#00d4ff]/30 pb-px hover:border-[#00d4ff] transition-colors mt-4">
-                  Read CE Briefs →
+                  Read CE Research →
                 </Link>
               </div>
             </div>
@@ -348,8 +348,8 @@ export default function HomePage() {
 
       {/* ── Operating Principle ─────────────────────────────────────── */}
       <section className="border-b border-[#1a1a2e]">
-        <div className="max-w-7xl mx-auto px-8 py-20">
-          <div className="grid grid-cols-2 gap-16 items-center">
+        <div className="max-w-7xl mx-auto px-6 md:px-8 py-16 md:py-20">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center">
             <div className="flex items-center justify-center">
               <SmallHex />
             </div>
@@ -373,7 +373,7 @@ export default function HomePage() {
 
       {/* ── Final CTA ───────────────────────────────────────────────── */}
       <section className="bg-[#080810] border-t border-[#1a1a2e]">
-        <div className="max-w-7xl mx-auto px-8 py-24 flex flex-col items-center text-center">
+        <div className="max-w-7xl mx-auto px-6 md:px-8 py-16 md:py-24 flex flex-col items-center text-center">
           <p className="text-[10px] text-[#6b7280] uppercase tracking-widest mb-6">
             Entry Point
           </p>

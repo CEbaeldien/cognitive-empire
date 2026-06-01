@@ -23,7 +23,7 @@ const NAV_LINKS = [
   { label: "Home", href: "/home" },
   { label: "Drift", href: "/drift" },
   { label: "Signals", href: "/signals" },
-  { label: "Briefs", href: "/briefs" },
+  { label: "CE Research", href: "/briefs" },
   { label: "Work", href: "/work" },
   { label: "FoundryLabs", href: "/foundrylabs" },
   { label: "Connect", href: "/connect" },
@@ -34,7 +34,7 @@ export default function CENav() {
 
   return (
     <nav className="sticky top-0 z-50 border-b border-[#1a1a2e] bg-[#050505]/96 backdrop-blur-sm">
-      <div className="max-w-7xl mx-auto px-8 py-5 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-6 md:px-8 py-5 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-3 group">
           <CELogoMark />
           <span className="text-white text-sm font-bold tracking-widest uppercase group-hover:text-[#00d4ff] transition-colors">
@@ -42,7 +42,7 @@ export default function CENav() {
           </span>
         </Link>
 
-        <div className="flex items-center gap-6">
+        <div className="hidden md:flex items-center gap-6">
           {NAV_LINKS.map((link) => {
             const isActive =
               pathname === link.href ||

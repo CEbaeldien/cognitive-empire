@@ -104,7 +104,7 @@ export default function FoundryLabsPage() {
               Current Status
             </p>
             <p className="text-base text-[#6b7280] leading-relaxed">
-              FoundryLabs is an active internal research layer. Public outputs will expand selectively over time. Some findings surface through CE Briefs. System patterns become products when they pass operational pressure tests.
+              FoundryLabs is an active internal research layer. Public outputs will expand selectively over time. Some findings surface through CE Research. System patterns become products when they pass operational pressure tests.
             </p>
           </div>
         </div>
@@ -117,14 +117,14 @@ export default function FoundryLabsPage() {
             Follow the research output.
           </h2>
           <p className="text-[#6b7280] text-sm mb-8 max-w-md leading-relaxed">
-            CE Briefs translate research into judgment. Dr. E routes serious engagement.
+            CE Research translates research into judgment. Dr. E routes serious engagement.
           </p>
           <div className="flex gap-4">
             <Link
               href="/briefs"
               className="px-6 py-3 border border-[#1a1a2e] text-white text-sm uppercase tracking-wide hover:border-[#00d4ff]/40 hover:text-[#00d4ff] transition-all"
             >
-              Read CE Briefs →
+              Read CE Research →
             </Link>
             <Link
               href="/connect"

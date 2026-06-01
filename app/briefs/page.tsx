@@ -42,10 +42,10 @@ export default function BriefsPage() {
       <section className="border-b border-[#1a1a2e]">
         <div className="max-w-7xl mx-auto px-8 py-20">
           <p className="text-[10px] text-[#00d4ff] uppercase tracking-widest mb-6">
-            Intelligence Layer — CE Briefs
+            Intelligence Layer — CE Research
           </p>
           <h1 className="text-5xl font-thin text-white leading-tight mb-6 max-w-2xl">
-            CE Briefs
+            CE Research
           </h1>
           <p className="text-lg text-[#6b7280] leading-relaxed max-w-2xl mb-4">
             Operator-grade intelligence, execution analysis, and structural briefings for an AI-native world.
