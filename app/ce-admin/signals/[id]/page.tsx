@@ -263,9 +263,11 @@ export default function SignalDetailPage() {
   const [savingScore, setSavingScore] = useState(false);
 
   // Actions
-  const [savingMeta,       setSavingMeta]       = useState(false);
-  const [submittingReview, setSubmittingReview] = useState(false);
-  const [toast,            setToast]            = useState<{ msg: string; type: "ok" | "err" } | null>(null);
+  const [savingMeta,        setSavingMeta]        = useState(false);
+  const [submittingReview,  setSubmittingReview]  = useState(false);
+  const [reviewActing,      setReviewActing]      = useState(false);
+  const [showRejectConfirm, setShowRejectConfirm] = useState(false);
+  const [toast,             setToast]             = useState<{ msg: string; type: "ok" | "err" } | null>(null);
 
   function showToast(msg: string, type: "ok" | "err") { setToast({ msg, type }); }
 
@@ -373,6 +375,33 @@ export default function SignalDetailPage() {
     setSignal((prev) => prev ? { ...prev, status: "in_review" } : prev);
   }
 
+  async function handleReviewAction(action: "approve" | "reject" | "publish") {
+    setReviewActing(true);
+    const res = await fetch(`/api/signals/${id}/review`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action }),
+    });
+    setReviewActing(false);
+    setShowRejectConfirm(false);
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      showToast(d.error ?? `HTTP ${res.status}`, "err");
+      return;
+    }
+    const nextStatus =
+      action === "approve" ? "approved" :
+      action === "reject"  ? "rejected" :
+      "published";
+    setSignal((prev) => prev ? { ...prev, status: nextStatus } : prev);
+    showToast(
+      action === "approve" ? "Signal approved." :
+      action === "reject"  ? "Signal rejected." :
+      "Signal published.",
+      "ok"
+    );
+  }
+
   async function handleArchive() {
     if (!confirm("Archive this signal? It will be hidden from the list but not deleted.")) return;
     const res = await fetch(`/api/signals/${id}`, { method: "DELETE" });
@@ -408,7 +437,7 @@ export default function SignalDetailPage() {
     );
   }
 
-  const canSubmitReview = signal.status !== "in_review" && signal.status !== "published" && signal.status !== "archived";
+  const canSubmitReview = signal.status !== "in_review" && signal.status !== "approved" && signal.status !== "published" && signal.status !== "archived";
   const finalScore = computeFinalScore(score);
   const scoreColor = finalScore >= 70 ? C.accent : finalScore >= 40 ? "#fbbf24" : C.muted;
 
@@ -628,22 +657,78 @@ export default function SignalDetailPage() {
         </div>
       </section>
 
-      {/* ── SECTION 3: Review Queue ────────────────────────────────────────── */}
-      <section style={{ borderRadius: 12, border: canSubmitReview ? `1px solid ${C.accentBorder}` : `1px solid ${C.border}`, background: C.panel, padding: "22px 24px", marginBottom: 20 }}>
+      {/* ── SECTION 3: Review & Publish ───────────────────────────────────── */}
+      <section style={{ borderRadius: 12, border: (signal.status === "in_review" || signal.status === "approved") ? `1px solid ${C.accentBorder}` : canSubmitReview ? `1px solid ${C.border}` : `1px solid ${C.border}`, background: C.panel, padding: "22px 24px", marginBottom: 20 }}>
         <SectionHeader
-          title="Submit to Review"
-          sub="Signals must pass human review before any publish action is available. Once submitted, the signal is locked in 'in_review' status."
+          title="Review & Publish"
+          sub="Submit to review queue, then approve and publish. No signal goes live without human review."
         />
 
+        {/* ── in_review: show review actions ── */}
         {signal.status === "in_review" && (
-          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", borderRadius: 8, border: "1px solid rgba(251,191,36,0.3)", background: "rgba(251,191,36,0.08)" }}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
-            </svg>
-            <p style={{ fontSize: 13, color: "#fbbf24", margin: 0 }}>This signal is currently in the review queue. Awaiting reviewer action.</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", borderRadius: 8, border: "1px solid rgba(251,191,36,0.3)", background: "rgba(251,191,36,0.08)" }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              <p style={{ fontSize: 13, color: "#fbbf24", margin: 0 }}>This signal is in the review queue.</p>
+            </div>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <button
+                onClick={() => handleReviewAction("approve")}
+                disabled={reviewActing}
+                style={{ padding: "10px 22px", borderRadius: 8, background: C.accentBg, border: `1px solid ${C.accentBorder}`, color: C.accent, fontSize: 13, fontWeight: 700, cursor: reviewActing ? "not-allowed" : "pointer", opacity: reviewActing ? 0.6 : 1 }}
+              >
+                {reviewActing ? "…" : "Approve"}
+              </button>
+              <button
+                onClick={() => setShowRejectConfirm((v) => !v)}
+                disabled={reviewActing}
+                style={{ padding: "10px 22px", borderRadius: 8, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", color: "#f87171", fontSize: 13, fontWeight: 700, cursor: reviewActing ? "not-allowed" : "pointer", opacity: reviewActing ? 0.6 : 1 }}
+              >
+                Reject
+              </button>
+            </div>
+            {showRejectConfirm && (
+              <div style={{ padding: "14px 16px", borderRadius: 9, border: "1px solid rgba(239,68,68,0.25)", background: "rgba(239,68,68,0.06)" }}>
+                <p style={{ fontSize: 13, fontWeight: 600, color: "#f87171", margin: "0 0 6px" }}>Reject this signal?</p>
+                <p style={{ fontSize: 12, color: C.faint, margin: "0 0 12px" }}>Status will be set to <strong style={{ color: "#f87171" }}>rejected</strong>. The signal can be resubmitted after revision.</p>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button
+                    onClick={() => handleReviewAction("reject")}
+                    disabled={reviewActing}
+                    style={{ padding: "8px 18px", borderRadius: 7, background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.4)", color: "#f87171", fontSize: 12, fontWeight: 700, cursor: reviewActing ? "not-allowed" : "pointer", opacity: reviewActing ? 0.6 : 1 }}
+                  >
+                    {reviewActing ? "Rejecting…" : "Confirm Reject"}
+                  </button>
+                  <button
+                    onClick={() => setShowRejectConfirm(false)}
+                    style={{ padding: "8px 14px", borderRadius: 7, background: "transparent", border: `1px solid ${C.border}`, color: C.faint, fontSize: 12, cursor: "pointer" }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
+        {/* ── approved: publish button ── */}
+        {signal.status === "approved" && (
+          <div style={{ padding: "16px 18px", borderRadius: 9, border: "1px solid rgba(34,197,94,0.3)", background: "rgba(34,197,94,0.06)" }}>
+            <p style={{ fontSize: 13, fontWeight: 600, color: "#4ade80", margin: "0 0 4px" }}>Ready to publish</p>
+            <p style={{ fontSize: 12, color: C.faint, margin: "0 0 14px" }}>This signal has been approved. Publish makes it live on the public signals feed.</p>
+            <button
+              onClick={() => handleReviewAction("publish")}
+              disabled={reviewActing}
+              style={{ padding: "10px 24px", borderRadius: 8, background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.4)", color: "#4ade80", fontSize: 13, fontWeight: 700, cursor: reviewActing ? "not-allowed" : "pointer", opacity: reviewActing ? 0.6 : 1 }}
+            >
+              {reviewActing ? "Publishing…" : "Publish Signal"}
+            </button>
+          </div>
+        )}
+
+        {/* ── published ── */}
         {signal.status === "published" && (
           <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", borderRadius: 8, border: "1px solid rgba(34,197,94,0.3)", background: "rgba(34,197,94,0.08)" }}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -653,11 +738,12 @@ export default function SignalDetailPage() {
           </div>
         )}
 
+        {/* ── draft / rejected / watching / decaying: submit to review ── */}
         {canSubmitReview && (
           <div>
             {signal.status === "rejected" && (
               <p style={{ fontSize: 12, color: "#f87171", marginBottom: 14 }}>
-                This signal was previously rejected. Review revision_notes and update before resubmitting.
+                This signal was previously rejected. Review revision notes and update before resubmitting.
               </p>
             )}
             {signal.revision_notes && (
