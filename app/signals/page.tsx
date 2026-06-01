@@ -2,12 +2,15 @@ import { createClient } from "@supabase/supabase-js";
 import CENav from "@/app/components/CENav";
 import type { SignalCategory } from "@/types/signals";
 
+export const dynamic = "force-dynamic";
+
 // ── Supabase (service role — server component) ────────────────────────────────
 
 function getServiceClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { persistSession: false } }
   );
 }
 
@@ -25,7 +28,9 @@ type SignalResult = {
   second_order_effect: string | null;
   impact_layer: unknown; // JSONB in DB — guard before use
   published_at: string | null;
-  signal_scores: Array<{ final_score: number }>;
+  // PostgREST returns a single object (not array) for UNIQUE FK relationships,
+  // or null when no related row exists.
+  signal_scores: { final_score: number } | null;
   signal_pressure_vectors: Array<{ pressure_vectors: VectorRef | null }>;
   signal_doctrine_vectors: Array<{ doctrine_vectors: VectorRef | null }>;
   raw_items: { url: string | null } | null;
@@ -91,7 +96,7 @@ function truncateSentences(text: string | null | undefined, max: number): string
 }
 
 function getFinalScore(s: SignalResult): number {
-  return s.signal_scores[0]?.final_score ?? 0;
+  return s.signal_scores?.final_score ?? 0;
 }
 
 // Score is 0–100; thresholds proportional to spec's 0–10 notation
