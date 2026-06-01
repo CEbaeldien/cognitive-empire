@@ -18,6 +18,10 @@ const C = {
   faint:        "#64748b",
 } as const;
 
+const NAV_CROSS = [
+  { href: "/ce-admin/dr-e", label: "Dr. E" },
+];
+
 const NAV = [
   { href: "/ce-admin/runtime",         label: "Dashboard" },
   { href: "/ce-admin/runtime/control", label: "Control Panel" },
@@ -81,7 +85,23 @@ export default function RuntimeAdminLayout({ children }: { children: React.React
 
         {/* Nav */}
         <nav style={{ padding: "12px 10px", flex: 1 }}>
-          <p style={{ fontSize: 9, fontWeight: 600, letterSpacing: "0.45em", textTransform: "uppercase", color: C.faint, padding: "0 10px", marginBottom: 6 }}>Navigation</p>
+          <p style={{ fontSize: 9, fontWeight: 600, letterSpacing: "0.45em", textTransform: "uppercase", color: C.faint, padding: "0 10px", marginBottom: 6 }}>CE Admin</p>
+          {NAV_CROSS.map(({ href, label }) => (
+            <Link key={href} href={href} style={{ textDecoration: "none", display: "block" }}>
+              <div style={{
+                display: "flex", alignItems: "center", padding: "9px 12px",
+                borderRadius: 8, marginBottom: 2,
+                background: "transparent",
+                border: "1px solid transparent",
+                color: C.faint,
+                fontSize: 13, fontWeight: 400,
+                transition: "all 0.12s",
+              }}>
+                {label}
+              </div>
+            </Link>
+          ))}
+          <p style={{ fontSize: 9, fontWeight: 600, letterSpacing: "0.45em", textTransform: "uppercase", color: C.faint, padding: "14px 10px 6px" }}>Runtime</p>
           {NAV.map(({ href, label }) => {
             const active = pathname === href;
             return (
