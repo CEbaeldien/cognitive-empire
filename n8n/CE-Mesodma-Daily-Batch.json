@@ -1,0 +1,201 @@
+{
+  "name": "CE Mesodma Daily Batch",
+  "nodes": [
+    {
+      "id": "a1b2c3d4-0001-0001-0001-000000000001",
+      "name": "Daily Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 2 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "a1b2c3d4-0002-0002-0002-000000000002",
+      "name": "POST /api/mesodma/batch",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.CE_SITE_URL }}/api/mesodma/batch",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.MESODMA_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "a1b2c3d4-0003-0003-0003-000000000003",
+      "name": "Batch OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [680, 300],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-1",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "a1b2c3d4-0004-0004-0004-000000000004",
+      "name": "POST /api/mesodma/cleanup",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 220],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.CE_SITE_URL }}/api/mesodma/cleanup",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.MESODMA_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "a1b2c3d4-0005-0005-0005-000000000005",
+      "name": "Log Success",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 220],
+      "parameters": {
+        "jsCode": "const batch  = $('POST /api/mesodma/batch').first().json;\nconst cleanup = $('POST /api/mesodma/cleanup').first().json;\nconsole.log('[CE Mesodma] Daily batch complete:', JSON.stringify({\n  processed:    batch.processed_this_run,\n  first_pass:   batch.promoted_to_first_pass,\n  candidates:   batch.promoted_to_candidate,\n  rejected:     batch.rejected,\n  errors:       batch.errors,\n  deleted_raw:  cleanup.deleted_raw_items,\n  deleted_cand: cleanup.deleted_candidates,\n}));\nreturn [{ json: { batch, cleanup, success: true } }];"
+      }
+    },
+    {
+      "id": "a1b2c3d4-0006-0006-0006-000000000006",
+      "name": "Log Batch Error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 400],
+      "parameters": {
+        "jsCode": "const result = $input.first().json;\nconsole.error('[CE Mesodma] Batch error:', JSON.stringify(result));\nreturn [{ json: { error: result.error, success: false } }];"
+      }
+    }
+  ],
+  "connections": {
+    "Daily Schedule": {
+      "main": [
+        [
+          {
+            "node": "POST /api/mesodma/batch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST /api/mesodma/batch": {
+      "main": [
+        [
+          {
+            "node": "Batch OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Batch OK?": {
+      "main": [
+        [
+          {
+            "node": "POST /api/mesodma/cleanup",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Batch Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST /api/mesodma/cleanup": {
+      "main": [
+        [
+          {
+            "node": "Log Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "versionId": "1",
+  "meta": {
+    "instanceId": "",
+    "templateCredsSetupCompleted": false
+  },
+  "tags": ["mesodma", "automation"],
+  "notes": "Requires n8n environment variables: CE_SITE_URL (e.g. https://cognitiveempire.com) and MESODMA_API_KEY. Schedule: 2:00 AM UTC daily. Runs batch processing then cleans up noise older than 48h."
+}

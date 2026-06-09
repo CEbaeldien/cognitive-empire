@@ -16,7 +16,6 @@ const C = {
   text:         "#f1f5f9",
   muted:        "#94a3b8",
   faint:        "#64748b",
-  input:        "#0a0919",
 } as const;
 
 const IcoIngest = () => (
@@ -41,13 +40,61 @@ const IcoChevron = () => (
   </svg>
 );
 
-const NAV_PRIMARY = [
-  { href: "/ce-admin/mesodma", label: "Cockpit", icon: <IcoIngest /> },
+const IcoGrid = () => (
+  <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
+    <rect x="2" y="2" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.5" />
+    <rect x="11" y="2" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.5" />
+    <rect x="2" y="11" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.5" />
+    <rect x="11" y="11" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.5" />
+  </svg>
+);
+
+const IcoDot = () => (
+  <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
+    <circle cx="10" cy="10" r="3" stroke="currentColor" strokeWidth="1.5" />
+    <circle cx="10" cy="10" r="1" fill="currentColor" />
+  </svg>
+);
+
+const IcoTrash = () => (
+  <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
+    <path d="M3 5h14M8 5V3h4v2M5 5l1 12h8l1-12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const IcoLog = () => (
+  <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
+    <rect x="3" y="2" width="14" height="16" rx="2" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M7 7h6M7 10h6M7 13h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+);
+
+const IcoBook = () => (
+  <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
+    <path d="M4 3h12a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M10 3v14M7 7h2M7 10h2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+);
+
+const IcoEye = () => (
+  <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
+    <path d="M1 10s3.5-7 9-7 9 7 9 7-3.5 7-9 7-9-7-9-7z" stroke="currentColor" strokeWidth="1.5" />
+    <circle cx="10" cy="10" r="2.5" stroke="currentColor" strokeWidth="1.5" />
+  </svg>
+);
+
+const NAV_MESODMA = [
+  { href: "/ce-admin/mesodma",                    label: "Cockpit",             icon: <IcoGrid /> },
+  { href: "/ce-admin/mesodma/first-pass-signals",  label: "First-Pass Signals", icon: <IcoSignal /> },
+  { href: "/ce-admin/mesodma/candidate-evidence",  label: "Candidate Evidence", icon: <IcoDot /> },
+  { href: "/ce-admin/mesodma/noise-corner",         label: "Noise Corner",       icon: <IcoTrash /> },
+  { href: "/ce-admin/mesodma/runs-log",             label: "Runs Log",           icon: <IcoLog /> },
+  { href: "/ce-admin/mesodma/training-examples",    label: "Training Examples",  icon: <IcoBook /> },
 ];
 
 const NAV_CROSS = [
-  { href: "/ce-admin/dr-e",   label: "Dr. E",         icon: <IcoSignal /> },
-  { href: "/ce-admin/signals", label: "Signals Admin", icon: <IcoSignal /> },
+  { href: "/ce-admin/dr-e",    label: "Dr. E",         icon: <IcoSignal /> },
+  { href: "/ce-admin/signals", label: "Signals Admin",  icon: <IcoEye /> },
 ];
 
 export default function MesodmaAdminLayout({ children }: { children: React.ReactNode }) {
@@ -117,9 +164,11 @@ export default function MesodmaAdminLayout({ children }: { children: React.React
 
         {/* Nav */}
         <nav style={{ padding: "12px 10px", flex: 1, overflow: "auto" }}>
-          <p style={{ fontSize: 9, fontWeight: 600, letterSpacing: "0.45em", textTransform: "uppercase", color: C.faint, padding: "0 10px", marginBottom: 6 }}>Navigation</p>
-          {NAV_PRIMARY.map(({ href, label, icon }) => {
-            const active = pathname === href;
+          <p style={{ fontSize: 9, fontWeight: 600, letterSpacing: "0.45em", textTransform: "uppercase", color: C.faint, padding: "0 10px", marginBottom: 6 }}>Mesodma</p>
+          {NAV_MESODMA.map(({ href, label, icon }) => {
+            const active = href === "/ce-admin/mesodma"
+              ? pathname === href
+              : pathname.startsWith(href);
             return (
               <Link key={href} href={href} style={{ textDecoration: "none", display: "block" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 8, marginBottom: 2, background: active ? C.accentBg : "transparent", border: active ? `1px solid ${C.accentBorder}` : "1px solid transparent", color: active ? C.accent : C.faint, fontSize: 13, fontWeight: active ? 600 : 400, transition: "all 0.15s" }}>
@@ -188,7 +237,7 @@ export default function MesodmaAdminLayout({ children }: { children: React.React
         </main>
         <footer style={{ flexShrink: 0, borderTop: `1px solid ${C.border}`, background: C.bg, padding: "8px 32px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <span style={{ fontSize: 11, color: C.faint }}>Cognitive Empire · Mesodma</span>
-          <span style={{ fontSize: 11, color: C.faint }}>Mesodma V1 — Candidate evidence and first-pass signals only. Does not touch signals table.</span>
+          <span style={{ fontSize: 11, color: C.faint }}>Signal vs. Noise Engine — Humans review First-Pass Signals only</span>
         </footer>
       </div>
     </div>
