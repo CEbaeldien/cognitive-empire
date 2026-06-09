@@ -35,8 +35,8 @@ export async function GET() {
     client.from("raw_items").select("id", { count: "exact", head: true }).or("enrichment_status.is.null,enrichment_status.eq.pending"),
     client.from("raw_items").select("id", { count: "exact", head: true }).eq("status", "error").gte("created_at", h24ago),
     client.from("raw_items").select("fetched_at").order("fetched_at", { ascending: false }).limit(1),
-    // V1
-    client.from("raw_items").select("id", { count: "exact", head: true }).eq("signal_processing_status", "pending"),
+    // V1 — count items not yet processed (null = never touched, pending = explicitly queued, needs_enrichment = partial)
+    client.from("raw_items").select("id", { count: "exact", head: true }).eq("status", "extracted").or("signal_processing_status.is.null,signal_processing_status.eq.pending,signal_processing_status.eq.needs_enrichment"),
     client.from("raw_items").select("id", { count: "exact", head: true }).eq("signal_processing_status", "rejected_noise"),
     client.from("candidate_evidence").select("id", { count: "exact", head: true }),
     client.from("first_pass_signals").select("id", { count: "exact", head: true }).eq("status", "ready_for_signal_intelligence"),

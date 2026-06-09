@@ -30,9 +30,19 @@ export async function GET(req: Request) {
   if (status)    q = q.eq("status",    status);
   if (source_id) q = q.eq("source_id", source_id);
 
+  // include_null=true ORs a null check alongside any other sig_proc filter
+  const include_null = searchParams.get("include_null") === "true";
+
   if (sig_proc_in) {
     const values = sig_proc_in.split(",").map(v => v.trim()).filter(Boolean);
-    if (values.length > 0) q = q.in("signal_processing_status", values);
+    if (include_null && values.length > 0) {
+      const inClauses = values.map(v => `signal_processing_status.eq.${v}`).join(",");
+      q = q.or(`signal_processing_status.is.null,${inClauses}`);
+    } else if (values.length > 0) {
+      q = q.in("signal_processing_status", values);
+    }
+  } else if (include_null) {
+    q = q.is("signal_processing_status", null);
   } else if (sig_proc === "null") {
     q = q.is("signal_processing_status", null);
   } else if (sig_proc) {

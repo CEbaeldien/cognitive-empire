@@ -273,7 +273,7 @@ export default function MesodmaV1() {
 
   const loadRawItems = useCallback(() => {
     setRawLoading(true);
-    fetch("/api/mesodma/raw-items?signal_processing_status_in=pending,needs_enrichment&status=extracted&limit=50")
+    fetch("/api/mesodma/raw-items?signal_processing_status_in=pending,needs_enrichment&include_null=true&status=extracted&limit=50")
       .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
       .then(d => { setRawItems(d.items ?? []); setRawTotal(d.total ?? 0); })
       .catch(() => {})

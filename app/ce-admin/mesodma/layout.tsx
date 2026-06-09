@@ -188,7 +188,7 @@ export default function MesodmaAdminLayout({ children }: { children: React.React
         </main>
         <footer style={{ flexShrink: 0, borderTop: `1px solid ${C.border}`, background: C.bg, padding: "8px 32px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <span style={{ fontSize: 11, color: C.faint }}>Cognitive Empire · Mesodma</span>
-          <span style={{ fontSize: 11, color: C.faint }}>Ingestion boundary: raw_items only — no signal creation</span>
+          <span style={{ fontSize: 11, color: C.faint }}>Mesodma V1 — Candidate evidence and first-pass signals only. Does not touch signals table.</span>
         </footer>
       </div>
     </div>
