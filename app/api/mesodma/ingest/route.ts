@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { runMesodmaIngest } from "@/lib/mesodma/ingest";
 
+export const maxDuration = 10; // Vercel Hobby plan max
+
 export async function POST(req: Request) {
   // Require Bearer token matching MESODMA_API_KEY
   const apiKey = process.env.MESODMA_API_KEY;

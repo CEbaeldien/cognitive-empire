@@ -83,21 +83,35 @@ async function fetchExistingExternalIds(
 // ── Parse RSS feed ────────────────────────────────────────────────────────────
 
 const rssParser = new Parser({
-  timeout: 10_000,
+  timeout: 5_000,
   headers: { "User-Agent": "Mesodma/1.0 (Cognitive Empire signal ingestion)" },
 });
 
 async function fetchRssFeed(url: string): Promise<RawRssItem[]> {
-  const feed = await rssParser.parseURL(url);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 5_000);
 
-  return (feed.items ?? []).map((item) => ({
-    title:        item.title?.trim() ?? "(no title)",
-    body:         item.content ?? item.contentSnippet ?? item.summary ?? null,
-    url:          item.link ?? null,
-    author:       item.creator ?? item.author ?? null,
-    published_at: item.isoDate ?? item.pubDate ?? null,
-    external_id:  item.guid ?? item.id ?? item.link ?? null,
-  }));
+  try {
+    const feed = await Promise.race([
+      rssParser.parseURL(url),
+      new Promise<never>((_, reject) => {
+        controller.signal.addEventListener("abort", () =>
+          reject(new Error(`Feed fetch timed out after 5s: ${url}`))
+        );
+      }),
+    ]);
+
+    return (feed.items ?? []).map((item) => ({
+      title:        item.title?.trim() ?? "(no title)",
+      body:         item.content ?? item.contentSnippet ?? item.summary ?? null,
+      url:          item.link ?? null,
+      author:       item.creator ?? item.author ?? null,
+      published_at: item.isoDate ?? item.pubDate ?? null,
+      external_id:  item.guid ?? item.id ?? item.link ?? null,
+    }));
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 // ── Extraction via gpt-4o-mini (structured output) ───────────────────────────
@@ -328,6 +342,7 @@ async function processItem(
 
 export async function runMesodmaIngest(): Promise<IngestReport> {
   const started_at = new Date().toISOString();
+  const HARD_LIMIT_MS = 8_000;
 
   const supabase = getSupabaseClient();
   const openai = getOpenAIClient();
@@ -349,17 +364,33 @@ export async function runMesodmaIngest(): Promise<IngestReport> {
     };
   }
 
+  // Results array populated as each source resolves (order not guaranteed)
   const sourceResults: SourceIngestResult[] = [];
+  let partial = false;
 
-  for (const source of sources) {
+  // Launch all sources in parallel; push to results as each settles
+  const ingestPromises = sources.map((source) => {
     console.log(`[mesodma] ingesting ${source.slug} (${source.endpoint_url})`);
-    const result = await ingestSource(supabase, openai, source);
-    sourceResults.push(result);
-    console.log(
-      `[mesodma] ${source.slug}: ${result.items_extracted} extracted, ` +
-      `${result.items_skipped} skipped, ${result.items_errored} errored`
-    );
-  }
+    return ingestSource(supabase, openai, source).then((result) => {
+      sourceResults.push(result);
+      console.log(
+        `[mesodma] ${source.slug}: ${result.items_extracted} extracted, ` +
+          `${result.items_skipped} skipped, ${result.items_errored} errored`
+      );
+      return result;
+    });
+  });
+
+  // Hard 8s deadline — return whatever finished if we hit the wall
+  const deadline = new Promise<void>((resolve) =>
+    setTimeout(() => {
+      partial = true;
+      console.warn("[mesodma] 8s hard limit reached — returning partial results");
+      resolve();
+    }, HARD_LIMIT_MS)
+  );
+
+  await Promise.race([Promise.allSettled(ingestPromises), deadline]);
 
   return {
     started_at,
@@ -369,5 +400,6 @@ export async function runMesodmaIngest(): Promise<IngestReport> {
     total_skipped:     sourceResults.reduce((n, r) => n + r.items_skipped, 0),
     total_errored:     sourceResults.reduce((n, r) => n + r.items_errored, 0),
     sources: sourceResults,
+    ...(partial ? { partial: true } : {}),
   };
 }

@@ -63,4 +63,5 @@ export type IngestReport = {
   total_skipped: number;
   total_errored: number;
   sources: SourceIngestResult[];
+  partial?: boolean; // true when the 8s hard timeout was hit before all sources finished
 };
