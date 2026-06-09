@@ -17,8 +17,9 @@ export async function GET(req: Request) {
   const offset    =               parseInt(searchParams.get("offset")    ?? "0",  10);
   const status    = searchParams.get("status");
   const source_id = searchParams.get("source_id");
-
-  const sig_proc = searchParams.get("signal_processing_status");
+  const sig_proc  = searchParams.get("signal_processing_status");
+  // Comma-separated list: signal_processing_status_in=pending,needs_enrichment
+  const sig_proc_in = searchParams.get("signal_processing_status_in");
 
   let q = sb()
     .from("raw_items")
@@ -28,7 +29,11 @@ export async function GET(req: Request) {
 
   if (status)    q = q.eq("status",    status);
   if (source_id) q = q.eq("source_id", source_id);
-  if (sig_proc === "null") {
+
+  if (sig_proc_in) {
+    const values = sig_proc_in.split(",").map(v => v.trim()).filter(Boolean);
+    if (values.length > 0) q = q.in("signal_processing_status", values);
+  } else if (sig_proc === "null") {
     q = q.is("signal_processing_status", null);
   } else if (sig_proc) {
     q = q.eq("signal_processing_status", sig_proc);
