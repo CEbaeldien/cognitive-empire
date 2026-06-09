@@ -11,7 +11,7 @@ import {
 export const dynamic = "force-dynamic";
 
 // ANTHROPIC_API_KEY must be set in Vercel environment variables and .env.local
-const ANTHROPIC_MODEL = "claude-sonnet-4-20250514";
+const ANTHROPIC_MODEL = "claude-sonnet-4-6-20251022";
 const OPENAI_MODEL    = "gpt-4o-mini";
 
 function sb() {
@@ -274,13 +274,14 @@ export async function POST(req: NextRequest) {
   try {
     doctrineResult = await callAnthropic(buildDoctrineFilterPrompt(), doctrineUserContent);
   } catch (e) {
+    const errMsg = e instanceof Error ? e.message : String(e);
     await logRun({ raw_item_id, candidate_evidence_id: candidateId,
       module_name: "doctrine_filter", model_used: ANTHROPIC_MODEL,
       input_snapshot: { raw_title: ri.title },
-      output_json: { error: String(e) }, error_flag: true });
+      output_json: { error: errMsg }, error_flag: true });
     await client.from("raw_items").update({ signal_processing_status: "mesodma_processed" }).eq("id", raw_item_id);
     return NextResponse.json({ route_taken: "candidate_evidence_stored",
-      candidate_evidence_id: candidateId, error: `Doctrine Filter failed: ${e}` });
+      candidate_evidence_id: candidateId, error: `Doctrine Filter failed: ${errMsg}` });
   }
 
   await logRun({ raw_item_id, candidate_evidence_id: candidateId,
@@ -310,10 +311,11 @@ export async function POST(req: NextRequest) {
         doctrineUserContent
       );
     } catch (e) {
+      const errMsg = e instanceof Error ? e.message : String(e);
       await logRun({ raw_item_id, candidate_evidence_id: candidateId,
         module_name: "skeptic_check", model_used: ANTHROPIC_MODEL,
         input_snapshot: { signal_potential: signalPotential },
-        output_json: { error: String(e) }, error_flag: true });
+        output_json: { error: errMsg }, error_flag: true });
     }
 
     if (skepticResult) {
