@@ -11,7 +11,7 @@ import {
 export const dynamic = "force-dynamic";
 
 // ANTHROPIC_API_KEY must be set in Vercel environment variables and .env.local
-const ANTHROPIC_MODEL = "claude-sonnet-4-6-20251022";
+const ANTHROPIC_MODEL = "claude-sonnet-4-6";
 const OPENAI_MODEL    = "gpt-4o-mini";
 
 function sb() {
