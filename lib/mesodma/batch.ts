@@ -17,62 +17,69 @@ function sb() {
   );
 }
 
+const RUN_SIZE = 20;
+
 export async function runBatch(): Promise<BatchResult> {
   const client  = sb();
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
+  // Count full queue depth for accurate reporting
+  const { count: pendingCount } = await client
+    .from("raw_items")
+    .select("*", { count: "exact", head: true })
+    .eq("status", "extracted")
+    .or("signal_processing_status.is.null,signal_processing_status.eq.pending,signal_processing_status.eq.needs_enrichment");
+
+  const total_pending = pendingCount ?? 0;
+
+  if (total_pending === 0) {
+    return { total_pending: 0, processed_this_run: 0, promoted_to_candidate: 0, promoted_to_first_pass: 0, rejected: 0, errors: 0 };
+  }
+
+  // Fetch only the oldest RUN_SIZE items for this run
   const { data: items, error } = await client
     .from("raw_items")
     .select("id")
     .eq("status", "extracted")
     .or("signal_processing_status.is.null,signal_processing_status.eq.pending,signal_processing_status.eq.needs_enrichment")
     .order("created_at", { ascending: true })
-    .limit(100);
+    .limit(RUN_SIZE);
 
   if (error) throw new Error(error.message);
 
-  const allItems      = items ?? [];
-  const total_pending = allItems.length;
+  const batch = (items ?? []) as { id: string }[];
 
-  if (total_pending === 0) {
-    return { total_pending: 0, processed_this_run: 0, promoted_to_candidate: 0, promoted_to_first_pass: 0, rejected: 0, errors: 0 };
-  }
+  // Process all in parallel — single allSettled, no loop
+  const results = await Promise.allSettled(
+    batch.map(({ id }) =>
+      fetch(`${siteUrl}/api/mesodma/process`, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ raw_item_id: id }),
+      }).then(r => {
+        if (!r.ok) throw new Error(`process HTTP ${r.status}`);
+        return r.json() as Promise<{ route_taken?: string }>;
+      })
+    )
+  );
 
-  const BATCH_SIZE = 10;
   let processed_this_run = 0, promoted_to_candidate = 0, promoted_to_first_pass = 0, rejected = 0, errors = 0;
 
-  for (let i = 0; i < allItems.length; i += BATCH_SIZE) {
-    const batch = allItems.slice(i, i + BATCH_SIZE) as { id: string }[];
-
-    const results = await Promise.allSettled(
-      batch.map(({ id }) =>
-        fetch(`${siteUrl}/api/mesodma/process`, {
-          method:  "POST",
-          headers: { "Content-Type": "application/json" },
-          body:    JSON.stringify({ raw_item_id: id }),
-        }).then(r => {
-          if (!r.ok) throw new Error(`process HTTP ${r.status}`);
-          return r.json() as Promise<{ route_taken?: string }>;
-        })
-      )
-    );
-
-    for (const r of results) {
-      processed_this_run++;
-      if (r.status === "rejected") {
-        errors++;
+  for (const r of results) {
+    processed_this_run++;
+    if (r.status === "rejected") {
+      errors++;
+    } else {
+      const rt = (r.value as { route_taken?: string }).route_taken ?? "";
+      if (rt === "promoted_to_first_pass_signal") {
+        promoted_to_first_pass++;
+        promoted_to_candidate++;
+      } else if (rt === "candidate_evidence_stored" || rt === "stored_as_candidate_evidence") {
+        promoted_to_candidate++;
+      } else if (rt === "rejected_noise" || rt === "rejected_at_doctrine_filter") {
+        rejected++;
       } else {
-        const rt = (r.value as { route_taken?: string }).route_taken ?? "";
-        if (rt === "promoted_to_first_pass_signal") {
-          promoted_to_first_pass++;
-          promoted_to_candidate++;
-        } else if (rt === "candidate_evidence_stored" || rt === "stored_as_candidate_evidence") {
-          promoted_to_candidate++;
-        } else if (rt === "rejected_noise" || rt === "rejected_at_doctrine_filter") {
-          rejected++;
-        } else {
-          errors++;
-        }
+        errors++;
       }
     }
   }

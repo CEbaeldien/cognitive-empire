@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { runBatch } from "@/lib/mesodma/batch";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 25;
+export const maxDuration = 10;
 
 // Internal admin trigger — no Bearer token required.
 // Auth protection comes from the ce-admin layout (Supabase session guard).
