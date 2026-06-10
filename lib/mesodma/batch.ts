@@ -49,19 +49,27 @@ export async function runBatch(): Promise<BatchResult> {
 
   const batch = (items ?? []) as { id: string }[];
 
-  // Process all in parallel — single allSettled, no loop
+  // 8s wall-clock abort so the caller (maxDuration=10) always returns in time.
+  // Items whose fetch is aborted may still complete in the background — their
+  // signal_processing_status is updated by the process route, so they won't re-queue.
+  const controller = new AbortController();
+  const abortTimer = setTimeout(() => controller.abort(), 8_000);
+
   const results = await Promise.allSettled(
     batch.map(({ id }) =>
       fetch(`${siteUrl}/api/mesodma/process`, {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({ raw_item_id: id }),
+        signal:  controller.signal,
       }).then(r => {
         if (!r.ok) throw new Error(`process HTTP ${r.status}`);
         return r.json() as Promise<{ route_taken?: string }>;
       })
     )
   );
+
+  clearTimeout(abortTimer);
 
   let processed_this_run = 0, promoted_to_candidate = 0, promoted_to_first_pass = 0, rejected = 0, errors = 0;
 
