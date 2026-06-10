@@ -285,6 +285,15 @@ All decisions where spec was ambiguous, conflicting, or unsafe — chose most co
 | 6 | A5 | Index named `idx_raw_items_ingestion_status` not `idx_raw_items_status` — V1 name conflict |
 | 7 | D  | MAX_CLUSTERS=1 per synthesis call — Vercel Hobby 10s constraint |
 
+## Cleanup List
+
+| # | Item | Priority |
+|---|------|----------|
+| 1 | Admin "Run Batch Now" button (`app/ce-admin/mesodma/page.tsx:115`) calls `/api/mesodma/batch` (V1). Needs a separate V2 section or a second button wired to `/api/mesodma/v2/batch` with the cluster and synthesize triggers. | Before V2 pipeline goes live |
+| 2 | `app/ce-admin/mesodma/noise-corner/page.tsx` and `app/ce-admin/mesodma/page.tsx` hardcode `"Bearer ce-mesodma-2026"` — should read from `process.env.NEXT_PUBLIC_MESODMA_API_KEY` or be moved server-side. | Low (admin-only pages, key already public in client bundle) |
+
+---
+
 ## Hard Constraints Audit
 
 | # | Constraint | Status |
