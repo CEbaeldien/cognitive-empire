@@ -39,8 +39,9 @@ type BatchResult = {
   promoted_to_first_pass: number;
   rejected:               number;
   errors:                 number;
-  error?:                 string;
 };
+
+type BatchProgress = { done: number; total: number };
 
 function timeAgo(iso: string | null | undefined): string {
   if (!iso) return "Never";
@@ -85,11 +86,12 @@ function StatCard({ label, value, sub, color, href }: {
 }
 
 export default function MesodmaCockpit() {
-  const [stats,        setStats]      = useState<BatchStats | null>(null);
-  const [statsLoading, setStatsLoading] = useState(true);
-  const [batchRunning, setBatchRunning] = useState(false);
-  const [batchResult,  setBatchResult]  = useState<BatchResult | null>(null);
-  const [batchError,   setBatchError]   = useState<string | null>(null);
+  const [stats,         setStats]        = useState<BatchStats | null>(null);
+  const [statsLoading,  setStatsLoading] = useState(true);
+  const [batchRunning,  setBatchRunning] = useState(false);
+  const [batchResult,   setBatchResult]  = useState<BatchResult | null>(null);
+  const [batchError,    setBatchError]   = useState<string | null>(null);
+  const [batchProgress, setBatchProgress] = useState<BatchProgress | null>(null);
 
   const loadStats = useCallback(() => {
     setStatsLoading(true);
@@ -106,21 +108,80 @@ export default function MesodmaCockpit() {
     setBatchRunning(true);
     setBatchResult(null);
     setBatchError(null);
+    setBatchProgress(null);
+
     try {
-      const res  = await fetch("/api/mesodma/batch", {
+      // Step 1: fast fetch of pending item IDs from the server (< 2s, no AI calls)
+      const res = await fetch("/api/mesodma/batch", {
         method: "POST",
         headers: { "Authorization": "Bearer ce-mesodma-2026" },
       });
-      const data = await res.json() as BatchResult;
-      if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
-      setBatchResult(data);
+      const batchData = await res.json() as { total_pending?: number; item_ids?: string[]; error?: string };
+      if (!res.ok) throw new Error(batchData.error ?? `HTTP ${res.status}`);
+
+      const total_pending = batchData.total_pending ?? 0;
+      const item_ids = batchData.item_ids ?? [];
+
+      if (item_ids.length === 0) {
+        setBatchResult({ total_pending: 0, processed_this_run: 0, promoted_to_candidate: 0, promoted_to_first_pass: 0, rejected: 0, errors: 0 });
+        return;
+      }
+
+      // Step 2: fire all process calls from the browser — no serverless timeout applies
+      setBatchProgress({ done: 0, total: item_ids.length });
+      let done = 0;
+      let promoted_to_candidate = 0;
+      let promoted_to_first_pass = 0;
+      let rejected = 0;
+      let errors = 0;
+
+      const results = await Promise.allSettled(
+        item_ids.map(id =>
+          fetch("/api/mesodma/process", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ raw_item_id: id }),
+          })
+            .then(r => {
+              if (!r.ok) throw new Error(`HTTP ${r.status}`);
+              return r.json() as Promise<{ route_taken?: string }>;
+            })
+            .finally(() => {
+              done++;
+              setBatchProgress({ done, total: item_ids.length });
+            })
+        )
+      );
+
+      for (const r of results) {
+        if (r.status === "rejected") {
+          errors++;
+        } else {
+          const rt = (r.value as { route_taken?: string }).route_taken ?? "";
+          if (rt === "promoted_to_first_pass_signal") {
+            promoted_to_first_pass++;
+            promoted_to_candidate++;
+          } else if (rt === "candidate_evidence_stored" || rt === "stored_as_candidate_evidence") {
+            promoted_to_candidate++;
+          } else if (rt === "rejected_noise" || rt === "rejected_at_doctrine_filter") {
+            rejected++;
+          } else {
+            errors++;
+          }
+        }
+      }
+
+      setBatchResult({ total_pending, processed_this_run: item_ids.length, promoted_to_candidate, promoted_to_first_pass, rejected, errors });
       loadStats();
     } catch (e) {
       setBatchError(e instanceof Error ? e.message : String(e));
     } finally {
       setBatchRunning(false);
+      setBatchProgress(null);
     }
   }
+
+  const progressPct = batchProgress ? Math.round((batchProgress.done / batchProgress.total) * 100) : 0;
 
   return (
     <div style={{ padding: "28px 32px", maxWidth: 1200 }}>
@@ -139,11 +200,11 @@ export default function MesodmaCockpit() {
           <p style={{ fontSize: 13, color: C.faint }}>Loading stats…</p>
         ) : stats ? (
           <>
-            <StatCard label="Pending"       value={stats.pending_count}    color={stats.pending_count > 0 ? C.yellow : C.text}   sub="raw items unprocessed" />
-            <StatCard label="Candidates"    value={stats.candidate_count}  color={C.accent}  sub="candidate evidence"               href="/ce-admin/mesodma/candidate-evidence" />
-            <StatCard label="First-Pass"    value={stats.first_pass_count} color={stats.first_pass_count > 0 ? C.green : C.text} sub="ready for review"        href="/ce-admin/mesodma/first-pass-signals" />
-            <StatCard label="Noise"         value={stats.rejected_count}   color={stats.rejected_count > 0 ? C.red : C.text}    sub="rejected, 48h TTL"       href="/ce-admin/mesodma/noise-corner" />
-            <StatCard label="Last Run"      value={timeAgo(stats.last_batch_run)} color={C.muted} sub="most recent module run"  href="/ce-admin/mesodma/runs-log" />
+            <StatCard label="Pending"    value={stats.pending_count}    color={stats.pending_count > 0 ? C.yellow : C.text}   sub="raw items unprocessed" />
+            <StatCard label="Candidates" value={stats.candidate_count}  color={C.accent}  sub="candidate evidence"               href="/ce-admin/mesodma/candidate-evidence" />
+            <StatCard label="First-Pass" value={stats.first_pass_count} color={stats.first_pass_count > 0 ? C.green : C.text} sub="ready for review"        href="/ce-admin/mesodma/first-pass-signals" />
+            <StatCard label="Noise"      value={stats.rejected_count}   color={stats.rejected_count > 0 ? C.red : C.text}    sub="rejected, 48h TTL"       href="/ce-admin/mesodma/noise-corner" />
+            <StatCard label="Last Run"   value={timeAgo(stats.last_batch_run)} color={C.muted} sub="most recent module run"  href="/ce-admin/mesodma/runs-log" />
           </>
         ) : (
           <p style={{ fontSize: 12, color: C.red }}>Failed to load stats</p>
@@ -157,7 +218,7 @@ export default function MesodmaCockpit() {
             <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.4em", textTransform: "uppercase", color: C.faint, margin: "0 0 6px" }}>Batch Processing</p>
             <p style={{ fontSize: 16, fontWeight: 700, color: C.text, margin: "0 0 4px" }}>Run Batch Now</p>
             <p style={{ fontSize: 12, color: C.faint, margin: 0 }}>
-              Processes all pending raw items through the 4-module pipeline in parallel batches of 10.
+              Processes up to 20 pending items through the 4-module pipeline in parallel.
               Next scheduled run: <span style={{ color: C.muted }}>{nextBatchTime()}</span>
             </p>
           </div>
@@ -194,18 +255,31 @@ export default function MesodmaCockpit() {
           </button>
         </div>
 
+        {/* Progress bar */}
+        {batchRunning && batchProgress && (
+          <div style={{ marginTop: 18 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+              <span style={{ fontSize: 11, color: C.accent }}>Processing items…</span>
+              <span style={{ fontSize: 11, color: C.muted }}>{batchProgress.done} / {batchProgress.total}</span>
+            </div>
+            <div style={{ height: 4, borderRadius: 2, background: C.border, overflow: "hidden" }}>
+              <div style={{ height: "100%", width: `${progressPct}%`, background: C.accent, borderRadius: 2, transition: "width 0.3s ease" }} />
+            </div>
+          </div>
+        )}
+
         {/* Batch Result */}
         {batchResult && !batchError && (
           <div style={{ marginTop: 20, paddingTop: 20, borderTop: `1px solid ${C.border}` }}>
             <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.4em", textTransform: "uppercase", color: C.green, margin: "0 0 12px" }}>Batch Complete</p>
             <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
               {[
-                { label: "Pending",     value: batchResult.total_pending },
-                { label: "Processed",   value: batchResult.processed_this_run },
+                { label: "Pending",      value: batchResult.total_pending },
+                { label: "Processed",    value: batchResult.processed_this_run },
                 { label: "→ First-Pass", value: batchResult.promoted_to_first_pass, color: C.green },
-                { label: "→ Candidate", value: batchResult.promoted_to_candidate,  color: C.accent },
-                { label: "Rejected",    value: batchResult.rejected,               color: C.red },
-                { label: "Errors",      value: batchResult.errors,                 color: batchResult.errors > 0 ? C.orange : C.faint },
+                { label: "→ Candidate",  value: batchResult.promoted_to_candidate,  color: C.accent },
+                { label: "Rejected",     value: batchResult.rejected,               color: C.red },
+                { label: "Errors",       value: batchResult.errors,                 color: batchResult.errors > 0 ? C.orange : C.faint },
               ].map(({ label, value, color }) => (
                 <div key={label}>
                   <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.3em", textTransform: "uppercase", color: C.faint, margin: "0 0 4px" }}>{label}</p>
@@ -228,11 +302,11 @@ export default function MesodmaCockpit() {
         <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.45em", textTransform: "uppercase", color: C.faint, marginBottom: 12 }}>Review Queues</p>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           {[
-            { href: "/ce-admin/mesodma/first-pass-signals",  label: "First-Pass Signals",  desc: "Promote, flag, or reject",         count: stats?.first_pass_count, urgent: (stats?.first_pass_count ?? 0) > 0, color: C.green },
+            { href: "/ce-admin/mesodma/first-pass-signals",  label: "First-Pass Signals",  desc: "Promote, flag, or reject",               count: stats?.first_pass_count, color: C.green },
             { href: "/ce-admin/mesodma/candidate-evidence",  label: "Candidate Evidence",  desc: "Structured evidence awaiting convergence", count: stats?.candidate_count },
-            { href: "/ce-admin/mesodma/noise-corner",         label: "Noise Corner",        desc: "Rejected items expiring in 48h",    count: stats?.rejected_count,  urgent: false, color: C.red },
-            { href: "/ce-admin/mesodma/runs-log",             label: "Runs Log",            desc: "Module-level execution log",        count: undefined },
-            { href: "/ce-admin/mesodma/training-examples",    label: "Training Examples",   desc: "Calibrate pipeline behavior",       count: undefined },
+            { href: "/ce-admin/mesodma/noise-corner",         label: "Noise Corner",        desc: "Rejected items expiring in 48h",           count: stats?.rejected_count,  color: C.red },
+            { href: "/ce-admin/mesodma/runs-log",             label: "Runs Log",            desc: "Module-level execution log",               count: undefined },
+            { href: "/ce-admin/mesodma/training-examples",    label: "Training Examples",   desc: "Calibrate pipeline behavior",              count: undefined },
           ].map(({ href, label, desc, count, color }) => (
             <Link key={href} href={href} style={{ textDecoration: "none", flex: "1 1 200px", minWidth: 200 }}>
               <div style={{ padding: "14px 18px", borderRadius: 9, background: C.panelDark, border: `1px solid ${C.border}`, transition: "border-color 0.15s", cursor: "pointer" }}>

@@ -1,12 +1,16 @@
 import { createClient } from "@supabase/supabase-js";
 
-export type BatchResult = {
-  total_pending:          number;
-  processed_this_run:     number;
-  promoted_to_candidate:  number;
-  promoted_to_first_pass: number;
-  rejected:               number;
-  errors:                 number;
+export type PendingBatch = {
+  total_pending: number;
+  item_ids:      string[];
+};
+
+export type BatchStats = {
+  pending_count:    number;
+  candidate_count:  number;
+  first_pass_count: number;
+  rejected_count:   number;
+  last_batch_run:   string | null;
 };
 
 function sb() {
@@ -19,89 +23,33 @@ function sb() {
 
 const RUN_SIZE = 20;
 
-export async function runBatch(): Promise<BatchResult> {
-  const client  = sb();
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+// Returns pending item IDs — no AI calls, completes well within Vercel Hobby 10s limit.
+// Actual processing is done client-side (cockpit) or per-item by n8n.
+export async function getPendingBatch(): Promise<PendingBatch> {
+  const client = sb();
 
-  // Count full queue depth for accurate reporting
-  const { count: pendingCount } = await client
-    .from("raw_items")
-    .select("*", { count: "exact", head: true })
-    .eq("status", "extracted")
-    .or("signal_processing_status.is.null,signal_processing_status.eq.pending,signal_processing_status.eq.needs_enrichment");
+  const [countResult, itemsResult] = await Promise.all([
+    client
+      .from("raw_items")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "extracted")
+      .or("signal_processing_status.is.null,signal_processing_status.eq.pending,signal_processing_status.eq.needs_enrichment"),
+    client
+      .from("raw_items")
+      .select("id")
+      .eq("status", "extracted")
+      .or("signal_processing_status.is.null,signal_processing_status.eq.pending,signal_processing_status.eq.needs_enrichment")
+      .order("created_at", { ascending: true })
+      .limit(RUN_SIZE),
+  ]);
 
-  const total_pending = pendingCount ?? 0;
+  if (itemsResult.error) throw new Error(itemsResult.error.message);
 
-  if (total_pending === 0) {
-    return { total_pending: 0, processed_this_run: 0, promoted_to_candidate: 0, promoted_to_first_pass: 0, rejected: 0, errors: 0 };
-  }
-
-  // Fetch only the oldest RUN_SIZE items for this run
-  const { data: items, error } = await client
-    .from("raw_items")
-    .select("id")
-    .eq("status", "extracted")
-    .or("signal_processing_status.is.null,signal_processing_status.eq.pending,signal_processing_status.eq.needs_enrichment")
-    .order("created_at", { ascending: true })
-    .limit(RUN_SIZE);
-
-  if (error) throw new Error(error.message);
-
-  const batch = (items ?? []) as { id: string }[];
-
-  // 8s wall-clock abort so the caller (maxDuration=10) always returns in time.
-  // Items whose fetch is aborted may still complete in the background — their
-  // signal_processing_status is updated by the process route, so they won't re-queue.
-  const controller = new AbortController();
-  const abortTimer = setTimeout(() => controller.abort(), 8_000);
-
-  const results = await Promise.allSettled(
-    batch.map(({ id }) =>
-      fetch(`${siteUrl}/api/mesodma/process`, {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ raw_item_id: id }),
-        signal:  controller.signal,
-      }).then(r => {
-        if (!r.ok) throw new Error(`process HTTP ${r.status}`);
-        return r.json() as Promise<{ route_taken?: string }>;
-      })
-    )
-  );
-
-  clearTimeout(abortTimer);
-
-  let processed_this_run = 0, promoted_to_candidate = 0, promoted_to_first_pass = 0, rejected = 0, errors = 0;
-
-  for (const r of results) {
-    processed_this_run++;
-    if (r.status === "rejected") {
-      errors++;
-    } else {
-      const rt = (r.value as { route_taken?: string }).route_taken ?? "";
-      if (rt === "promoted_to_first_pass_signal") {
-        promoted_to_first_pass++;
-        promoted_to_candidate++;
-      } else if (rt === "candidate_evidence_stored" || rt === "stored_as_candidate_evidence") {
-        promoted_to_candidate++;
-      } else if (rt === "rejected_noise" || rt === "rejected_at_doctrine_filter") {
-        rejected++;
-      } else {
-        errors++;
-      }
-    }
-  }
-
-  return { total_pending, processed_this_run, promoted_to_candidate, promoted_to_first_pass, rejected, errors };
+  return {
+    total_pending: countResult.count ?? 0,
+    item_ids:      (itemsResult.data ?? []).map((r: { id: string }) => r.id),
+  };
 }
-
-export type BatchStats = {
-  pending_count:    number;
-  candidate_count:  number;
-  first_pass_count: number;
-  rejected_count:   number;
-  last_batch_run:   string | null;
-};
 
 export async function getBatchStats(): Promise<BatchStats> {
   const client = sb();

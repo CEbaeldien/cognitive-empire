@@ -2,7 +2,7 @@
   "name": "CE Mesodma Daily Batch",
   "nodes": [
     {
-      "id": "a1b2c3d4-0001-0001-0001-000000000001",
+      "id": "node-01",
       "name": "Daily Schedule",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
@@ -19,8 +19,8 @@
       }
     },
     {
-      "id": "a1b2c3d4-0002-0002-0002-000000000002",
-      "name": "POST /api/mesodma/batch",
+      "id": "node-02",
+      "name": "Get Batch IDs",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [460, 300],
@@ -41,7 +41,7 @@
           ]
         },
         "options": {
-          "timeout": 30000,
+          "timeout": 15000,
           "response": {
             "response": {
               "responseFormat": "json"
@@ -51,8 +51,8 @@
       }
     },
     {
-      "id": "a1b2c3d4-0003-0003-0003-000000000003",
-      "name": "Batch OK?",
+      "id": "node-03",
+      "name": "Has Items?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [680, 300],
@@ -65,13 +65,22 @@
           },
           "conditions": [
             {
-              "id": "cond-1",
+              "id": "cond-no-error",
               "leftValue": "={{ $json.error }}",
               "rightValue": "",
               "operator": {
                 "type": "string",
                 "operation": "empty",
                 "singleValue": true
+              }
+            },
+            {
+              "id": "cond-has-items",
+              "leftValue": "={{ ($json.item_ids ?? []).length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
               }
             }
           ],
@@ -80,11 +89,62 @@
       }
     },
     {
-      "id": "a1b2c3d4-0004-0004-0004-000000000004",
+      "id": "node-04",
+      "name": "Split IDs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 220],
+      "parameters": {
+        "jsCode": "const { item_ids, total_pending } = $input.first().json;\nreturn (item_ids || []).map(id => ({ json: { raw_item_id: id, total_pending } }));"
+      }
+    },
+    {
+      "id": "node-05",
+      "name": "Process Item",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1120, 220],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.CE_SITE_URL }}/api/mesodma/process",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ raw_item_id: $json.raw_item_id }) }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "node-06",
+      "name": "Aggregate Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1340, 220],
+      "parameters": {
+        "jsCode": "const results = $input.all();\nconst routes = results.reduce((acc, r) => {\n  const rt = r.json.route_taken || 'unknown';\n  acc[rt] = (acc[rt] || 0) + 1;\n  return acc;\n}, {});\nreturn [{ json: { processed: results.length, routes } }];"
+      }
+    },
+    {
+      "id": "node-07",
       "name": "POST /api/mesodma/cleanup",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [900, 220],
+      "position": [1560, 220],
       "parameters": {
         "method": "POST",
         "url": "={{ $env.CE_SITE_URL }}/api/mesodma/cleanup",
@@ -111,23 +171,23 @@
       }
     },
     {
-      "id": "a1b2c3d4-0005-0005-0005-000000000005",
+      "id": "node-08",
       "name": "Log Success",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1120, 220],
+      "position": [1780, 220],
       "parameters": {
-        "jsCode": "const batch  = $('POST /api/mesodma/batch').first().json;\nconst cleanup = $('POST /api/mesodma/cleanup').first().json;\nconsole.log('[CE Mesodma] Daily batch complete:', JSON.stringify({\n  processed:    batch.processed_this_run,\n  first_pass:   batch.promoted_to_first_pass,\n  candidates:   batch.promoted_to_candidate,\n  rejected:     batch.rejected,\n  errors:       batch.errors,\n  deleted_raw:  cleanup.deleted_raw_items,\n  deleted_cand: cleanup.deleted_candidates,\n}));\nreturn [{ json: { batch, cleanup, success: true } }];"
+        "jsCode": "const agg = $('Aggregate Results').first().json;\nconst cleanup = $('POST /api/mesodma/cleanup').first().json;\nconsole.log('[CE Mesodma] Daily batch complete:', JSON.stringify({\n  processed:         agg.processed,\n  routes:            agg.routes,\n  deleted_raw:       cleanup.deleted_raw_items,\n  deleted_candidates: cleanup.deleted_candidates,\n}));\nreturn [{ json: { ...agg, cleanup, success: true } }];"
       }
     },
     {
-      "id": "a1b2c3d4-0006-0006-0006-000000000006",
+      "id": "node-09",
       "name": "Log Batch Error",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [900, 400],
       "parameters": {
-        "jsCode": "const result = $input.first().json;\nconsole.error('[CE Mesodma] Batch error:', JSON.stringify(result));\nreturn [{ json: { error: result.error, success: false } }];"
+        "jsCode": "const result = $input.first().json;\nconsole.log('[CE Mesodma] Queue empty or error:', JSON.stringify(result));\nreturn [{ json: { error: result.error || 'empty queue', success: false } }];"
       }
     }
   ],
@@ -136,29 +196,29 @@
       "main": [
         [
           {
-            "node": "POST /api/mesodma/batch",
+            "node": "Get Batch IDs",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "POST /api/mesodma/batch": {
+    "Get Batch IDs": {
       "main": [
         [
           {
-            "node": "Batch OK?",
+            "node": "Has Items?",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Batch OK?": {
+    "Has Items?": {
       "main": [
         [
           {
-            "node": "POST /api/mesodma/cleanup",
+            "node": "Split IDs",
             "type": "main",
             "index": 0
           }
@@ -166,6 +226,39 @@
         [
           {
             "node": "Log Batch Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split IDs": {
+      "main": [
+        [
+          {
+            "node": "Process Item",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Item": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Results": {
+      "main": [
+        [
+          {
+            "node": "POST /api/mesodma/cleanup",
             "type": "main",
             "index": 0
           }
@@ -191,11 +284,11 @@
     "callerPolicy": "workflowsFromSameOwner",
     "errorWorkflow": ""
   },
-  "versionId": "1",
+  "versionId": "2",
   "meta": {
     "instanceId": "",
     "templateCredsSetupCompleted": false
   },
   "tags": ["mesodma", "automation"],
-  "notes": "Requires n8n environment variables: CE_SITE_URL (e.g. https://cognitiveempire.com) and MESODMA_API_KEY. Schedule: 2:00 AM UTC daily. Runs batch processing then cleans up noise older than 48h."
+  "notes": "Requires n8n env vars: CE_SITE_URL (e.g. https://www.cognitiveempire.com) and MESODMA_API_KEY. Schedule: 2:00 AM UTC daily. POST /api/mesodma/batch returns pending item IDs (fast, no AI calls). Split IDs node splits the array into individual items. Process Item runs once per ID with a 30s timeout. Aggregate Results merges back to 1 item for cleanup."
 }

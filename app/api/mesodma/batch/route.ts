@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { runBatch, getBatchStats } from "@/lib/mesodma/batch";
+import { getPendingBatch, getBatchStats } from "@/lib/mesodma/batch";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 10;
@@ -21,11 +21,11 @@ export async function POST(req: NextRequest) {
     if (!apiKey || req.headers.get("authorization") !== `Bearer ${apiKey}`) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const result = await runBatch();
-    return NextResponse.json(result);
+    const batch = await getPendingBatch();
+    return NextResponse.json(batch);
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
-    console.error("[mesodma] batch run failed:", message);
+    console.error("[mesodma] batch failed:", message);
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
