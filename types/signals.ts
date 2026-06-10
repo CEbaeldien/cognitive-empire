@@ -480,7 +480,7 @@ export type FactualAtomRow = {
   id: number;
   raw_item_id: string | null;
   source_id: string | null;
-  batch_run_id: number | null;
+  mesodma_run_id: number | null;
   atom_summary: string;
   who: string | null;
   what: string | null;

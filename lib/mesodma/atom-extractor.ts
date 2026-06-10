@@ -122,12 +122,32 @@ export async function loadDoctrineContext(client: SupabaseClient): Promise<Doctr
       .single(),
   ]);
 
-  if (invariantsRes.error) throw new Error(`Invariants load: ${invariantsRes.error.message}`);
-  if (patternsRes.error)   throw new Error(`Patterns load: ${patternsRes.error.message}`);
+  if (invariantsRes.error) throw new Error(`Invariants load failed: ${invariantsRes.error.message} (code: ${invariantsRes.error.code})`);
+  if (patternsRes.error)   throw new Error(`Patterns load failed: ${patternsRes.error.message} (code: ${patternsRes.error.code})`);
 
+  // Hard guard: a batch with zero invariants must never proceed — items would be classified
+  // with no doctrine lens and produce useless noise atoms that waste raw_item budget.
   const invariants = (invariantsRes.data ?? []) as StructuralInvariant[];
+  if (invariants.length === 0) {
+    throw new Error(
+      "Doctrine context empty: structural_invariants returned 0 active rows. " +
+      "Verify migrations ran and active=true is set on all 14 rows."
+    );
+  }
+
   const falseSignalPatterns = (patternsRes.data ?? []) as FalseSignalPattern[];
+
+  if (versionRes.error && versionRes.error.code !== "PGRST116") {
+    // PGRST116 = "JSON object requested, multiple (or no) rows returned" — acceptable if table
+    // was not yet seeded. Any other error is unexpected and logged loudly.
+    console.error("[loadDoctrineContext] doctrine_versions query error:", versionRes.error.message, versionRes.error.code);
+  }
   const doctrineVersion = (versionRes.data as { version?: string } | null)?.version ?? "unknown";
+
+  console.log(
+    `[loadDoctrineContext] loaded: ${invariants.length} invariants, ` +
+    `${falseSignalPatterns.length} patterns, doctrine=${doctrineVersion}`
+  );
 
   const invariantMap = new Map<string, number>(invariants.map((i) => [i.code, i.id]));
 
