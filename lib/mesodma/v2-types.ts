@@ -136,6 +136,16 @@ export type ClusterPassReport = {
   errors: string[];
 };
 
+export type EnrichReport = {
+  started_at: string;
+  completed_at: string;
+  items_checked: number;
+  items_enriched: number;
+  items_skipped: number;
+  items_failed: number;
+  failures: Array<{ id: string; url: string; error: string }>;
+};
+
 export type SynthesisOutput = {
   title: string;
   summary: string;

@@ -19,11 +19,146 @@
       }
     },
     {
+      "id": "v2-e1",
+      "name": "Enrich Run 1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "VhVNz7nvyu48scjk",
+          "name": "Header Auth account 2"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.cognitiveempire.com/api/mesodma/v2/enrich",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "v2-e2",
+      "name": "Enrich Run 2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "VhVNz7nvyu48scjk",
+          "name": "Header Auth account 2"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.cognitiveempire.com/api/mesodma/v2/enrich",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "v2-e3",
+      "name": "Enrich Run 3",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "VhVNz7nvyu48scjk",
+          "name": "Header Auth account 2"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.cognitiveempire.com/api/mesodma/v2/enrich",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "v2-e4",
+      "name": "Enrich Run 4",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1120, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "VhVNz7nvyu48scjk",
+          "name": "Header Auth account 2"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.cognitiveempire.com/api/mesodma/v2/enrich",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "v2-e5",
+      "name": "Enrich Run 5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "VhVNz7nvyu48scjk",
+          "name": "Header Auth account 2"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.cognitiveempire.com/api/mesodma/v2/enrich",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
       "id": "v2-b1",
       "name": "Batch Run 1",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [460, 300],
+      "position": [1560, 300],
       "parameters": {
         "method": "POST",
         "url": "={{ $env.CE_SITE_URL }}/api/mesodma/v2/batch",
@@ -55,7 +190,7 @@
       "name": "Batch Run 2",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [680, 300],
+      "position": [1780, 300],
       "parameters": {
         "method": "POST",
         "url": "={{ $env.CE_SITE_URL }}/api/mesodma/v2/batch",
@@ -87,7 +222,7 @@
       "name": "Batch Run 3",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [900, 300],
+      "position": [2000, 300],
       "parameters": {
         "method": "POST",
         "url": "={{ $env.CE_SITE_URL }}/api/mesodma/v2/batch",
@@ -119,7 +254,7 @@
       "name": "Cluster Run",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1120, 300],
+      "position": [2220, 300],
       "parameters": {
         "method": "POST",
         "url": "={{ $env.CE_SITE_URL }}/api/mesodma/v2/cluster",
@@ -151,7 +286,7 @@
       "name": "Cluster OK?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [1340, 300],
+      "position": [2440, 300],
       "parameters": {
         "conditions": {
           "options": {
@@ -180,9 +315,9 @@
       "name": "Log Success",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1560, 220],
+      "position": [2660, 220],
       "parameters": {
-        "jsCode": "const b1 = $('Batch Run 1').first().json;\nconst b2 = $('Batch Run 2').first().json;\nconst b3 = $('Batch Run 3').first().json;\nconst cl = $('Cluster Run').first().json;\nconst summary = {\n  runs: [b1.run_id, b2.run_id, b3.run_id],\n  total_input:  (b1.input_count  || 0) + (b2.input_count  || 0) + (b3.input_count  || 0),\n  total_output: (b1.output_count || 0) + (b2.output_count || 0) + (b3.output_count || 0),\n  total_noise:  (b1.noise_count  || 0) + (b2.noise_count  || 0) + (b3.noise_count  || 0),\n  total_errors: (b1.error_count  || 0) + (b2.error_count  || 0) + (b3.error_count  || 0),\n  doctrine_version: b3.doctrine_version,\n  cluster: {\n    atoms_processed:  cl.atoms_processed,\n    clusters_created: cl.clusters_created,\n    clusters_updated: cl.clusters_updated,\n    clusters_matured: cl.clusters_matured,\n    clusters_expired: cl.clusters_expired,\n    soft_errors:      (cl.errors || []).length,\n  },\n};\nconsole.log('[CE Signals V2] Daily run complete:', JSON.stringify(summary));\nreturn [{ json: { ...summary, success: true } }];"
+        "jsCode": "const e1 = $('Enrich Run 1').first().json;\nconst e2 = $('Enrich Run 2').first().json;\nconst e3 = $('Enrich Run 3').first().json;\nconst e4 = $('Enrich Run 4').first().json;\nconst e5 = $('Enrich Run 5').first().json;\nconst b1 = $('Batch Run 1').first().json;\nconst b2 = $('Batch Run 2').first().json;\nconst b3 = $('Batch Run 3').first().json;\nconst cl = $('Cluster Run').first().json;\nconst summary = {\n  enrich: {\n    total_checked:  (e1.items_checked  || 0) + (e2.items_checked  || 0) + (e3.items_checked  || 0) + (e4.items_checked  || 0) + (e5.items_checked  || 0),\n    total_enriched: (e1.items_enriched || 0) + (e2.items_enriched || 0) + (e3.items_enriched || 0) + (e4.items_enriched || 0) + (e5.items_enriched || 0),\n    total_skipped:  (e1.items_skipped  || 0) + (e2.items_skipped  || 0) + (e3.items_skipped  || 0) + (e4.items_skipped  || 0) + (e5.items_skipped  || 0),\n    total_failed:   (e1.items_failed   || 0) + (e2.items_failed   || 0) + (e3.items_failed   || 0) + (e4.items_failed   || 0) + (e5.items_failed   || 0),\n  },\n  batch: {\n    runs: [b1.run_id, b2.run_id, b3.run_id],\n    total_input:  (b1.input_count  || 0) + (b2.input_count  || 0) + (b3.input_count  || 0),\n    total_output: (b1.output_count || 0) + (b2.output_count || 0) + (b3.output_count || 0),\n    total_noise:  (b1.noise_count  || 0) + (b2.noise_count  || 0) + (b3.noise_count  || 0),\n    total_errors: (b1.error_count  || 0) + (b2.error_count  || 0) + (b3.error_count  || 0),\n    doctrine_version: b3.doctrine_version,\n  },\n  cluster: {\n    atoms_processed:  cl.atoms_processed,\n    clusters_created: cl.clusters_created,\n    clusters_updated: cl.clusters_updated,\n    clusters_matured: cl.clusters_matured,\n    clusters_expired: cl.clusters_expired,\n    soft_errors:      (cl.errors || []).length,\n  },\n};\nconsole.log('[CE Signals V2] Daily run complete:', JSON.stringify(summary));\nreturn [{ json: { ...summary, success: true } }];"
       }
     },
     {
@@ -190,7 +325,7 @@
       "name": "Log Cluster Error",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1560, 400],
+      "position": [2660, 400],
       "parameters": {
         "jsCode": "const result = $input.first().json;\nconsole.log('[CE Signals V2] Cluster error:', JSON.stringify(result));\nreturn [{ json: { error: result.error || 'unknown', success: false } }];"
       }
@@ -198,76 +333,39 @@
   ],
   "connections": {
     "Daily Schedule": {
-      "main": [
-        [
-          {
-            "node": "Batch Run 1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "Enrich Run 1", "type": "main", "index": 0 }]]
+    },
+    "Enrich Run 1": {
+      "main": [[{ "node": "Enrich Run 2", "type": "main", "index": 0 }]]
+    },
+    "Enrich Run 2": {
+      "main": [[{ "node": "Enrich Run 3", "type": "main", "index": 0 }]]
+    },
+    "Enrich Run 3": {
+      "main": [[{ "node": "Enrich Run 4", "type": "main", "index": 0 }]]
+    },
+    "Enrich Run 4": {
+      "main": [[{ "node": "Enrich Run 5", "type": "main", "index": 0 }]]
+    },
+    "Enrich Run 5": {
+      "main": [[{ "node": "Batch Run 1", "type": "main", "index": 0 }]]
     },
     "Batch Run 1": {
-      "main": [
-        [
-          {
-            "node": "Batch Run 2",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "Batch Run 2", "type": "main", "index": 0 }]]
     },
     "Batch Run 2": {
-      "main": [
-        [
-          {
-            "node": "Batch Run 3",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "Batch Run 3", "type": "main", "index": 0 }]]
     },
     "Batch Run 3": {
-      "main": [
-        [
-          {
-            "node": "Cluster Run",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "Cluster Run", "type": "main", "index": 0 }]]
     },
     "Cluster Run": {
-      "main": [
-        [
-          {
-            "node": "Cluster OK?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "Cluster OK?", "type": "main", "index": 0 }]]
     },
     "Cluster OK?": {
       "main": [
-        [
-          {
-            "node": "Log Success",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Log Cluster Error",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        [{ "node": "Log Success", "type": "main", "index": 0 }],
+        [{ "node": "Log Cluster Error", "type": "main", "index": 0 }]
       ]
     }
   },
@@ -278,11 +376,11 @@
     "callerPolicy": "workflowsFromSameOwner",
     "errorWorkflow": ""
   },
-  "versionId": "1",
+  "versionId": "2",
   "meta": {
     "instanceId": "",
     "templateCredsSetupCompleted": false
   },
   "tags": ["signals-v2", "automation"],
-  "notes": "Requires n8n env vars: CE_SITE_URL (e.g. https://www.cognitiveempire.com) and MESODMA_API_KEY. Schedule: 2:00 AM UTC daily. Runs 3 sequential V2 batch calls (atom extraction) then one clustering pass. BATCH_SIZE is set in lib/mesodma/atom-extractor.ts — currently 5 for Vercel Hobby (3 runs = 15 items/day). Raise BATCH_SIZE to 20 on a paid Vercel plan for 60 items/day. HTTP 4xx/5xx on any batch node auto-fails the execution (visible in n8n error log). Cluster 500 errors route to Log Cluster Error node. Synthesis is NOT wired — manual approval required before synthesis is automated."
+  "notes": "Pipeline order: Enrich (5 runs × 3 items = 15 items) → Batch (3 runs × 5 items = 15 items) → Cluster. Enrich nodes use Header Auth credential (literal URL, no $env). Batch/Cluster nodes use $env.CE_SITE_URL + $env.MESODMA_API_KEY. For 60 items/day on Vercel Hobby: run this workflow 4× daily (02:00, 08:00, 14:00, 20:00 UTC). Synthesis NOT wired — manual approval required."
 }
