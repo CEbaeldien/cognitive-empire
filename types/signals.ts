@@ -1,4 +1,4 @@
-// CE Signals V1 — TypeScript types
+// CE Signals V1/V2 — TypeScript types
 // Updated to reflect post-migration schema.
 // Usage: createClient<SignalsDatabase>(url, key)
 
@@ -114,6 +114,10 @@ export type RawItemRow = {
   enrichment_status: string | null;
   signal_processing_status: string | null;
   ingestion_status: string | null;
+  // V2 columns (A5)
+  raw_item_hash: string | null;
+  source_snapshot_hash: string | null;
+  ingestion_lane: "v1" | "v2" | null;
   created_at: string;
 };
 
@@ -169,6 +173,21 @@ export type SignalRow = {
   reviewed_at: string | null;
   revision_notes: string | null;
   metadata: Record<string, unknown>;
+  // V2 columns (Phase D)
+  cluster_id: number | null;
+  invariant_id: number | null;
+  birth_type: "evidence_cluster" | "legacy" | null;
+  evidence_mass_at_birth: number | null;
+  evidence_snapshot: Record<string, unknown> | null;
+  doctrine_basis: string | null;
+  governance_pressure_note: string | null;
+  maintenance_gravity_note: string | null;
+  continuity_note: string | null;
+  physical_constraint_note: string | null;
+  contradiction_note: string | null;
+  lifecycle_status: "active" | "decaying" | "archived" | null;
+  legacy_signal: boolean;
+  created_by_run_id: number | null;
   created_at: string;
   updated_at: string;
 };
@@ -236,6 +255,10 @@ export type ConvergenceRow = {
   impact_layer: string | null;
   subcategories: string[] | null;
   decay_factor: number | null;
+  // V2 columns (Phase E)
+  linked_cluster_ids: number[] | null;
+  dominant_invariant_ids: number[] | null;
+  convergence_strength: number | null;
   created_at: string;
   updated_at: string;
 };
@@ -309,6 +332,9 @@ export type PressureVectorRow = {
   description: string | null;
   is_active: boolean;
   created_by: string | null;
+  // V2 columns (A3)
+  invariant_id: number | null;
+  visibility: "public" | "internal";
   created_at: string;
   updated_at: string;
 };
@@ -411,6 +437,143 @@ export type ConvergenceDoctrineVectorInsert = Omit<
 export type ConvergenceDoctrineVectorUpdate = Partial<ConvergenceDoctrineVectorInsert>;
 
 // ============================================================
+// V2 TABLES — Phase A
+// ============================================================
+
+export type StructuralInvariantRow = {
+  id: number;
+  code: string;
+  name: string;
+  statement: string;
+  function_note: string | null;
+  display_order: number;
+  active: boolean;
+  created_at: string;
+};
+
+export type DoctrineVersionRow = {
+  id: number;
+  version: string;
+  invariant_count: number;
+  vector_count: number;
+  change_note: string | null;
+  active: boolean;
+  created_at: string;
+};
+
+// ============================================================
+// V2 TABLES — Phase B
+// ============================================================
+
+export type FalseSignalPatternRow = {
+  id: number;
+  pattern_name: string;
+  description: string;
+  detection_hint: string | null;
+  severity: "low" | "medium" | "high";
+  active: boolean;
+  created_at: string;
+};
+
+export type FactualAtomRow = {
+  id: number;
+  raw_item_id: string | null;
+  source_id: string | null;
+  batch_run_id: number | null;
+  atom_summary: string;
+  who: string | null;
+  what: string | null;
+  when_occurred: string | null;
+  where_occurred: string | null;
+  why_stated: string | null;
+  how_stated: string | null;
+  entities: Record<string, unknown>;
+  evidence_type: string | null;
+  distribution_stage: string | null;
+  possible_invariant_ids: number[] | null;
+  possible_vector_ids: string[] | null;
+  false_signal_risk: number;
+  extraction_confidence: number | null;
+  source_weight: number;
+  extracted_by_model: string | null;
+  doctrine_version: string | null;
+  status: "atom" | "noise" | "duplicate" | "error";
+  error_message: string | null;
+  created_at: string;
+};
+
+export type MesodmaBatchRunRow = {
+  id: number;
+  started_at: string;
+  completed_at: string | null;
+  status: "running" | "complete" | "error";
+  input_count: number;
+  output_count: number;
+  noise_count: number;
+  error_count: number;
+  doctrine_version: string | null;
+  error_message: string | null;
+};
+
+// ============================================================
+// V2 TABLES — Phase C
+// ============================================================
+
+export type EvidenceClusterRow = {
+  id: number;
+  invariant_id: number;
+  vector_id: string | null;
+  label: string | null;
+  status: "seed" | "accumulating" | "mature" | "signal_candidate" | "converted" | "decayed";
+  evidence_mass: number;
+  atom_count: number;
+  source_count: number;
+  independence_bonus: number;
+  vector_spread_bonus: number;
+  corroboration_bonus: number;
+  contradiction_penalty: number;
+  last_atom_at: string | null;
+  last_mass_computed_at: string | null;
+  decay_check_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ClusterAtomRow = {
+  cluster_id: number;
+  atom_id: number;
+  match_score: number;
+  attached_at: string;
+};
+
+// ============================================================
+// V2 TABLES — Phase D
+// ============================================================
+
+export type SignalIntelligenceRunRow = {
+  id: number;
+  trigger_type: "threshold" | "cycle" | "manual";
+  clusters_evaluated: number;
+  signals_created: number;
+  signals_routed_internal: number;
+  signals_blocked: number;
+  started_at: string;
+  completed_at: string | null;
+  status: "running" | "complete" | "error";
+  error_message: string | null;
+};
+
+export type HumanGovernanceActionRow = {
+  id: number;
+  signal_id: string;
+  run_id: number | null;
+  action: string;
+  actor: string | null;
+  note: string | null;
+  created_at: string;
+};
+
+// ============================================================
 // DATABASE TYPE — for typed Supabase client
 // Usage: createClient<SignalsDatabase>(url, key)
 // ============================================================
@@ -482,6 +645,52 @@ export type SignalsDatabase = {
         Row: ConvergenceDoctrineVectorRow;
         Insert: ConvergenceDoctrineVectorInsert;
         Update: ConvergenceDoctrineVectorUpdate;
+      };
+      // V2 tables
+      structural_invariants: {
+        Row: StructuralInvariantRow;
+        Insert: never;
+        Update: never;
+      };
+      doctrine_versions: {
+        Row: DoctrineVersionRow;
+        Insert: Omit<DoctrineVersionRow, "id" | "created_at"> & { id?: number; created_at?: string };
+        Update: Partial<Omit<DoctrineVersionRow, "id" | "created_at">>;
+      };
+      false_signal_patterns: {
+        Row: FalseSignalPatternRow;
+        Insert: Omit<FalseSignalPatternRow, "id" | "created_at"> & { id?: number; created_at?: string };
+        Update: Partial<Omit<FalseSignalPatternRow, "id" | "created_at">>;
+      };
+      factual_atoms: {
+        Row: FactualAtomRow;
+        Insert: Omit<FactualAtomRow, "id" | "created_at"> & { id?: number; created_at?: string };
+        Update: Partial<Omit<FactualAtomRow, "id" | "created_at">>;
+      };
+      mesodma_batch_runs: {
+        Row: MesodmaBatchRunRow;
+        Insert: Omit<MesodmaBatchRunRow, "id"> & { id?: number };
+        Update: Partial<Omit<MesodmaBatchRunRow, "id">>;
+      };
+      evidence_clusters: {
+        Row: EvidenceClusterRow;
+        Insert: Omit<EvidenceClusterRow, "id" | "created_at" | "updated_at"> & { id?: number; created_at?: string; updated_at?: string };
+        Update: Partial<Omit<EvidenceClusterRow, "id" | "created_at">>;
+      };
+      cluster_atoms: {
+        Row: ClusterAtomRow;
+        Insert: Omit<ClusterAtomRow, "attached_at"> & { attached_at?: string };
+        Update: Partial<Omit<ClusterAtomRow, "cluster_id" | "atom_id">>;
+      };
+      signal_intelligence_runs: {
+        Row: SignalIntelligenceRunRow;
+        Insert: Omit<SignalIntelligenceRunRow, "id"> & { id?: number };
+        Update: Partial<Omit<SignalIntelligenceRunRow, "id">>;
+      };
+      human_governance_actions: {
+        Row: HumanGovernanceActionRow;
+        Insert: Omit<HumanGovernanceActionRow, "id" | "created_at"> & { id?: number; created_at?: string };
+        Update: never;
       };
     };
     Enums: {
