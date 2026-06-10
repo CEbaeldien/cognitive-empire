@@ -284,16 +284,25 @@ export async function runClusteringPass(): Promise<ClusterPassReport> {
   let clustersMatured = 0;
   let clustersExpired = 0;
 
-  // Load atoms not yet in any cluster
-  const { data: atomData, error: atomErr } = await client
+  // Load atoms not yet in any cluster.
+  // Fetch clustered IDs first — PostgREST can't execute SQL subqueries as filter values.
+  const { data: clusteredRows } = await client
+    .from("cluster_atoms")
+    .select("atom_id");
+  const clusteredIds = (clusteredRows ?? []).map((r: { atom_id: number }) => r.atom_id);
+
+  let atomQuery = client
     .from("factual_atoms")
     .select("*, sources(source_tier)")
     .eq("status", "atom")
-    .not("id", "in",
-      `(SELECT atom_id FROM cluster_atoms)`
-    )
     .order("created_at", { ascending: true })
     .limit(MATCH_ATOM_LIMIT);
+
+  if (clusteredIds.length > 0) {
+    atomQuery = atomQuery.not("id", "in", `(${clusteredIds.join(",")})`);
+  }
+
+  const { data: atomData, error: atomErr } = await atomQuery;
 
   if (atomErr) {
     return {
