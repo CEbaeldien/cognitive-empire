@@ -245,6 +245,32 @@ NEXT_PUBLIC_SIGNALS_V2=true npm run dev
 
 ---
 
+## Post-Build Corrections (2026-06-10)
+
+### B1 — false_signal_patterns type mismatch (corrected)
+
+**What was wrong:** `FalseSignalPatternRow` in `types/signals.ts` was authored with fields `pattern_name`, `detection_hint`, and `severity` that do not exist in the actual DB table. The spec (and the migration) use `name`, `description`, `indicators text[]`. The type would have caused runtime errors in any code reading this table via the typed client.
+
+**Fix applied:** `FalseSignalPatternRow` corrected to match actual schema: `name`, `description`, `indicators: string[]`. No migration required — DB was correct; type was wrong.
+
+**Pattern content audit (all 7 "missing" canon patterns found already seeded):**
+
+| Requested slug | DB row (already present) |
+|---|---|
+| benchmark_claim_without_deployment | "Benchmark claim without deployment consequence" |
+| funding_without_buildout | "Funding news with no infrastructure buildout" |
+| agent_demo_without_transaction | "AI agent demo without economic transaction evidence" |
+| tool_launch_without_dependency_shift | "Tool launch with no workflow dependency shift" |
+| marketing_without_adoption | "Marketing claim without measured adoption" |
+| social_hype_without_institutional_movement | "Social hype without institutional movement" |
+| media_wave_without_primary_source | "Media wave with no primary source" (row 2 of 9) |
+
+**media_wave_without_primary_source decision:** Row 2 of the 9 seeded patterns covers this exactly. No duplicate added. Logged here per Rule 9 spirit (deviation audit requested by founder).
+
+**No Studio migration required for this correction.** DB is correct. Type was wrong. Fixed in `types/signals.ts`.
+
+---
+
 ## Rule 9 Decisions Log
 
 All decisions where spec was ambiguous, conflicting, or unsafe — chose most conservative additive option.

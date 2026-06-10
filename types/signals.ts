@@ -465,12 +465,13 @@ export type DoctrineVersionRow = {
 // V2 TABLES — Phase B
 // ============================================================
 
+// Table schema: id, name, description, indicators text[], active, created_at
+// (no pattern_name/severity/detection_hint — those were a type-authoring error)
 export type FalseSignalPatternRow = {
   id: number;
-  pattern_name: string;
+  name: string;
   description: string;
-  detection_hint: string | null;
-  severity: "low" | "medium" | "high";
+  indicators: string[];
   active: boolean;
   created_at: string;
 };

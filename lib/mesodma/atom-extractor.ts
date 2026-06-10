@@ -117,7 +117,7 @@ export async function loadDoctrineContext(client: SupabaseClient): Promise<Doctr
       .eq("active", true),
     client
       .from("doctrine_versions")
-      .select("version_tag")
+      .select("version")
       .eq("active", true)
       .single(),
   ]);
@@ -127,7 +127,7 @@ export async function loadDoctrineContext(client: SupabaseClient): Promise<Doctr
 
   const invariants = (invariantsRes.data ?? []) as StructuralInvariant[];
   const falseSignalPatterns = (patternsRes.data ?? []) as FalseSignalPattern[];
-  const doctrineVersion = versionRes.data?.version_tag ?? "unknown";
+  const doctrineVersion = (versionRes.data as { version?: string } | null)?.version ?? "unknown";
 
   const invariantMap = new Map<string, number>(invariants.map((i) => [i.code, i.id]));
 
