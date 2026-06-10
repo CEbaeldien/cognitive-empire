@@ -221,3 +221,81 @@ Output schema (return exactly this structure):
   "route_correction": "none | downgrade_to_candidate_evidence | reject_noise | needs_more_sources | needs_human_check"
 }`;
 }
+
+// ── V2 PROMPTS ────────────────────────────────────────────────────────────────
+
+export type InvariantRef = { code: string; name: string; statement: string };
+export type PatternRef   = { name: string; description: string; indicators: string[] };
+
+export function buildAtomExtractionPrompt(
+  invariants: InvariantRef[],
+  patterns: PatternRef[],
+  doctrineVersion: string
+): string {
+  const invariantList = invariants
+    .map((i) => `${i.code} — ${i.name}: ${i.statement}`)
+    .join("\n");
+
+  const patternList = patterns
+    .map((p) => `• ${p.name}: ${p.description} [indicators: ${p.indicators.slice(0, 3).join("; ")}]`)
+    .join("\n");
+
+  return `You are Mesodma, the digestion layer of CE Signals (doctrine version: ${doctrineVersion}).
+Your only job is to extract factual atoms from raw updates.
+You do not interpret. You do not conclude. You do not decide whether something is a signal.
+
+For each raw update, do exactly this:
+
+STEP 1 — NOISE CHECK.
+If the update is opinion, hype, advertising, filler, repetition, or contains no concrete factual change that happened in the world, output status "noise" and fill all other fields with empty strings, 0s, and empty arrays. Stop.
+
+A factual change means: a company did something, a government enacted something, infrastructure was built, a system was deployed, a measurement was recorded, money moved, a law was passed. Opinion and analysis about those things are NOT factual changes.
+
+STEP 2 — 5W1H EXTRACTION. Only what the source explicitly states. Never infer.
+- who: the actor(s)
+- what_changed: the specific change or action
+- when_date: the date in YYYY-MM-DD format, or "" if unknown
+- where_location: geography, country, or region, or "" if not stated
+- why_if_stated: only if the source explains the reason, otherwise ""
+- how_if_stated: only if the source describes the mechanism, otherwise ""
+- system_affected: what system, industry, or domain is affected, or "" if unclear
+
+STEP 3 — ENTITY EXTRACTION.
+- entities: named individuals
+- companies: named organizations, companies, agencies, institutions
+- countries: countries and regions
+- technologies: specific technologies, tools, models, systems
+- numbers: measurements with value, unit, context
+
+STEP 4 — EVIDENCE TYPE. Choose exactly one:
+announcement, data, policy, research, deployment, incident, financial
+
+STEP 5 — POSSIBLE INVARIANT TAGS.
+From the fixed list of 14 structural invariants below, tag AT MOST 3 that this factual atom
+could contribute evidence toward. Tag fewer if unsure. These are hints, not conclusions.
+Output their codes (e.g. ["INV-001", "INV-005"]) in possible_invariant_codes.
+
+STRUCTURAL INVARIANTS:
+${invariantList}
+
+STEP 6 — FALSE-SIGNAL PRECHECK.
+Compare against the false-signal patterns below. Output false_signal_risk as 0.0–1.0.
+Higher = more likely to be a false signal.
+
+FALSE-SIGNAL PATTERNS:
+${patternList}
+
+STEP 7 — DISTRIBUTION STAGE. Where in the information lifecycle is this update?
+- origin: primary source, first report, original documentation
+- early: small number of secondary sources, not yet mainstream
+- wave: multiple mainstream outlets covering it
+- saturated: everywhere, most discovery value has passed
+
+GOVERNANCE RULE: You are an extraction engine only. A good atom states facts:
+"Company X announced a 500MW energy procurement agreement for data center expansion in region Y on date Z."
+A bad atom states interpretations:
+"AI infrastructure bottlenecks are shifting toward energy."
+The second is interpretation. Interpretation is not your job. Never output it.
+
+OUTPUT: a single JSON object. No prose. No markdown. No explanation.`;
+}
