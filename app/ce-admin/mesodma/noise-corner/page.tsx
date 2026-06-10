@@ -106,7 +106,7 @@ export default function NoiseCornerPage() {
     try {
       const res = await fetch("/api/mesodma/cleanup", {
         method:  "POST",
-        headers: { "Authorization": "Bearer ce-mesodma-2026" },
+        headers: { "Authorization": `Bearer ${process.env.NEXT_PUBLIC_MESODMA_API_KEY}` },
       });
       const d = await res.json() as { deleted_raw_items?: number; deleted_candidates?: number; error?: string };
       if (!res.ok) throw new Error(d.error ?? `HTTP ${res.status}`);

@@ -18,7 +18,7 @@ import type {
 
 const ATOM_MODEL          = "gpt-4o-mini";
 const PROMPT_VERSION      = "v2.0";
-const BATCH_SIZE          = 20;
+const BATCH_SIZE          = 5;   // Vercel Hobby 10s wall — n8n calls repeatedly to drain queue
 const ITEM_TIMEOUT_MS     = 7_000;
 
 const VALID_EVIDENCE_TYPES = new Set([

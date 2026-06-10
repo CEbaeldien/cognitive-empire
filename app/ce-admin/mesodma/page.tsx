@@ -114,7 +114,7 @@ export default function MesodmaCockpit() {
       // Step 1: fast fetch of pending item IDs from the server (< 2s, no AI calls)
       const res = await fetch("/api/mesodma/batch", {
         method: "POST",
-        headers: { "Authorization": "Bearer ce-mesodma-2026" },
+        headers: { "Authorization": `Bearer ${process.env.NEXT_PUBLIC_MESODMA_API_KEY}` },
       });
       const batchData = await res.json() as { total_pending?: number; item_ids?: string[]; error?: string };
       if (!res.ok) throw new Error(batchData.error ?? `HTTP ${res.status}`);

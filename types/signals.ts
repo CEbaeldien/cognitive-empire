@@ -505,15 +505,18 @@ export type FactualAtomRow = {
 
 export type MesodmaBatchRunRow = {
   id: number;
-  started_at: string;
-  completed_at: string | null;
-  status: "running" | "complete" | "error";
+  model_used: string | null;
+  prompt_version: string | null;
+  doctrine_version: string | null;
   input_count: number;
   output_count: number;
   noise_count: number;
+  duplicate_count: number;
   error_count: number;
-  doctrine_version: string | null;
-  error_message: string | null;
+  failed_items: Record<string, unknown>[];
+  status: "running" | "completed" | "completed_with_errors" | "failed" | "cancelled";
+  started_at: string;
+  completed_at: string | null;
 };
 
 // ============================================================
