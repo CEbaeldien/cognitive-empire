@@ -107,7 +107,10 @@ export default function MesodmaCockpit() {
     setBatchResult(null);
     setBatchError(null);
     try {
-      const res  = await fetch("/api/mesodma/batch-trigger", { method: "POST" });
+      const res  = await fetch("/api/mesodma/batch", {
+        method: "POST",
+        headers: { "Authorization": "Bearer ce-mesodma-2026" },
+      });
       const data = await res.json() as BatchResult;
       if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
       setBatchResult(data);
