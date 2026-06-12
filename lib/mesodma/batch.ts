@@ -33,12 +33,12 @@ export async function getPendingBatch(): Promise<PendingBatch> {
       .from("raw_items")
       .select("*", { count: "exact", head: true })
       .eq("status", "extracted")
-      .or("signal_processing_status.is.null,signal_processing_status.eq.pending,signal_processing_status.eq.needs_enrichment"),
+      .or("signal_processing_status.is.null,signal_processing_status.eq.pending,signal_processing_status.eq.needs_enrichment,signal_processing_status.eq.mesodma_pending"),
     client
       .from("raw_items")
       .select("id")
       .eq("status", "extracted")
-      .or("signal_processing_status.is.null,signal_processing_status.eq.pending,signal_processing_status.eq.needs_enrichment")
+      .or("signal_processing_status.is.null,signal_processing_status.eq.pending,signal_processing_status.eq.needs_enrichment,signal_processing_status.eq.mesodma_pending")
       .order("created_at", { ascending: true })
       .limit(RUN_SIZE),
   ]);
@@ -59,7 +59,7 @@ export async function getBatchStats(): Promise<BatchStats> {
       .from("raw_items")
       .select("*", { count: "exact", head: true })
       .eq("status", "extracted")
-      .or("signal_processing_status.is.null,signal_processing_status.eq.pending,signal_processing_status.eq.needs_enrichment"),
+      .or("signal_processing_status.is.null,signal_processing_status.eq.pending,signal_processing_status.eq.needs_enrichment,signal_processing_status.eq.mesodma_pending"),
     client
       .from("candidate_evidence")
       .select("*", { count: "exact", head: true }),

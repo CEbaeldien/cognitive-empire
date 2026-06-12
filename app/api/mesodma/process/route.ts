@@ -232,6 +232,18 @@ export async function POST(req: NextRequest) {
     confidence: safeNum(evidenceResult.confidence),
     error_flag: false });
 
+  // Dedup: if candidate_evidence already exists for this raw_item_id, skip insert
+  const { data: existingCand } = await client
+    .from("candidate_evidence")
+    .select("id")
+    .eq("raw_item_id", raw_item_id)
+    .maybeSingle();
+
+  if (existingCand) {
+    await client.from("raw_items").update({ signal_processing_status: "mesodma_processed" }).eq("id", raw_item_id);
+    return NextResponse.json({ route_taken: "skipped_duplicate", candidate_evidence_id: (existingCand as { id: string }).id });
+  }
+
   const { data: candidateRow, error: candErr } = await client
     .from("candidate_evidence")
     .insert({
@@ -389,7 +401,10 @@ export async function POST(req: NextRequest) {
     });
 
   } else {
-    const newStatus = finalRoute === "needs_more_sources" ? "needs_enrichment" : "mesodma_processed";
+    // "needs_more_sources" previously set needs_enrichment, re-queuing the item and creating
+    // duplicate candidate_evidence rows on every batch. Candidate evidence already exists at
+    // this point, so mark processed regardless of doctrine route.
+    const newStatus = "mesodma_processed";
     await client.from("raw_items").update({ signal_processing_status: newStatus }).eq("id", raw_item_id);
     return NextResponse.json({
       route_taken:           finalRoute === "reject_noise" ? "rejected_at_doctrine_filter" : "stored_as_candidate_evidence",

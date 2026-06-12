@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { supabase } from "@/lib/supabase";
 
 const C = {
   bg:           "#09091c",
@@ -38,6 +39,7 @@ type BatchResult = {
   promoted_to_candidate:  number;
   promoted_to_first_pass: number;
   rejected:               number;
+  skipped_duplicate:      number;
   errors:                 number;
 };
 
@@ -111,10 +113,17 @@ export default function MesodmaCockpit() {
     setBatchProgress(null);
 
     try {
-      // Step 1: fast fetch of pending item IDs from the server (< 2s, no AI calls)
-      const res = await fetch("/api/mesodma/batch", {
+      // Authenticate via the existing Supabase session — no API key in the client bundle
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        setBatchError("Session expired — reload the page and try again.");
+        return;
+      }
+
+      // Step 1: fast fetch of pending item IDs (server validates session, < 2s, no AI calls)
+      const res = await fetch("/api/mesodma/admin/run-batch", {
         method: "POST",
-        headers: { "Authorization": `Bearer ${process.env.NEXT_PUBLIC_MESODMA_API_KEY}` },
+        headers: { "Authorization": `Bearer ${session.access_token}` },
       });
       const batchData = await res.json() as { total_pending?: number; item_ids?: string[]; error?: string };
       if (!res.ok) throw new Error(batchData.error ?? `HTTP ${res.status}`);
@@ -123,7 +132,7 @@ export default function MesodmaCockpit() {
       const item_ids = batchData.item_ids ?? [];
 
       if (item_ids.length === 0) {
-        setBatchResult({ total_pending: 0, processed_this_run: 0, promoted_to_candidate: 0, promoted_to_first_pass: 0, rejected: 0, errors: 0 });
+        setBatchResult({ total_pending: 0, processed_this_run: 0, promoted_to_candidate: 0, promoted_to_first_pass: 0, rejected: 0, skipped_duplicate: 0, errors: 0 });
         return;
       }
 
@@ -133,6 +142,7 @@ export default function MesodmaCockpit() {
       let promoted_to_candidate = 0;
       let promoted_to_first_pass = 0;
       let rejected = 0;
+      let skipped_duplicate = 0;
       let errors = 0;
 
       const results = await Promise.allSettled(
@@ -165,13 +175,15 @@ export default function MesodmaCockpit() {
             promoted_to_candidate++;
           } else if (rt === "rejected_noise" || rt === "rejected_at_doctrine_filter") {
             rejected++;
+          } else if (rt === "skipped_duplicate") {
+            skipped_duplicate++;
           } else {
             errors++;
           }
         }
       }
 
-      setBatchResult({ total_pending, processed_this_run: item_ids.length, promoted_to_candidate, promoted_to_first_pass, rejected, errors });
+      setBatchResult({ total_pending, processed_this_run: item_ids.length, promoted_to_candidate, promoted_to_first_pass, rejected, skipped_duplicate, errors });
       loadStats();
     } catch (e) {
       setBatchError(e instanceof Error ? e.message : String(e));
@@ -274,12 +286,13 @@ export default function MesodmaCockpit() {
             <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.4em", textTransform: "uppercase", color: C.green, margin: "0 0 12px" }}>Batch Complete</p>
             <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
               {[
-                { label: "Pending",      value: batchResult.total_pending },
-                { label: "Processed",    value: batchResult.processed_this_run },
-                { label: "→ First-Pass", value: batchResult.promoted_to_first_pass, color: C.green },
-                { label: "→ Candidate",  value: batchResult.promoted_to_candidate,  color: C.accent },
-                { label: "Rejected",     value: batchResult.rejected,               color: C.red },
-                { label: "Errors",       value: batchResult.errors,                 color: batchResult.errors > 0 ? C.orange : C.faint },
+                { label: "Pending",       value: batchResult.total_pending },
+                { label: "Processed",     value: batchResult.processed_this_run },
+                { label: "→ First-Pass",  value: batchResult.promoted_to_first_pass,  color: C.green },
+                { label: "→ Candidate",   value: batchResult.promoted_to_candidate,   color: C.accent },
+                { label: "Rejected",      value: batchResult.rejected,                color: C.red },
+                { label: "Skipped (dup)", value: batchResult.skipped_duplicate,       color: batchResult.skipped_duplicate > 0 ? C.yellow : C.faint },
+                { label: "Errors",        value: batchResult.errors,                  color: batchResult.errors > 0 ? C.orange : C.faint },
               ].map(({ label, value, color }) => (
                 <div key={label}>
                   <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.3em", textTransform: "uppercase", color: C.faint, margin: "0 0 4px" }}>{label}</p>
