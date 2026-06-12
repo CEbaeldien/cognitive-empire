@@ -2,106 +2,107 @@ import Link from "next/link";
 import CENav from "../components/CENav";
 import CEFooter from "../components/CEFooter";
 
-const ENGAGEMENTS = [
+const SYSTEMS = [
   {
     number: "01",
-    title: "Revenue Decay Systems",
-    body: "Detects silent revenue decay, forces evidence-backed interventions, and protects momentum already in motion.",
+    title: "Maintenance Gravity Audit",
+    body: "Identifies where operational maintenance load is consuming disproportionate capacity relative to value output. Prioritizes what to rationalize, automate, or eliminate.",
     bullets: [
-      "Revenue Exposure Map",
-      "Live Intervention Queue",
-      "Weekly Revenue Reality reporting",
-      "Execution Integrity Score",
+      "Maintenance burden mapping",
+      "Gravity score by system and process",
+      "Rationalization and automation priorities",
+      "Decision-ready output report",
     ],
-    cta: "Discuss Revenue Decay System",
   },
   {
     number: "02",
-    title: "Operator Execution Systems",
-    body: "Turns chaotic AI usage into governed, repeatable operational leverage.",
+    title: "AI Systems Governance",
+    body: "Structures how AI is used, trusted, reviewed, and escalated inside operational environments. Removes ambiguity from human-machine boundaries.",
     bullets: [
-      "Operator runtime architecture",
-      "AI task classification & judgment checkpoints",
-      "Execution dashboards",
-      "Governance & escalation logic",
+      "Governance framework and policy design",
+      "Task classification and review thresholds",
+      "Audit, override, and escalation logic",
+      "Human-machine boundary documentation",
     ],
-    cta: "Discuss Operator Execution System",
   },
   {
     number: "03",
-    title: "Strategic Signal Systems",
-    body: "Cuts through noise and surfaces structural shifts that actually matter.",
+    title: "Operational Continuity Architecture",
+    body: "Ensures critical operations persist through personnel changes, system disruptions, and knowledge drift.",
     bullets: [
-      "Signal architecture & scoring",
-      "Convergence tracking",
-      "Pressure vector analysis",
-      "Strategic intelligence briefs & dashboards",
+      "Continuity dependency mapping",
+      "Failure mode and risk identification",
+      "Recovery protocol design",
+      "Documentation and handoff architecture",
     ],
-    cta: "Discuss Strategic Signal System",
   },
   {
     number: "04",
-    title: "Custom Operational Systems",
-    body: "Selective high-trust operational system design for more complex environments.",
-    bullets: ["For serious, well-aligned opportunities only."],
-    cta: "Route Through Dr. E",
+    title: "Runtime & Orchestration Architecture",
+    body: "Designs the coordination layer that governs how AI agents, tools, and operators function together under doctrine-level constraints.",
+    bullets: [
+      "Runtime system and workflow design",
+      "Task routing and orchestration logic",
+      "Oversight, intervention, and rollback architecture",
+      "Execution governance documentation",
+    ],
   },
 ];
 
 export default function WorkPage() {
   return (
-    <div className="min-h-screen bg-[#050505] text-white">
+    <div className="min-h-screen bg-[#080d1a] text-[#f1f5f9]">
       <CENav />
 
       {/* Hero */}
-      <section className="border-b border-[#1a1a2e]">
+      <section className="border-b border-[#1e2a45]">
         <div className="max-w-7xl mx-auto px-8 py-20">
-          <p className="text-[10px] text-[#00d4ff] uppercase tracking-widest mb-6">
+          <p className="text-[10px] text-blue-400 uppercase tracking-widest mb-6">
             Cognitive Empire — Work
           </p>
-          <h1 className="text-5xl font-thin text-white leading-tight mb-6 max-w-2xl">
-            Operational Intelligence Systems
+          <h1 className="text-5xl font-thin text-[#f1f5f9] leading-tight mb-6 max-w-2xl">
+            Operational Survivability Systems
           </h1>
-          <p className="text-lg text-[#6b7280] leading-relaxed max-w-2xl mb-4">
-            We design and implement judgment-preserving systems that reduce execution drift and create structured leverage for serious operators.
+          <p className="text-lg text-[#64748b] leading-relaxed max-w-2xl mb-4">
+            CE designs and implements operational systems for organizations that cannot afford structural failure. These are not services, consulting engagements, or advisory arrangements.
           </p>
-          <p className="text-sm text-[#4b5563] tracking-wide italic">
+          <p className="text-sm text-[#475569] tracking-wide italic">
             Systems, not services.
           </p>
         </div>
       </section>
 
-      {/* Engagement Blocks */}
+      {/* System Blocks */}
       <section>
         <div className="max-w-7xl mx-auto px-8 py-20">
-          <div className="grid grid-cols-2 gap-6">
-            {ENGAGEMENTS.map((eng) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {SYSTEMS.map((sys) => (
               <div
-                key={eng.number}
-                className="p-8 bg-[#0a0a0f] border border-[#1a1a2e] flex flex-col"
+                key={sys.number}
+                className="p-8 bg-[#0f1629] border border-[#1e2a45] flex flex-col hover:border-blue-500/20 transition-colors duration-200"
               >
-                <span className="text-[#00d4ff] text-xs font-mono tracking-widest mb-5">
-                  {eng.number}
+                <span className="text-blue-500 text-xs font-mono tracking-widest mb-5">
+                  {sys.number}
                 </span>
-                <h2 className="text-xl font-semibold text-white mb-4">
-                  {eng.title}
+                <h2 className="text-xl font-semibold text-[#f1f5f9] mb-4">
+                  {sys.title}
                 </h2>
-                <p className="text-[#6b7280] text-sm leading-relaxed mb-6">
-                  {eng.body}
+                <p className="text-[#64748b] text-sm leading-relaxed mb-6">
+                  {sys.body}
                 </p>
                 <ul className="space-y-2 mb-8 flex-1">
-                  {eng.bullets.map((b) => (
-                    <li key={b} className="flex items-start gap-2 text-sm text-[#9ca3af]">
-                      <span className="text-[#00d4ff] mt-px shrink-0">›</span>
+                  {sys.bullets.map((b) => (
+                    <li key={b} className="flex items-start gap-2 text-sm text-[#94a3b8]">
+                      <span className="text-blue-500 mt-px shrink-0">›</span>
                       {b}
                     </li>
                   ))}
                 </ul>
                 <Link
                   href="/connect"
-                  className="inline-flex items-center border border-[#1a1a2e] text-white text-xs uppercase tracking-widest px-5 py-2.5 hover:border-[#00d4ff]/50 hover:text-[#00d4ff] transition-all duration-200 self-start"
+                  className="inline-flex items-center border border-[#1e2a45] text-[#f1f5f9] text-xs uppercase tracking-widest px-5 py-2.5 hover:border-blue-500/40 hover:text-blue-400 transition-all duration-200 self-start"
                 >
-                  {eng.cta} →
+                  Discuss {sys.title} →
                 </Link>
               </div>
             ))}
@@ -110,22 +111,22 @@ export default function WorkPage() {
       </section>
 
       {/* Bottom CTA */}
-      <section className="border-t border-[#1a1a2e] bg-[#080810]">
+      <section className="border-t border-[#1e2a45] bg-[#080d1a]">
         <div className="max-w-7xl mx-auto px-8 py-16 flex flex-col items-center text-center">
-          <p className="text-[10px] text-[#6b7280] uppercase tracking-widest mb-6">
+          <p className="text-[10px] text-[#64748b] uppercase tracking-widest mb-6">
             Start the conversation
           </p>
-          <h2 className="text-3xl font-thin text-white mb-4">
-            Discuss the right operational system.
+          <h2 className="text-3xl font-thin text-[#f1f5f9] mb-4">
+            Identify the right operational system.
           </h2>
-          <p className="text-[#6b7280] text-sm mb-8 max-w-md leading-relaxed">
-            Every engagement starts with understanding the environment. Dr. E routes you to the correct path.
+          <p className="text-[#64748b] text-sm mb-8 max-w-md leading-relaxed">
+            Every engagement starts with understanding the environment and constraints.
           </p>
           <Link
             href="/connect"
-            className="px-8 py-3 bg-[#00d4ff] text-black text-sm font-bold uppercase tracking-wide hover:bg-[#00b8d9] transition-colors"
+            className="px-8 py-3 bg-blue-600 text-white text-sm font-semibold uppercase tracking-wide hover:bg-blue-500 transition-colors"
           >
-            Route Through Dr. E →
+            Connect →
           </Link>
         </div>
       </section>

@@ -5,11 +5,11 @@ function CELogoMark() {
     <svg width="22" height="22" viewBox="0 0 26 26" fill="none">
       <polygon
         points="13,1.5 23.99,7.75 23.99,18.25 13,24.5 2.01,18.25 2.01,7.75"
-        fill="rgba(0,212,255,0.05)"
-        stroke="#00d4ff"
+        fill="rgba(59,130,246,0.06)"
+        stroke="#3b82f6"
         strokeWidth="1.5"
       />
-      <text x="13" y="17" textAnchor="middle" fill="#00d4ff" fontSize="8.5" fontFamily="monospace" fontWeight="700">
+      <text x="13" y="17" textAnchor="middle" fill="#3b82f6" fontSize="8.5" fontFamily="monospace" fontWeight="700">
         CE
       </text>
     </svg>
@@ -18,18 +18,19 @@ function CELogoMark() {
 
 export default function CEFooter() {
   return (
-    <footer className="border-t border-[#1a1a2e] bg-[#050505]">
+    <footer className="border-t border-[#1e2a45] bg-[#080d1a]">
       <div className="max-w-7xl mx-auto px-8 pt-16 pb-8">
-        <div className="grid grid-cols-5 gap-8 mb-12">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-8 mb-12">
+
           {/* Brand */}
-          <div>
+          <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2 mb-3">
               <CELogoMark />
               <span className="text-white text-xs font-bold tracking-widest uppercase">
                 Cognitive Empire
               </span>
             </div>
-            <p className="text-[#4b5563] text-xs tracking-widest">
+            <p className="text-[#475569] text-xs tracking-widest">
               Signal. Judgment. Systems.
             </p>
           </div>
@@ -41,7 +42,7 @@ export default function CEFooter() {
             </h4>
             <ul className="space-y-2">
               <li>
-                <Link href="/drift" className="text-[#6b7280] text-xs hover:text-white transition-colors">
+                <Link href="/drift" className="text-[#64748b] text-xs hover:text-white transition-colors">
                   Drift
                 </Link>
               </li>
@@ -55,12 +56,12 @@ export default function CEFooter() {
             </h4>
             <ul className="space-y-2">
               <li>
-                <Link href="/signals" className="text-[#6b7280] text-xs hover:text-white transition-colors">
+                <Link href="/signals" className="text-[#64748b] text-xs hover:text-white transition-colors">
                   Signals
                 </Link>
               </li>
               <li>
-                <Link href="/briefs" className="text-[#6b7280] text-xs hover:text-white transition-colors">
+                <Link href="/briefs" className="text-[#64748b] text-xs hover:text-white transition-colors">
                   CE Research
                 </Link>
               </li>
@@ -74,12 +75,12 @@ export default function CEFooter() {
             </h4>
             <ul className="space-y-2">
               <li>
-                <Link href="/work" className="text-[#6b7280] text-xs hover:text-white transition-colors">
+                <Link href="/work" className="text-[#64748b] text-xs hover:text-white transition-colors">
                   Work
                 </Link>
               </li>
               <li>
-                <Link href="/foundrylabs" className="text-[#6b7280] text-xs hover:text-white transition-colors">
+                <Link href="/foundrylabs" className="text-[#64748b] text-xs hover:text-white transition-colors">
                   FoundryLabs
                 </Link>
               </li>
@@ -93,32 +94,81 @@ export default function CEFooter() {
             </h4>
             <ul className="space-y-2">
               <li>
-                <Link href="/connect" className="text-[#6b7280] text-xs hover:text-white transition-colors">
-                  Dr. E Interface
+                <Link href="/connect" className="text-[#64748b] text-xs hover:text-white transition-colors">
+                  Connect
                 </Link>
               </li>
               <li>
                 <a
-                  href="mailto:contact@cognitiveempire.com"
-                  className="text-[#6b7280] text-xs hover:text-white transition-colors"
+                  href="mailto:founder@cognitiveempire.com"
+                  className="text-[#64748b] text-xs hover:text-white transition-colors"
                 >
                   Contact
                 </a>
               </li>
             </ul>
           </div>
+
+          {/* Legal */}
+          <div>
+            <h4 className="text-white text-[10px] font-semibold uppercase tracking-widest mb-4">
+              Legal
+            </h4>
+            <ul className="space-y-2">
+              <li>
+                <Link href="/legal" className="text-[#64748b] text-xs hover:text-white transition-colors">
+                  Legal Hub
+                </Link>
+              </li>
+              <li>
+                <Link href="/privacy" className="text-[#64748b] text-xs hover:text-white transition-colors">
+                  Privacy
+                </Link>
+              </li>
+              <li>
+                <Link href="/terms" className="text-[#64748b] text-xs hover:text-white transition-colors">
+                  Terms
+                </Link>
+              </li>
+              <li>
+                <Link href="/refund" className="text-[#64748b] text-xs hover:text-white transition-colors">
+                  Refunds
+                </Link>
+              </li>
+              <li>
+                <Link href="/cookies" className="text-[#64748b] text-xs hover:text-white transition-colors">
+                  Cookies
+                </Link>
+              </li>
+              <li>
+                <Link href="/disclaimer" className="text-[#64748b] text-xs hover:text-white transition-colors">
+                  Disclaimer
+                </Link>
+              </li>
+            </ul>
+          </div>
         </div>
 
-        <div className="border-t border-[#1a1a2e] pt-6 flex items-center justify-between">
-          <span className="text-[#3b3b4f] text-xs">
-            © 2025 Cognitive Empire. All rights reserved.
-          </span>
-          <div className="flex items-center gap-2 text-[#3b3b4f] text-xs">
-            <Link href="/privacy" className="hover:text-[#6b7280] transition-colors">Privacy</Link>
-            <span>·</span>
-            <Link href="/terms" className="hover:text-[#6b7280] transition-colors">Terms</Link>
-            <span>·</span>
-            <Link href="/status" className="hover:text-[#6b7280] transition-colors">System Status</Link>
+        <div className="border-t border-[#1e2a45] pt-6 space-y-3">
+          <p className="text-[#334155] text-[11px] leading-relaxed max-w-3xl">
+            COGNITIVE EMPIRE SYSTEMS LTD is a private company limited by shares registered in England and Wales.
+            Company number: 17272459. Registered office: 71-75 Shelton Street, Covent Garden, London, WC2H 9JQ, United Kingdom.
+          </p>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <span className="text-[#334155] text-xs">
+              © 2026 Cognitive Empire Systems Ltd. All rights reserved.
+            </span>
+            <div className="flex items-center gap-2 text-[#334155] text-xs">
+              <Link href="/privacy"    className="hover:text-[#64748b] transition-colors">Privacy</Link>
+              <span>·</span>
+              <Link href="/terms"      className="hover:text-[#64748b] transition-colors">Terms</Link>
+              <span>·</span>
+              <Link href="/refund"     className="hover:text-[#64748b] transition-colors">Refunds</Link>
+              <span>·</span>
+              <Link href="/cookies"    className="hover:text-[#64748b] transition-colors">Cookies</Link>
+              <span>·</span>
+              <Link href="/disclaimer" className="hover:text-[#64748b] transition-colors">Disclaimer</Link>
+            </div>
           </div>
         </div>
       </div>
