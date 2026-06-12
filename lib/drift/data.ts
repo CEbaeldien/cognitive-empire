@@ -15,6 +15,114 @@ export type DriftOverview = {
   interventions: any[];
 };
 
+export type InterventionActivity = {
+  id: string;
+  activity_type: string;
+  summary: string;
+  outcome: string;
+  next_action: string | null;
+  next_action_due_date: string | null;
+  evidence_strength: "weak" | "moderate" | "strong";
+};
+
+export type InterventionRow = {
+  id: string;
+  workspace_id: string;
+  opportunity_id: string;
+  drift_score_id: string | null;
+  title: string;
+  reason: string | null;
+  recommended_action: string;
+  priority: string;
+  status: "pending" | "completed";
+  created_at: string;
+  completed_at: string | null;
+  completion_activity_id: string | null;
+  opportunities: {
+    id: string;
+    title: string;
+    value: number | null;
+    stage: string | null;
+    next_action_due_date: string | null;
+    accounts: { id: string; name: string; contact_name: string | null } | null;
+  } | null;
+  activity: InterventionActivity | null;
+};
+
+export async function getDriftInterventions(): Promise<InterventionRow[]> {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const workspaceId = process.env.DRIFT_WORKSPACE_ID;
+
+  if (!supabaseUrl) throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL");
+  if (!serviceRoleKey) throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY");
+  if (!workspaceId) throw new Error("Missing DRIFT_WORKSPACE_ID");
+
+  const supabase = createClient(supabaseUrl, serviceRoleKey, {
+    auth: { persistSession: false },
+  });
+
+  const { data: rows, error } = await supabase
+    .schema("drift")
+    .from("interventions")
+    .select(`
+      id,
+      workspace_id,
+      opportunity_id,
+      drift_score_id,
+      title,
+      reason,
+      recommended_action,
+      priority,
+      status,
+      created_at,
+      completed_at,
+      completion_activity_id,
+      opportunities (
+        id,
+        title,
+        value,
+        stage,
+        next_action_due_date,
+        accounts (
+          id,
+          name,
+          contact_name
+        )
+      )
+    `)
+    .eq("workspace_id", workspaceId)
+    .order("created_at", { ascending: false });
+
+  if (error) throw new Error(`Interventions fetch failed: ${error.message}`);
+
+  const activityIds = (rows ?? [])
+    .map(r => r.completion_activity_id)
+    .filter(Boolean) as string[];
+
+  const activityMap: Record<string, InterventionActivity> = {};
+  if (activityIds.length > 0) {
+    const { data: acts } = await supabase
+      .schema("drift")
+      .from("activities")
+      .select("id, activity_type, summary, outcome, next_action, next_action_due_date, evidence_strength")
+      .in("id", activityIds);
+    for (const a of acts ?? []) activityMap[a.id] = a;
+  }
+
+  return (rows ?? []).map(r => {
+    const opp = Array.isArray(r.opportunities) ? r.opportunities[0] ?? null : r.opportunities;
+    const normalizedOpp = opp
+      ? { ...opp, accounts: Array.isArray(opp.accounts) ? opp.accounts[0] ?? null : opp.accounts }
+      : null;
+    return {
+      ...r,
+      opportunities: normalizedOpp,
+      activity: r.completion_activity_id ? (activityMap[r.completion_activity_id] ?? null) : null,
+    };
+  }) as unknown as InterventionRow[];
+}
+
 export async function getDriftOverview(): Promise<DriftOverview> {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
