@@ -8,9 +8,7 @@ export function middleware(request: NextRequest) {
   const isProtected =
     pathname === "/app" ||
     pathname.startsWith("/app/") ||
-    pathname.startsWith("/admin/") ||
-    pathname === "/drift/workspace" ||
-    pathname.startsWith("/drift/workspace/");
+    pathname.startsWith("/admin/");
 
   const isAuthPage =
     pathname === "/auth/signin" ||
@@ -36,8 +34,6 @@ export const config = {
     "/app",
     "/app/:path+",
     "/admin/:path+",
-    "/drift/workspace",
-    "/drift/workspace/:path+",
     "/auth/signin",
     "/auth/signup",
   ],
