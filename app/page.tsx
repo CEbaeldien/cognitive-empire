@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function EntrancePage() {
   const router = useRouter();
@@ -86,6 +87,43 @@ export default function EntrancePage() {
           >
             Enter Cognitive Empire →
           </button>
+        </div>
+
+        {/* Crawler-visible legal/pricing footer */}
+        <div
+          style={{
+            position: "fixed",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: 20,
+            padding: "14px 24px",
+            zIndex: 10,
+          }}
+        >
+          {[
+            { label: "Pricing",  href: "/drift"   },
+            { label: "Terms",    href: "/terms"   },
+            { label: "Privacy",  href: "/privacy" },
+            { label: "Refunds",  href: "/refund"  },
+            { label: "Legal",    href: "/legal"   },
+          ].map(({ label, href }) => (
+            <Link
+              key={href}
+              href={href}
+              style={{
+                fontSize: 12,
+                color: "rgba(100,116,139,0.55)",
+                textDecoration: "none",
+                letterSpacing: "0.02em",
+              }}
+            >
+              {label}
+            </Link>
+          ))}
         </div>
       </div>
     </>
