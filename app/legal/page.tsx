@@ -27,7 +27,7 @@ export default function LegalPage() {
           Legal Information
         </h1>
         <p className="text-[#64748b] leading-relaxed mb-12">
-          Cognitive Empire Systems Ltd operates this website and its associated products. The pages below govern your use of our site, products, and services.
+          Cognitive Empire Systems Ltd operates this website and its associated products. The pages below govern your use of our site, products, and services. Software subscriptions may be processed by Paddle as merchant of record; professional engagements are invoiced directly by Cognitive Empire Systems Ltd.
         </p>
 
         {/* Entity identity */}

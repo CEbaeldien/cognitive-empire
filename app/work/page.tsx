@@ -131,6 +131,27 @@ export default function WorkPage() {
         </div>
       </section>
 
+      {/* Engagement & Commercials */}
+      <section className="border-t border-[#1e2a45]">
+        <div className="max-w-7xl mx-auto px-8 py-16">
+          <p className="text-[10px] text-blue-400 uppercase tracking-widest mb-6">
+            Engagement &amp; Commercials
+          </p>
+          <h2 className="text-2xl font-thin text-[#f1f5f9] mb-5 max-w-xl leading-snug">
+            Engagement &amp; Commercials
+          </h2>
+          <p className="text-[#64748b] text-sm leading-relaxed max-w-2xl mb-8">
+            CE Work engagements are scoped individually and invoiced directly by Cognitive Empire Systems Ltd. Engagements begin with a scoping conversation — no self-serve checkout, no generic packages.
+          </p>
+          <Link
+            href="/connect"
+            className="inline-flex items-center border border-[#1e2a45] text-[#f1f5f9] text-xs uppercase tracking-widest px-5 py-2.5 hover:border-blue-500/40 hover:text-blue-400 transition-all duration-200"
+          >
+            Start a conversation →
+          </Link>
+        </div>
+      </section>
+
       <CEFooter />
     </div>
   );

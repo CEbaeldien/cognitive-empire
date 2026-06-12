@@ -58,6 +58,10 @@ export default function RefundPage() {
             <p>To request a refund or discuss a purchase issue, contact <a href="mailto:founder@cognitiveempire.com">founder@cognitiveempire.com</a> with your order reference and a description of the issue. We aim to respond within five business days.</p>
           </Section>
 
+          <Section title="8. Service Engagements">
+            <p>CE Work engagements (audits, governance, and architecture services) are contracted and invoiced directly by Cognitive Empire Systems Ltd and are not sold through Paddle. Refunds and cancellation terms for engagements are governed by the individual engagement agreement.</p>
+          </Section>
+
         </div>
       </div>
 
