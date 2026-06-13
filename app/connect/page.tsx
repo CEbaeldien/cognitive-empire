@@ -1,43 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 
-// ─── Cognition Core ────────────────────────────────────────────────────────────
+// ─── Routing Visual ────────────────────────────────────────────────────────────
 
-function CognitionCore() {
-  const hexPoints = (r: number) =>
-    [0, 60, 120, 180, 240, 300]
-      .map((a) => {
-        const rad = (a * Math.PI) / 180;
-        return `${(200 + r * Math.cos(rad)).toFixed(2)},${(200 + r * Math.sin(rad)).toFixed(2)}`;
-      })
-      .join(" ");
-
-  const ringDots = (radius: number, count: number) =>
-    Array.from({ length: count }, (_, i) => {
-      const rad = ((i * 360) / count) * (Math.PI / 180);
-      return {
-        x: parseFloat((200 + radius * Math.cos(rad)).toFixed(4)),
-        y: parseFloat((200 + radius * Math.sin(rad)).toFixed(4)),
-      };
-    });
-
+function RoutingVisual() {
   return (
-    <div className="flex items-center justify-center w-full h-full">
-      <svg
-        viewBox="0 0 400 400"
-        className="w-[320px] h-[320px] max-w-full"
-        style={{ filter: "drop-shadow(0 0 28px rgba(0,212,255,0.14))" }}
-      >
+    <div className="w-full h-full flex items-center justify-center">
+      <svg viewBox="0 0 460 300" className="w-full max-w-[440px] h-[280px]" fill="none">
         <defs>
-          <radialGradient id="core-bg" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#00d4ff" stopOpacity="0.07" />
-            <stop offset="100%" stopColor="#00d4ff" stopOpacity="0" />
-          </radialGradient>
-          <filter id="fglow" x="-60%" y="-60%" width="220%" height="220%">
-            <feGaussianBlur stdDeviation="2.5" result="blur" />
+          <filter id="node-glow" x="-150%" y="-150%" width="400%" height="400%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
@@ -45,59 +20,91 @@ function CognitionCore() {
           </filter>
         </defs>
 
-        <circle cx="200" cy="200" r="190" fill="url(#core-bg)" />
-        <circle cx="200" cy="200" r="175" fill="none" stroke="#00d4ff" strokeWidth="0.4" opacity="0.08" />
-        <circle cx="200" cy="200" r="155" fill="none" stroke="#00d4ff" strokeWidth="0.4" opacity="0.12" />
+        {/* Subtle horizontal grid */}
+        {[55, 100, 150, 200, 245].map((y) => (
+          <line key={y} x1="30" y1={y} x2="390" y2={y}
+            stroke="rgba(220,220,210,0.04)" strokeWidth="0.4" />
+        ))}
 
-        <motion.g
-          animate={{ rotate: 360 }}
-          transition={{ duration: 50, repeat: Infinity, ease: "linear" }}
-          style={{ transformOrigin: "200px 200px" }}
-        >
-          <circle cx="200" cy="200" r="135" fill="none" stroke="#00d4ff" strokeWidth="0.5" opacity="0.18" />
-          {ringDots(135, 8).map((d, i) => (
-            <circle key={i} cx={d.x} cy={d.y} r="2.5" fill="#00d4ff" opacity="0.55" filter="url(#fglow)" />
-          ))}
-        </motion.g>
-
-        <motion.g
-          animate={{ rotate: -360 }}
-          transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
-          style={{ transformOrigin: "200px 200px" }}
-        >
-          <circle cx="200" cy="200" r="108" fill="none" stroke="#00d4ff" strokeWidth="0.5" opacity="0.22" />
-          {ringDots(108, 6).map((d, i) => (
-            <circle key={i} cx={d.x} cy={d.y} r="2" fill="#00d4ff" opacity="0.5" filter="url(#fglow)" />
-          ))}
-        </motion.g>
-
-        <circle cx="200" cy="200" r="80" fill="none" stroke="#00d4ff" strokeWidth="0.5" opacity="0.25" />
-        <polygon points={hexPoints(62)} fill="none" stroke="#00d4ff" strokeWidth="1" opacity="0.42" filter="url(#fglow)" />
-        <polygon points={hexPoints(30)} fill="rgba(0,212,255,0.04)" stroke="#00d4ff" strokeWidth="1" opacity="0.62" filter="url(#fglow)" />
-
-        {[0, 60, 120, 180, 240, 300].map((angle, i) => {
-          const rad = (angle * Math.PI) / 180;
-          return (
-            <line key={i}
-              x1={(200 + 30 * Math.cos(rad)).toFixed(2)} y1={(200 + 30 * Math.sin(rad)).toFixed(2)}
-              x2={(200 + 62 * Math.cos(rad)).toFixed(2)} y2={(200 + 62 * Math.sin(rad)).toFixed(2)}
-              stroke="#00d4ff" strokeWidth="0.5" opacity="0.2"
-            />
-          );
-        })}
-
-        <motion.g
-          style={{ transformOrigin: "200px 200px" }}
-          animate={{ scale: [1, 1.9], opacity: [0.22, 0] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeOut", repeatDelay: 1.5 }}
-        >
-          <circle cx="200" cy="200" r="80" fill="none" stroke="#00d4ff" strokeWidth="0.8" />
-        </motion.g>
-
-        <motion.circle cx="200" cy="200" r="4" fill="#00d4ff" filter="url(#fglow)"
-          animate={{ opacity: [0.7, 1, 0.7] }}
-          transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+        {/* Source ring + node */}
+        <circle cx="42" cy="150" r="11" fill="none"
+          stroke="rgba(220,220,210,0.14)" strokeWidth="0.5" />
+        <motion.circle cx="42" cy="150" r="11" fill="none"
+          stroke="rgba(245,245,235,0.12)" strokeWidth="0.5"
+          animate={{ r: [11, 22], opacity: [0.18, 0] }}
+          transition={{ duration: 4.5, repeat: Infinity, ease: "easeOut", repeatDelay: 2.5 }}
         />
+        <circle cx="42" cy="150" r="3.5" fill="rgba(245,245,235,0.55)"
+          filter="url(#node-glow)" />
+
+        {/* Trunk */}
+        <path d="M46 150 L118 150"
+          stroke="rgba(220,220,210,0.32)" strokeWidth="0.85" />
+
+        {/* Branch node */}
+        <circle cx="118" cy="150" r="2.5" fill="rgba(245,245,235,0.38)" />
+
+        {/* INTAKE — top lane */}
+        <path d="M118 150 Q148 150 168 72 L330 72"
+          stroke="rgba(220,220,210,0.28)" strokeWidth="0.78" />
+        {/* ROUTE */}
+        <path d="M118 150 Q148 150 168 114 L330 114"
+          stroke="rgba(220,220,210,0.22)" strokeWidth="0.72" />
+        {/* GOVERN */}
+        <path d="M118 150 Q148 150 168 186 L330 186"
+          stroke="rgba(220,220,210,0.22)" strokeWidth="0.72" />
+        {/* CONNECT — bottom lane */}
+        <path d="M118 150 Q148 150 168 228 L330 228"
+          stroke="rgba(220,220,210,0.26)" strokeWidth="0.78" />
+
+        {/* Mid-path marks */}
+        <circle cx="224" cy="72" r="1.5" fill="rgba(245,245,235,0.28)" />
+        <circle cx="224" cy="114" r="1.5" fill="rgba(245,245,235,0.22)" />
+        <circle cx="224" cy="186" r="1.5" fill="rgba(245,245,235,0.22)" />
+        <circle cx="224" cy="228" r="1.5" fill="rgba(245,245,235,0.28)" />
+
+        {/* Chevrons */}
+        <polyline points="219,68 224,72 219,76"
+          stroke="rgba(220,220,210,0.3)" strokeWidth="0.65" fill="none" />
+        <polyline points="219,110 224,114 219,118"
+          stroke="rgba(220,220,210,0.22)" strokeWidth="0.65" fill="none" />
+        <polyline points="219,182 224,186 219,190"
+          stroke="rgba(220,220,210,0.22)" strokeWidth="0.65" fill="none" />
+        <polyline points="219,224 224,228 219,232"
+          stroke="rgba(220,220,210,0.28)" strokeWidth="0.65" fill="none" />
+
+        {/* Terminal nodes */}
+        <motion.circle cx="330" cy="72" r="3" fill="rgba(245,245,235,0.68)"
+          filter="url(#node-glow)"
+          animate={{ opacity: [0.45, 0.85, 0.45] }}
+          transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <circle cx="330" cy="114" r="2.5" fill="rgba(245,245,235,0.4)" />
+        <circle cx="330" cy="186" r="2.5" fill="rgba(245,245,235,0.4)" />
+        <motion.circle cx="330" cy="228" r="2.5" fill="rgba(245,245,235,0.52)"
+          animate={{ opacity: [0.32, 0.62, 0.32] }}
+          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+        />
+
+        {/* Dashed connectors to labels */}
+        <line x1="333" y1="72" x2="356" y2="72"
+          stroke="rgba(220,220,210,0.14)" strokeWidth="0.5" strokeDasharray="2 2.5" />
+        <line x1="333" y1="114" x2="356" y2="114"
+          stroke="rgba(220,220,210,0.11)" strokeWidth="0.5" strokeDasharray="2 2.5" />
+        <line x1="333" y1="186" x2="356" y2="186"
+          stroke="rgba(220,220,210,0.11)" strokeWidth="0.5" strokeDasharray="2 2.5" />
+        <line x1="333" y1="228" x2="356" y2="228"
+          stroke="rgba(220,220,210,0.13)" strokeWidth="0.5" strokeDasharray="2 2.5" />
+
+        {/* Labels */}
+        <text x="360" y="76" fill="rgba(196,197,194,0.62)"
+          fontSize="7.5" fontFamily="'Courier New',monospace" letterSpacing="2.5">INTAKE</text>
+        <text x="360" y="118" fill="rgba(196,197,194,0.44)"
+          fontSize="7.5" fontFamily="'Courier New',monospace" letterSpacing="2.5">ROUTE</text>
+        <text x="360" y="190" fill="rgba(196,197,194,0.44)"
+          fontSize="7.5" fontFamily="'Courier New',monospace" letterSpacing="2.5">GOVERN</text>
+        <text x="360" y="232" fill="rgba(196,197,194,0.55)"
+          fontSize="7.5" fontFamily="'Courier New',monospace" letterSpacing="2.5">CONNECT</text>
       </svg>
     </div>
   );
@@ -107,7 +114,8 @@ function CognitionCore() {
 
 function IconRevenue() {
   return (
-    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
     </svg>
   );
@@ -115,53 +123,244 @@ function IconRevenue() {
 
 function IconGravity() {
   return (
-    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-      <line x1="4" y1="6" x2="20" y2="6" />
-      <line x1="6" y1="10" x2="18" y2="10" />
-      <line x1="8" y1="14" x2="16" y2="14" />
-      <line x1="10" y1="18" x2="14" y2="18" />
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="1.2" strokeLinecap="round">
+      <line x1="3" y1="6" x2="21" y2="6" />
+      <line x1="5" y1="10" x2="19" y2="10" />
+      <line x1="7" y1="14" x2="17" y2="14" />
+      <line x1="9" y1="18" x2="15" y2="18" />
     </svg>
   );
 }
 
 function IconContact() {
   return (
-    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
       <line x1="22" y1="2" x2="11" y2="13" />
       <polygon points="22 2 15 22 11 13 2 9 22 2" />
     </svg>
   );
 }
 
+function IconUpload() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="17 8 12 3 7 8" />
+      <line x1="12" y1="3" x2="12" y2="15" />
+    </svg>
+  );
+}
+
+// ─── Attachment Module ─────────────────────────────────────────────────────────
+
+function AttachmentModule({
+  files,
+  onChange,
+}: {
+  files: File[];
+  onChange: (f: File[]) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [dragOver, setDragOver] = useState(false);
+
+  const handleFiles = (list: FileList | null) => {
+    if (!list) return;
+    onChange([...files, ...Array.from(list)]);
+  };
+
+  return (
+    <div>
+      <p className="text-[10px] uppercase tracking-[0.22em] mb-2.5"
+        style={{ color: "rgba(196,197,194,0.48)" }}>
+        Attachment Optional
+      </p>
+      <div
+        onClick={() => inputRef.current?.click()}
+        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDragOver(false);
+          handleFiles(e.dataTransfer.files);
+        }}
+        className="cursor-pointer flex flex-col items-center justify-center gap-2.5 py-8 px-5 transition-all duration-200"
+        style={{
+          border: `1px dashed ${dragOver ? "rgba(245,242,232,0.38)" : "rgba(245,242,232,0.16)"}`,
+          background: dragOver ? "rgba(245,242,232,0.025)" : "rgba(8,10,12,0.55)",
+        }}
+      >
+        <span style={{ color: "rgba(196,197,194,0.38)" }}>
+          <IconUpload />
+        </span>
+        <p className="text-[11px] text-center leading-relaxed"
+          style={{ color: "rgba(196,197,194,0.5)" }}>
+          Upload supporting files
+        </p>
+        <p className="text-[10px] text-center leading-relaxed"
+          style={{ color: "rgba(196,197,194,0.3)" }}>
+          Attach documents, screenshots,<br />or supporting material
+        </p>
+        <input
+          ref={inputRef}
+          type="file"
+          multiple
+          className="hidden"
+          accept=".pdf,.docx,.xlsx,.png,.jpg,.jpeg"
+          onChange={(e) => handleFiles(e.target.files)}
+        />
+      </div>
+      <p className="text-[9px] mt-1.5 tracking-wide"
+        style={{ color: "rgba(196,197,194,0.28)" }}>
+        PDF, DOCX, XLSX, PNG, JPG · Max 25MB
+      </p>
+      {files.length > 0 && (
+        <ul className="mt-3 space-y-1.5">
+          {files.map((f, i) => (
+            <li key={i} className="flex items-center justify-between pb-1.5 text-[10px]"
+              style={{
+                color: "rgba(196,197,194,0.52)",
+                borderBottom: "1px solid rgba(245,242,232,0.05)",
+              }}>
+              <span className="truncate mr-2">{f.name}</span>
+              <button
+                type="button"
+                onClick={() => onChange(files.filter((_, j) => j !== i))}
+                className="shrink-0 transition-colors hover:opacity-80"
+                style={{ color: "rgba(196,197,194,0.35)" }}
+              >×</button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 // ─── Shared styles ─────────────────────────────────────────────────────────────
 
-const inputCls = "bg-[#05050a] border border-[#1a1a2e] px-3 py-2 text-xs text-white placeholder:text-[#3d3d55] focus:outline-none focus:border-[#00d4ff]/40 transition-colors w-full";
-const btnPrimaryCls = "px-5 py-2 bg-[#00d4ff] text-black text-xs font-bold uppercase tracking-wide hover:bg-[#00b8d9] transition-colors";
-const optionCls = (active: boolean) =>
-  `px-4 py-2 border text-xs transition-all duration-150 ${active ? "border-[#00d4ff] text-white" : "border-[#1a1a2e] text-[#6b7280] hover:border-[#00d4ff]/40 hover:text-white"}`;
+const inputCls = [
+  "px-3 py-2 text-[11px] w-full tracking-wide transition-colors",
+  "focus:outline-none",
+].join(" ");
 
-function PanelHeader({ quote, onClose }: { quote: string; onClose: () => void }) {
+const inputStyle = {
+  background: "rgba(8,10,12,0.65)",
+  border: "1px solid rgba(245,242,232,0.1)",
+  color: "rgba(246,244,238,0.82)",
+};
+
+const optionCls = (active: boolean) =>
+  [
+    "px-4 py-1.5 text-[10px] uppercase tracking-[0.14em] transition-all duration-150 border",
+    active
+      ? "border-[rgba(245,242,232,0.48)] text-[rgba(246,244,238,0.88)] bg-[rgba(245,242,232,0.04)]"
+      : "border-[rgba(245,242,232,0.11)] text-[rgba(196,197,194,0.48)] hover:border-[rgba(245,242,232,0.26)] hover:text-[rgba(246,244,238,0.7)]",
+  ].join(" ");
+
+// ─── Panel Header ──────────────────────────────────────────────────────────────
+
+function PanelHeader({
+  title,
+  quote,
+  onClose,
+}: {
+  title: string;
+  quote: string;
+  onClose: () => void;
+}) {
   return (
-    <div className="flex items-start justify-between mb-6">
-      <p className="text-[#9ca3af] text-sm max-w-2xl leading-relaxed">&ldquo;{quote}&rdquo;</p>
-      <button onClick={onClose} className="text-[#4b5563] hover:text-white text-xs ml-8 shrink-0 transition-colors">
-        close ×
+    <div className="mb-6">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2.5">
+          <span
+            className="w-2 h-2 shrink-0 inline-block"
+            style={{
+              border: "1px solid rgba(199,178,118,0.45)",
+              background: "rgba(199,178,118,0.1)",
+            }}
+          />
+          <span
+            className="text-[10px] uppercase tracking-[0.22em] font-semibold"
+            style={{ color: "rgba(246,244,238,0.72)" }}
+          >
+            {title}
+          </span>
+        </div>
+        <button
+          onClick={onClose}
+          className="shrink-0 ml-8 text-[9px] uppercase tracking-[0.18em] transition-colors hover:opacity-70"
+          style={{ color: "rgba(196,197,194,0.32)" }}
+        >
+          Close Panel —
+        </button>
+      </div>
+      <p
+        className="text-xs leading-relaxed max-w-2xl"
+        style={{ color: "rgba(196,197,194,0.54)" }}
+      >
+        &ldquo;{quote}&rdquo;
+      </p>
+    </div>
+  );
+}
+
+// ─── Submitted State ───────────────────────────────────────────────────────────
+
+function SubmittedState({
+  label,
+  onClose,
+}: {
+  label: string;
+  onClose: () => void;
+}) {
+  return (
+    <div className="flex flex-col items-start gap-4 py-4">
+      <div className="flex items-center gap-3">
+        <span className="text-xs" style={{ color: "rgba(199,178,118,0.75)" }}>✓</span>
+        <p className="text-sm tracking-wide" style={{ color: "rgba(246,244,238,0.78)" }}>
+          {label} received. We will be in touch.
+        </p>
+      </div>
+      <button
+        onClick={onClose}
+        className="text-[9px] uppercase tracking-[0.18em] transition-colors hover:opacity-70"
+        style={{ color: "rgba(196,197,194,0.32)" }}
+      >
+        Close Panel —
       </button>
     </div>
   );
 }
 
-function SubmittedState({ label, onClose }: { label: string; onClose: () => void }) {
+// ─── Styled input helper ────────────────────────────────────────────────────────
+
+function Field({
+  tag = "input",
+  ...props
+}: React.InputHTMLAttributes<HTMLInputElement> &
+  React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
+  tag?: "input" | "textarea";
+}) {
+  const shared = {
+    className: inputCls,
+    style: { ...inputStyle, ...(props.style ?? {}) },
+  };
+  if (tag === "textarea") {
+    return (
+      <textarea
+        {...(props as React.TextareaHTMLAttributes<HTMLTextAreaElement>)}
+        {...shared}
+      />
+    );
+  }
   return (
-    <div className="flex flex-col items-start gap-4">
-      <div className="flex items-center gap-3">
-        <span className="text-[#00d4ff] text-xs font-mono">✓</span>
-        <p className="text-white text-sm">{label} received. We will be in touch.</p>
-      </div>
-      <button onClick={onClose} className="text-[#4b5563] hover:text-white text-xs transition-colors">
-        close ×
-      </button>
-    </div>
+    <input
+      {...(props as React.InputHTMLAttributes<HTMLInputElement>)}
+      {...shared}
+    />
   );
 }
 
@@ -171,40 +370,52 @@ function RevenueDisciplinePanel({ onClose }: { onClose: () => void }) {
   const [selected, setSelected] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", org: "", auditContext: "", message: "" });
+  const [files, setFiles] = useState<File[]>([]);
 
-  const opts = ["Fractional CRO / RevOps", "Founder-led sales", "Small sales team", "Multi-client operator"];
+  const opts = [
+    "Fractional CRO / RevOps",
+    "Founder-led sales",
+    "Small sales team",
+    "Multi-client operator",
+  ];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // TODO: wire to Supabase insert or n8n webhook
-    const payload = {
+    console.log("[ConnectPage] submission:", {
       route_type: "revenue_discipline_audit",
       internal_product: "Drift",
-      environment_type: selected,
+      selected_option: selected,
       name: form.name,
       email: form.email,
       organization: form.org,
-      audit_context: form.auditContext,
+      context_or_inquiry_type: form.auditContext,
       message: form.message,
-    };
-    console.log("[ConnectPage] submission:", payload);
+      attachments: files.map((f) => ({ name: f.name, size: f.size, type: f.type })),
+      created_at: new Date().toISOString(),
+    });
     setSubmitted(true);
   };
 
-  if (submitted) return <SubmittedState label="Revenue Discipline Audit" onClose={onClose} />;
+  if (submitted)
+    return <SubmittedState label="Revenue Discipline Audit" onClose={onClose} />;
 
   return (
     <div>
       <PanelHeader
+        title="Revenue Discipline Audit"
         quote="Revenue discipline audits expose where pipeline activity, follow-up, accountability, and intervention timing are decaying."
         onClose={onClose}
       />
-      <p className="text-white text-[10px] uppercase tracking-widest mb-4 font-semibold">
+      <p className="text-[10px] uppercase tracking-[0.22em] mb-3"
+        style={{ color: "rgba(246,244,238,0.48)" }}>
         What type of environment are you managing?
       </p>
-      <div className="flex flex-wrap gap-3 mb-6">
+      <div className="flex flex-wrap gap-2 mb-6">
         {opts.map((o) => (
-          <button key={o} onClick={() => setSelected(o)} className={optionCls(selected === o)}>{o}</button>
+          <button key={o} type="button" onClick={() => setSelected(o)} className={optionCls(selected === o)}>
+            {o}
+          </button>
         ))}
       </div>
       <AnimatePresence>
@@ -216,18 +427,35 @@ function RevenueDisciplinePanel({ onClose }: { onClose: () => void }) {
             transition={{ duration: 0.18 }}
             onSubmit={handleSubmit}
           >
-            <div className="grid grid-cols-3 gap-3 mb-3">
-              <input required placeholder="Name" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} className={inputCls} />
-              <input required type="email" placeholder="Email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} className={inputCls} />
-              <input placeholder="Organization" value={form.org} onChange={(e) => setForm((f) => ({ ...f, org: e.target.value }))} className={inputCls} />
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_268px]">
+              <div className="space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <Field required placeholder="Name" value={form.name}
+                    onChange={(e) => setForm((f) => ({ ...f, name: (e.target as HTMLInputElement).value }))} />
+                  <Field required type="email" placeholder="Email" value={form.email}
+                    onChange={(e) => setForm((f) => ({ ...f, email: (e.target as HTMLInputElement).value }))} />
+                </div>
+                <Field placeholder="Organization" value={form.org}
+                  onChange={(e) => setForm((f) => ({ ...f, org: (e.target as HTMLInputElement).value }))} />
+                <Field placeholder="Audit Context" value={form.auditContext}
+                  onChange={(e) => setForm((f) => ({ ...f, auditContext: (e.target as HTMLInputElement).value }))} />
+                <Field tag="textarea" required placeholder="Message" rows={4} value={form.message}
+                  style={{ ...inputStyle, resize: "none" }}
+                  onChange={(e) => setForm((f) => ({ ...f, message: (e.target as HTMLTextAreaElement).value }))} />
+                <div className="pt-2">
+                  <button type="submit" className="px-6 py-2.5 text-[10px] font-semibold uppercase tracking-[0.2em] transition-all duration-200"
+                    style={{
+                      border: "1px solid rgba(245,242,232,0.26)",
+                      color: "rgba(246,244,238,0.78)",
+                    }}>
+                    REQUEST AUDIT →
+                  </button>
+                </div>
+              </div>
+              <div>
+                <AttachmentModule files={files} onChange={setFiles} />
+              </div>
             </div>
-            <div className="mb-3">
-              <input placeholder="Audit Context" value={form.auditContext} onChange={(e) => setForm((f) => ({ ...f, auditContext: e.target.value }))} className={inputCls} />
-            </div>
-            <textarea required placeholder="Message..." rows={3} value={form.message}
-              onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))}
-              className={`${inputCls} resize-none mb-5`} />
-            <button type="submit" className={btnPrimaryCls}>REQUEST AUDIT →</button>
           </motion.form>
         )}
       </AnimatePresence>
@@ -241,40 +469,52 @@ function MaintenanceGravityPanel({ onClose }: { onClose: () => void }) {
   const [selected, setSelected] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", org: "", systemUnderReview: "", message: "" });
+  const [files, setFiles] = useState<File[]>([]);
 
-  const opts = ["Software / product system", "AI or automation workflow", "Operations process", "Team execution system"];
+  const opts = [
+    "Software / product system",
+    "AI or automation workflow",
+    "Operations process",
+    "Team execution system",
+  ];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // TODO: wire to Supabase insert or n8n webhook
-    const payload = {
+    console.log("[ConnectPage] submission:", {
       route_type: "maintenance_gravity_audit",
       internal_product: "Maintenance Gravity",
-      system_type: selected,
+      selected_option: selected,
       name: form.name,
       email: form.email,
       organization: form.org,
-      system_under_review: form.systemUnderReview,
+      context_or_inquiry_type: form.systemUnderReview,
       message: form.message,
-    };
-    console.log("[ConnectPage] submission:", payload);
+      attachments: files.map((f) => ({ name: f.name, size: f.size, type: f.type })),
+      created_at: new Date().toISOString(),
+    });
     setSubmitted(true);
   };
 
-  if (submitted) return <SubmittedState label="Maintenance Gravity Audit" onClose={onClose} />;
+  if (submitted)
+    return <SubmittedState label="Maintenance Gravity Audit" onClose={onClose} />;
 
   return (
     <div>
       <PanelHeader
+        title="Maintenance Gravity Audit"
         quote="Maintenance Gravity audits expose the hidden operational weight that makes systems harder to sustain, scale, or delegate."
         onClose={onClose}
       />
-      <p className="text-white text-[10px] uppercase tracking-widest mb-4 font-semibold">
+      <p className="text-[10px] uppercase tracking-[0.22em] mb-3"
+        style={{ color: "rgba(246,244,238,0.48)" }}>
         What system is under pressure?
       </p>
-      <div className="flex flex-wrap gap-3 mb-6">
+      <div className="flex flex-wrap gap-2 mb-6">
         {opts.map((o) => (
-          <button key={o} onClick={() => setSelected(o)} className={optionCls(selected === o)}>{o}</button>
+          <button key={o} type="button" onClick={() => setSelected(o)} className={optionCls(selected === o)}>
+            {o}
+          </button>
         ))}
       </div>
       <AnimatePresence>
@@ -286,18 +526,35 @@ function MaintenanceGravityPanel({ onClose }: { onClose: () => void }) {
             transition={{ duration: 0.18 }}
             onSubmit={handleSubmit}
           >
-            <div className="grid grid-cols-3 gap-3 mb-3">
-              <input required placeholder="Name" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} className={inputCls} />
-              <input required type="email" placeholder="Email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} className={inputCls} />
-              <input placeholder="Organization" value={form.org} onChange={(e) => setForm((f) => ({ ...f, org: e.target.value }))} className={inputCls} />
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_268px]">
+              <div className="space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <Field required placeholder="Name" value={form.name}
+                    onChange={(e) => setForm((f) => ({ ...f, name: (e.target as HTMLInputElement).value }))} />
+                  <Field required type="email" placeholder="Email" value={form.email}
+                    onChange={(e) => setForm((f) => ({ ...f, email: (e.target as HTMLInputElement).value }))} />
+                </div>
+                <Field placeholder="Organization" value={form.org}
+                  onChange={(e) => setForm((f) => ({ ...f, org: (e.target as HTMLInputElement).value }))} />
+                <Field placeholder="System Under Review" value={form.systemUnderReview}
+                  onChange={(e) => setForm((f) => ({ ...f, systemUnderReview: (e.target as HTMLInputElement).value }))} />
+                <Field tag="textarea" required placeholder="Message" rows={4} value={form.message}
+                  style={{ ...inputStyle, resize: "none" }}
+                  onChange={(e) => setForm((f) => ({ ...f, message: (e.target as HTMLTextAreaElement).value }))} />
+                <div className="pt-2">
+                  <button type="submit" className="px-6 py-2.5 text-[10px] font-semibold uppercase tracking-[0.2em] transition-all duration-200"
+                    style={{
+                      border: "1px solid rgba(245,242,232,0.26)",
+                      color: "rgba(246,244,238,0.78)",
+                    }}>
+                    REQUEST AUDIT →
+                  </button>
+                </div>
+              </div>
+              <div>
+                <AttachmentModule files={files} onChange={setFiles} />
+              </div>
             </div>
-            <div className="mb-3">
-              <input placeholder="System Under Review" value={form.systemUnderReview} onChange={(e) => setForm((f) => ({ ...f, systemUnderReview: e.target.value }))} className={inputCls} />
-            </div>
-            <textarea required placeholder="Message..." rows={3} value={form.message}
-              onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))}
-              className={`${inputCls} resize-none mb-5`} />
-            <button type="submit" className={btnPrimaryCls}>REQUEST AUDIT →</button>
           </motion.form>
         )}
       </AnimatePresence>
@@ -308,46 +565,87 @@ function MaintenanceGravityPanel({ onClose }: { onClose: () => void }) {
 // ─── Panel: Contact Cognitive Empire ──────────────────────────────────────────
 
 function ContactPanel({ onClose }: { onClose: () => void }) {
+  const [selected, setSelected] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", org: "", inquiryType: "", message: "" });
+  const [files, setFiles] = useState<File[]>([]);
+
+  const opts = [
+    "Partnership",
+    "Strategic discussion",
+    "Institutional inquiry",
+    "Other",
+  ];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // TODO: wire to Supabase insert or n8n webhook
-    const payload = {
+    console.log("[ConnectPage] submission:", {
       route_type: "general_contact",
       internal_product: "CE",
+      selected_option: selected,
       name: form.name,
       email: form.email,
       organization: form.org,
-      inquiry_type: form.inquiryType,
+      context_or_inquiry_type: form.inquiryType || selected,
       message: form.message,
-    };
-    console.log("[ConnectPage] submission:", payload);
+      attachments: files.map((f) => ({ name: f.name, size: f.size, type: f.type })),
+      created_at: new Date().toISOString(),
+    });
     setSubmitted(true);
   };
 
-  if (submitted) return <SubmittedState label="Inquiry" onClose={onClose} />;
+  if (submitted)
+    return <SubmittedState label="Inquiry" onClose={onClose} />;
 
   return (
     <div>
       <PanelHeader
+        title="Contact Cognitive Empire"
         quote="Direct institutional contact for partnerships, strategic discussions, and serious inquiries."
         onClose={onClose}
       />
+      <p className="text-[10px] uppercase tracking-[0.22em] mb-3"
+        style={{ color: "rgba(246,244,238,0.48)" }}>
+        What type of inquiry is this?
+      </p>
+      <div className="flex flex-wrap gap-2 mb-6">
+        {opts.map((o) => (
+          <button key={o} type="button" onClick={() => setSelected(o)} className={optionCls(selected === o)}>
+            {o}
+          </button>
+        ))}
+      </div>
       <form onSubmit={handleSubmit}>
-        <div className="grid grid-cols-3 gap-3 mb-3">
-          <input required placeholder="Name" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} className={inputCls} />
-          <input required type="email" placeholder="Email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} className={inputCls} />
-          <input placeholder="Organization" value={form.org} onChange={(e) => setForm((f) => ({ ...f, org: e.target.value }))} className={inputCls} />
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_268px]">
+          <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-2">
+              <Field required placeholder="Name" value={form.name}
+                onChange={(e) => setForm((f) => ({ ...f, name: (e.target as HTMLInputElement).value }))} />
+              <Field required type="email" placeholder="Email" value={form.email}
+                onChange={(e) => setForm((f) => ({ ...f, email: (e.target as HTMLInputElement).value }))} />
+            </div>
+            <Field placeholder="Organization" value={form.org}
+              onChange={(e) => setForm((f) => ({ ...f, org: (e.target as HTMLInputElement).value }))} />
+            <Field placeholder="Inquiry Type" value={form.inquiryType}
+              onChange={(e) => setForm((f) => ({ ...f, inquiryType: (e.target as HTMLInputElement).value }))} />
+            <Field tag="textarea" required placeholder="Message" rows={4} value={form.message}
+              style={{ ...inputStyle, resize: "none" }}
+              onChange={(e) => setForm((f) => ({ ...f, message: (e.target as HTMLTextAreaElement).value }))} />
+            <div className="pt-2">
+              <button type="submit" className="px-6 py-2.5 text-[10px] font-semibold uppercase tracking-[0.2em] transition-all duration-200"
+                style={{
+                  border: "1px solid rgba(245,242,232,0.26)",
+                  color: "rgba(246,244,238,0.78)",
+                }}>
+                ROUTE INQUIRY →
+              </button>
+            </div>
+          </div>
+          <div>
+            <AttachmentModule files={files} onChange={setFiles} />
+          </div>
         </div>
-        <div className="mb-3">
-          <input placeholder="Inquiry Type" value={form.inquiryType} onChange={(e) => setForm((f) => ({ ...f, inquiryType: e.target.value }))} className={inputCls} />
-        </div>
-        <textarea required placeholder="Message..." rows={4} value={form.message}
-          onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))}
-          className={`${inputCls} resize-none mb-5`} />
-        <button type="submit" className={btnPrimaryCls}>ROUTE INQUIRY →</button>
       </form>
     </div>
   );
@@ -411,107 +709,217 @@ export default function ConnectPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white">
+    <div className="min-h-screen text-white" style={{ background: "#030405" }}>
       <style>{`
         @keyframes cursor-blink { 0%,100%{opacity:1} 50%{opacity:0} }
         .cursor-blink { animation: cursor-blink 1s step-end infinite; }
+        .ce-input:focus { border-color: rgba(245,242,232,0.28) !important; }
+        .ce-card:hover { background: rgba(7,9,11,0.9) !important; }
+        .ce-card:hover .ce-card-border { border-color: rgba(245,242,232,0.22) !important; }
+        .ce-btn-primary:hover { background: rgba(245,242,232,0.04); border-color: rgba(245,242,232,0.46) !important; }
       `}</style>
 
       {/* Navigation */}
-      <nav className="sticky top-0 z-50 border-b border-[#1a1a2e] bg-[#050505]/96 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-8 py-6 flex items-center justify-between">
-          <Link href="/home" className="text-white text-base font-bold tracking-widest uppercase">
+      <nav
+        className="sticky top-0 z-50 backdrop-blur-sm"
+        style={{
+          background: "rgba(3,4,5,0.96)",
+          borderBottom: "1px solid rgba(245,242,232,0.07)",
+        }}
+      >
+        <div
+          className="max-w-[1440px] mx-auto px-10 flex items-center justify-between"
+          style={{ height: "72px" }}
+        >
+          <Link
+            href="/home"
+            className="text-[11px] font-bold tracking-[0.28em] uppercase"
+            style={{ color: "rgba(246,244,238,0.82)" }}
+          >
             Cognitive Empire
           </Link>
-          <div className="flex items-center gap-7">
+          <div className="hidden md:flex items-center gap-7">
             {NAV_LINKS.map((link) => (
-              <Link key={link.label} href={link.href}
-                className={`text-sm px-1 transition-colors ${link.active ? "text-white border-b border-white pb-px" : "text-[#6b7280] hover:text-white"}`}>
+              <Link
+                key={link.label}
+                href={link.href}
+                className="text-[11px] tracking-[0.07em] transition-colors"
+                style={{
+                  color: link.active
+                    ? "rgba(246,244,238,0.9)"
+                    : "rgba(196,197,194,0.48)",
+                  borderBottom: link.active
+                    ? "1px solid rgba(245,242,232,0.38)"
+                    : "none",
+                  paddingBottom: link.active ? "1px" : undefined,
+                }}
+              >
                 {link.label}
               </Link>
             ))}
           </div>
-          <span className="text-[#00d4ff] text-sm font-mono tracking-wider">• DR. E INTERFACE</span>
+          <span
+            className="text-[10px] tracking-[0.2em] uppercase"
+            style={{ color: "rgba(196,197,194,0.42)" }}
+          >
+            · DR. E INTERFACE
+          </span>
         </div>
       </nav>
 
       {/* Hero */}
-      <section className="max-w-7xl mx-auto px-8 pt-10 pb-6">
-        <div className="grid grid-cols-2 gap-16 items-center">
+      <section className="max-w-[1440px] mx-auto px-10 pt-14 pb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-20 items-center"
+          style={{ minHeight: "260px" }}>
           <div>
             <h1
-              className="leading-none font-mono font-[200] tracking-wider text-white mb-3"
-              style={{ fontSize: "clamp(3rem, 6vw, 5rem)" }}
+              className="font-mono font-[200] leading-none tracking-[0.06em] mb-5"
+              style={{
+                fontSize: "clamp(3.2rem, 5.5vw, 5.5rem)",
+                color: "rgba(246,244,238,0.88)",
+              }}
             >
-              DR. E<span className="cursor-blink font-[400]" style={{ letterSpacing: 0 }}>_</span>
+              DR. E<span className="cursor-blink" style={{ letterSpacing: 0, fontWeight: 400 }}>_</span>
             </h1>
-            <p className="text-sm text-[#00d4ff] uppercase tracking-[0.45em] mb-3">
+            <p
+              className="text-[10px] uppercase tracking-[0.44em] mb-4"
+              style={{ color: "rgba(196,197,194,0.5)" }}
+            >
               Public Interface of Cognitive Empire
             </p>
-            <p className="text-xl text-white/65 max-w-lg leading-relaxed mb-5">
-              Structured operational routing for serious systems and strategic engagements.
+            <p
+              className="text-[15px] leading-relaxed mb-6 max-w-md"
+              style={{ color: "rgba(196,197,194,0.56)" }}
+            >
+              Structured operational routing for serious systems
+              <br />and strategic engagements.
             </p>
-            <div className="w-10 border-t border-[#00d4ff]/30 mb-5" />
-            <p className="text-sm text-[#00d4ff] uppercase tracking-[0.45em]">
+            <div
+              className="mb-6"
+              style={{
+                width: "2.25rem",
+                borderTop: "1px solid rgba(245,242,232,0.14)",
+              }}
+            />
+            <p
+              className="text-[10px] uppercase tracking-[0.4em]"
+              style={{ color: "rgba(196,197,194,0.4)" }}
+            >
               Select Your Entry Point.
             </p>
           </div>
-          <div className="flex items-center justify-center h-[320px]">
-            <CognitionCore />
+          <div className="hidden lg:flex items-center justify-center h-[280px]">
+            <RoutingVisual />
           </div>
         </div>
       </section>
 
       {/* Routing Cards */}
-      <section className="max-w-7xl mx-auto px-8 pb-6">
-        <div className="grid grid-cols-3 gap-3">
-          {CARDS.map((card) => (
-            <button key={card.id} onClick={() => handleCardClick(card.id)}
-              className={`relative text-left p-5 bg-[#0a0a0f] border cursor-pointer transition-all duration-200 group flex flex-col ${
-                activeCard === card.id
-                  ? "border-[#00d4ff]/50 shadow-[0_0_22px_rgba(0,212,255,0.10)]"
-                  : "border-[#1a1a2e] hover:border-[#00d4ff]/30 hover:shadow-[0_0_16px_rgba(0,212,255,0.06)]"
-              }`}
-            >
-              <span className="text-[#00d4ff] text-base font-mono tracking-wider block mb-3">{card.number}</span>
-              <span className="text-[#4b5563] group-hover:text-[#6b7280] transition-colors mb-3 block">
-                <card.Icon />
-              </span>
-              <h3 className="text-white font-bold text-lg uppercase tracking-[0.1em] mb-2 leading-snug">{card.title}</h3>
-              <p className="text-[#6b7280] text-base leading-relaxed flex-1">{card.description}</p>
-              <span className={`text-sm font-mono mt-4 block tracking-wider transition-colors ${
-                activeCard === card.id ? "text-[#00d4ff]" : "text-[#3d3d55] group-hover:text-[#00d4ff]"
-              }`}>
-                {card.cta}
-              </span>
-            </button>
-          ))}
+      <section className="max-w-[1440px] mx-auto px-10 pb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {CARDS.map((card) => {
+            const isActive = activeCard === card.id;
+            return (
+              <button
+                key={card.id}
+                onClick={() => handleCardClick(card.id)}
+                className="relative text-left p-6 flex flex-col cursor-pointer transition-all duration-200 group"
+                style={{
+                  background: isActive ? "rgba(9,11,14,0.92)" : "rgba(7,9,11,0.75)",
+                  border: `1px solid ${isActive ? "rgba(245,242,232,0.42)" : "rgba(245,242,232,0.1)"}`,
+                }}
+              >
+                <span
+                  className="text-[10px] font-mono tracking-[0.24em] block mb-4"
+                  style={{ color: "rgba(196,197,194,0.3)" }}
+                >
+                  {card.number}
+                </span>
+                <span
+                  className="mb-4 block transition-colors"
+                  style={{
+                    color: isActive
+                      ? "rgba(246,244,238,0.72)"
+                      : "rgba(196,197,194,0.38)",
+                  }}
+                >
+                  <card.Icon />
+                </span>
+                <h3
+                  className="font-semibold text-[12px] uppercase tracking-[0.12em] mb-2.5 leading-snug"
+                  style={{ color: "rgba(246,244,238,0.82)" }}
+                >
+                  {card.title}
+                </h3>
+                <p
+                  className="text-[13px] leading-relaxed flex-1"
+                  style={{ color: "rgba(196,197,194,0.48)" }}
+                >
+                  {card.description}
+                </p>
+                <span
+                  className="text-[10px] font-mono mt-5 block tracking-[0.16em] transition-colors"
+                  style={{
+                    color: isActive
+                      ? "rgba(246,244,238,0.65)"
+                      : "rgba(196,197,194,0.28)",
+                  }}
+                >
+                  {card.cta}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Inline Panel */}
         <AnimatePresence mode="wait">
           {activeCard && (
-            <motion.div key={activeCard}
-              initial={{ opacity: 0, y: -6 }}
+            <motion.div
+              key={activeCard}
+              initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.18 }}
-              className="mt-3 p-8 bg-[#0a0a0f] border border-[#1a1a2e]"
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+              className="mt-3 p-8"
+              style={{
+                background: "rgba(7,9,11,0.88)",
+                border: "1px solid rgba(245,242,232,0.1)",
+              }}
             >
-              {activeCard === 1 && <RevenueDisciplinePanel onClose={() => setActiveCard(null)} />}
-              {activeCard === 2 && <MaintenanceGravityPanel onClose={() => setActiveCard(null)} />}
-              {activeCard === 3 && <ContactPanel onClose={() => setActiveCard(null)} />}
+              {activeCard === 1 && (
+                <RevenueDisciplinePanel onClose={() => setActiveCard(null)} />
+              )}
+              {activeCard === 2 && (
+                <MaintenanceGravityPanel onClose={() => setActiveCard(null)} />
+              )}
+              {activeCard === 3 && (
+                <ContactPanel onClose={() => setActiveCard(null)} />
+              )}
             </motion.div>
           )}
         </AnimatePresence>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-[#1a1a2e] py-6">
-        <div className="max-w-7xl mx-auto px-8 flex items-center justify-between">
-          <span className="text-[#3b3b4f] text-[10px] tracking-[0.3em] uppercase">Cognitive Empire</span>
-          <span className="text-[#3b3b4f] text-sm">·</span>
-          <span className="text-[#3b3b4f] text-[10px] tracking-[0.3em] uppercase">Intelligence. Structure. Empire.</span>
+      <footer
+        className="mt-16"
+        style={{ borderTop: "1px solid rgba(245,242,232,0.07)" }}
+      >
+        <div className="max-w-[1440px] mx-auto px-10 py-6 flex items-center justify-between">
+          <span
+            className="text-[9px] tracking-[0.34em] uppercase"
+            style={{ color: "rgba(196,197,194,0.22)" }}
+          >
+            Cognitive Empire
+          </span>
+          <span style={{ color: "rgba(196,197,194,0.22)", fontSize: "11px" }}>·</span>
+          <span
+            className="text-[9px] tracking-[0.34em] uppercase"
+            style={{ color: "rgba(196,197,194,0.22)" }}
+          >
+            Intelligence. Structure. Empire.
+          </span>
         </div>
       </footer>
     </div>
