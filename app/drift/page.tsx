@@ -122,12 +122,12 @@ export default function DriftMarketingPage() {
         }}>
           {/* Logo */}
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 28, height: 28, borderRadius: 6, background: "rgba(59,130,246,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
-                <path d="M4 4 L16 10 L4 16 L7 10 Z" fill="#3b82f6" />
-              </svg>
-            </div>
-            <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: "-0.02em", color: "#f8fafc" }}>Drift</span>
+            <svg width="28" height="22" viewBox="0 0 106 82" fill="none" aria-hidden="true">
+              <path fill="#EEF3FA" fillRule="evenodd" d="M2,56 h12 v16 h-12 Z M17,44 h12 v28 h-12 Z M32,32 h12 v40 h-12 Z M47,18 h12 v54 h-12 Z M62,32 h12 v40 h-12 Z M77,44 h12 v28 h-12 Z M92,56 h12 v16 h-12 Z M2,72 h102 v6 h-102 Z M49,72 L49,54 C49,43 51,41 53,41 C55,41 57,43 57,54 L57,72 Z" />
+            </svg>
+            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: "#94a3b8" }}>Cognitive Empire</span>
+            <span style={{ width: 1, height: 16, background: C.border, flexShrink: 0 }} />
+            <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: "0.06em", color: "#f8fafc" }}>DRIFT</span>
           </div>
 
           {/* Nav right */}
@@ -451,12 +451,12 @@ export default function DriftMarketingPage() {
           <div style={{ maxWidth: 1152, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             {/* Wordmark */}
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{ width: 22, height: 22, borderRadius: 4, background: "rgba(59,130,246,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <svg width="10" height="10" viewBox="0 0 20 20" fill="none">
-                  <path d="M4 4 L16 10 L4 16 L7 10 Z" fill="#3b82f6" />
-                </svg>
-              </div>
-              <span style={{ fontSize: 15, fontWeight: 700, color: "#f8fafc" }}>Drift</span>
+              <svg width="22" height="17" viewBox="0 0 106 82" fill="none" aria-hidden="true">
+                <path fill="#EEF3FA" fillRule="evenodd" d="M2,56 h12 v16 h-12 Z M17,44 h12 v28 h-12 Z M32,32 h12 v40 h-12 Z M47,18 h12 v54 h-12 Z M62,32 h12 v40 h-12 Z M77,44 h12 v28 h-12 Z M92,56 h12 v16 h-12 Z M2,72 h102 v6 h-102 Z M49,72 L49,54 C49,43 51,41 53,41 C55,41 57,43 57,54 L57,72 Z" />
+              </svg>
+              <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: "#64748b" }}>Cognitive Empire</span>
+              <span style={{ width: 1, height: 13, background: C.border, flexShrink: 0 }} />
+              <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: "0.06em", color: "#f8fafc" }}>DRIFT</span>
             </div>
 
             {/* Links */}
