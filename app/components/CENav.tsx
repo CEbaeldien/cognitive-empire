@@ -41,7 +41,7 @@ export default function CENav() {
                 href={link.href}
                 className={`text-sm transition-colors ${
                   isActive
-                    ? "text-blue-400 border-b border-blue-500 pb-px"
+                    ? "text-[#C5A26F] border-b border-[#C5A26F]/55 pb-px"
                     : "text-[#64748b] hover:text-white"
                 }`}
               >
