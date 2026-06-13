@@ -1,4 +1,5 @@
 import { DownloadButton } from './DownloadButton'
+import { CEMark } from '@/app/components/CEMark'
 
 /* ─────────────────────────────────────────────────────────
    TopNav
@@ -16,36 +17,10 @@ export function TopNav() {
           {/* Left: logo + wordmark + badge */}
           <div className="flex items-center gap-x-4">
             <div className="flex items-center gap-x-3">
-              {/* CE emblem — final locked logo */}
               <a href="/" aria-label="Cognitive Empire home">
-                {/*
-                  Crop window: mark spans native x≈289–1158 (869px wide), y≈77–656 (579px tall).
-                  At img width=60px: scale=60/1448=0.0414.
-                  Mark at scale: x=12–48px, y=3.2–27.2px.
-                  Container 40×36px; left=-10 centers x (12-10=2 to 48-10=38), top=5 centers y.
-                */}
-                <div
-                  style={{
-                    width: 40,
-                    height: 36,
-                    overflow: 'hidden',
-                    position: 'relative',
-                    flexShrink: 0,
-                  }}
-                >
-                  <img
-                    src="/brand/ce_logo_presentation_exact.svg"
-                    alt=""
-                    aria-hidden="true"
-                    style={{
-                      position: 'absolute',
-                      width: 60,
-                      height: 'auto',
-                      left: -10,
-                      top: 5,
-                    }}
-                  />
-                </div>
+                <span className="text-[#F4F7FB]">
+                  <CEMark className="w-9 h-9" />
+                </span>
               </a>
               <a href="/" className="font-semibold tracking-[-0.6px] text-xl text-[#F4F7FB] hover:text-white transition-colors">
                 Cognitive Empire

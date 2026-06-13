@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 // ─── Cognition Core ────────────────────────────────────────────────────────────
 
@@ -50,7 +49,6 @@ function CognitionCore() {
         <circle cx="200" cy="200" r="175" fill="none" stroke="#00d4ff" strokeWidth="0.4" opacity="0.08" />
         <circle cx="200" cy="200" r="155" fill="none" stroke="#00d4ff" strokeWidth="0.4" opacity="0.12" />
 
-        {/* Slow CW rotating outer ring */}
         <motion.g
           animate={{ rotate: 360 }}
           transition={{ duration: 50, repeat: Infinity, ease: "linear" }}
@@ -62,7 +60,6 @@ function CognitionCore() {
           ))}
         </motion.g>
 
-        {/* Medium CCW rotating ring */}
         <motion.g
           animate={{ rotate: -360 }}
           transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
@@ -75,7 +72,6 @@ function CognitionCore() {
         </motion.g>
 
         <circle cx="200" cy="200" r="80" fill="none" stroke="#00d4ff" strokeWidth="0.5" opacity="0.25" />
-
         <polygon points={hexPoints(62)} fill="none" stroke="#00d4ff" strokeWidth="1" opacity="0.42" filter="url(#fglow)" />
         <polygon points={hexPoints(30)} fill="rgba(0,212,255,0.04)" stroke="#00d4ff" strokeWidth="1" opacity="0.62" filter="url(#fglow)" />
 
@@ -90,7 +86,6 @@ function CognitionCore() {
           );
         })}
 
-        {/* Expanding pulse ring */}
         <motion.g
           style={{ transformOrigin: "200px 200px" }}
           animate={{ scale: [1, 1.9], opacity: [0.22, 0] }}
@@ -110,7 +105,7 @@ function CognitionCore() {
 
 // ─── Icons ─────────────────────────────────────────────────────────────────────
 
-function IconDrift() {
+function IconRevenue() {
   return (
     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
@@ -118,37 +113,13 @@ function IconDrift() {
   );
 }
 
-function IconSignals() {
+function IconGravity() {
   return (
-    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="2" />
-      <path d="M4.93 4.93a10 10 0 0 0 0 14.14" />
-      <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
-      <path d="M7.76 7.76a6 6 0 0 0 0 8.49" />
-      <path d="M16.24 7.76a6 6 0 0 1 0 8.49" />
-    </svg>
-  );
-}
-
-function IconOps() {
-  return (
-    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="3" width="6" height="6" rx="1" />
-      <rect x="15" y="3" width="6" height="6" rx="1" />
-      <rect x="9" y="15" width="6" height="6" rx="1" />
-      <path d="M6 9v3a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V9" />
-      <line x1="12" y1="9" x2="12" y2="15" />
-    </svg>
-  );
-}
-
-function IconBriefs() {
-  return (
-    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-      <polyline points="14 2 14 8 20 8" />
-      <line x1="16" y1="13" x2="8" y2="13" />
-      <line x1="16" y1="17" x2="8" y2="17" />
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+      <line x1="4" y1="6" x2="20" y2="6" />
+      <line x1="6" y1="10" x2="18" y2="10" />
+      <line x1="8" y1="14" x2="16" y2="14" />
+      <line x1="10" y1="18" x2="14" y2="18" />
     </svg>
   );
 }
@@ -162,11 +133,10 @@ function IconContact() {
   );
 }
 
-// ─── Inline Panels ─────────────────────────────────────────────────────────────
+// ─── Shared styles ─────────────────────────────────────────────────────────────
 
 const inputCls = "bg-[#05050a] border border-[#1a1a2e] px-3 py-2 text-xs text-white placeholder:text-[#3d3d55] focus:outline-none focus:border-[#00d4ff]/40 transition-colors w-full";
 const btnPrimaryCls = "px-5 py-2 bg-[#00d4ff] text-black text-xs font-bold uppercase tracking-wide hover:bg-[#00b8d9] transition-colors";
-const btnOutlineCls = "px-5 py-2 border border-[#00d4ff]/50 text-[#00d4ff] text-xs uppercase tracking-wide hover:border-[#00d4ff] transition-colors";
 const optionCls = (active: boolean) =>
   `px-4 py-2 border text-xs transition-all duration-150 ${active ? "border-[#00d4ff] text-white" : "border-[#1a1a2e] text-[#6b7280] hover:border-[#00d4ff]/40 hover:text-white"}`;
 
@@ -181,130 +151,203 @@ function PanelHeader({ quote, onClose }: { quote: string; onClose: () => void })
   );
 }
 
-function DriftPanel({ onClose }: { onClose: () => void }) {
+function SubmittedState({ label, onClose }: { label: string; onClose: () => void }) {
+  return (
+    <div className="flex flex-col items-start gap-4">
+      <div className="flex items-center gap-3">
+        <span className="text-[#00d4ff] text-xs font-mono">✓</span>
+        <p className="text-white text-sm">{label} received. We will be in touch.</p>
+      </div>
+      <button onClick={onClose} className="text-[#4b5563] hover:text-white text-xs transition-colors">
+        close ×
+      </button>
+    </div>
+  );
+}
+
+// ─── Panel: Revenue Discipline Audit ──────────────────────────────────────────
+
+function RevenueDisciplinePanel({ onClose }: { onClose: () => void }) {
   const [selected, setSelected] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useState(false);
+  const [form, setForm] = useState({ name: "", email: "", org: "", auditContext: "", message: "" });
+
   const opts = ["Fractional CRO / RevOps", "Founder-led sales", "Small sales team", "Multi-client operator"];
-  return (
-    <div>
-      <PanelHeader onClose={onClose} quote="Drift detects revenue decay before it becomes revenue loss. Designed for operators managing active pipelines, interventions, and execution accountability." />
-      <p className="text-white text-[10px] uppercase tracking-widest mb-4 font-semibold">What type of environment are you managing?</p>
-      <div className="flex flex-wrap gap-3 mb-6">
-        {opts.map((o) => (
-          <button key={o} onClick={() => setSelected(o)} className={optionCls(selected === o)}>{o}</button>
-        ))}
-      </div>
-      <AnimatePresence>
-        {selected && (
-          <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} className="flex gap-4">
-            <Link href="/drift" className={btnPrimaryCls}>Start Drift Trial</Link>
-            <a href="mailto:contact@cognitiveempire.com?subject=Drift%20Walkthrough%20Request" className={btnOutlineCls}>Request Walkthrough</a>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-function SignalsPanel({ onClose }: { onClose: () => void }) {
-  const [selected, setSelected] = useState<string | null>(null);
-  const opts = ["AI", "Robotics", "Infrastructure", "Market shifts", "Multi-domain convergence"];
-  return (
-    <div>
-      <PanelHeader onClose={onClose} quote="Signals surfaces structural shifts before they become public knowledge. Built for analysts and operators tracking multi-domain convergence." />
-      <p className="text-white text-[10px] uppercase tracking-widest mb-4 font-semibold">What are you trying to monitor more effectively?</p>
-      <div className="flex flex-wrap gap-3 mb-6">
-        {opts.map((o) => (
-          <button key={o} onClick={() => setSelected(o)} className={optionCls(selected === o)}>{o}</button>
-        ))}
-      </div>
-      <AnimatePresence>
-        {selected && (
-          <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} className="flex gap-4">
-            <Link href="/signals" className={btnPrimaryCls}>Access Signals</Link>
-            <a href="mailto:contact@cognitiveempire.com?subject=Signals%20Demo%20Request" className={btnOutlineCls}>Request Demo</a>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-function OpsPanel({ onClose }: { onClose: () => void }) {
-  const [step, setStep] = useState<"select" | "form">("select");
-  const [problem, setProblem] = useState("");
-  const [form, setForm] = useState({ name: "", email: "", org: "", message: "" });
-  const problems = ["Revenue execution", "Workflow chaos", "Signal overload", "Operational visibility", "Governance / escalation", "Other"];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const body = encodeURIComponent(`Problem Area: ${problem}\nName: ${form.name}\nOrganization: ${form.org}\n\nMessage:\n${form.message}`);
-    window.location.href = `mailto:ops@cognitiveempire.com?subject=${encodeURIComponent(`Operational Inquiry: ${problem}`)}&body=${body}`;
+    // TODO: wire to Supabase insert or n8n webhook
+    const payload = {
+      route_type: "revenue_discipline_audit",
+      internal_product: "Drift",
+      environment_type: selected,
+      name: form.name,
+      email: form.email,
+      organization: form.org,
+      audit_context: form.auditContext,
+      message: form.message,
+    };
+    console.log("[ConnectPage] submission:", payload);
+    setSubmitted(true);
   };
+
+  if (submitted) return <SubmittedState label="Revenue Discipline Audit" onClose={onClose} />;
 
   return (
     <div>
-      <PanelHeader onClose={onClose} quote="Cognitive Empire builds execution systems for operators who can't afford operational drift. Tell us what you're trying to solve." />
-      {step === "select" ? (
-        <>
-          <p className="text-white text-[10px] uppercase tracking-widest mb-4 font-semibold">What operational problem are you trying to solve?</p>
-          <div className="flex flex-wrap gap-3">
-            {problems.map((p) => (
-              <button key={p} onClick={() => { setProblem(p); setStep("form"); }}
-                className="px-4 py-2 border border-[#1a1a2e] text-[#6b7280] text-xs hover:border-[#00d4ff]/40 hover:text-white transition-all duration-150">
-                {p}
-              </button>
-            ))}
-          </div>
-        </>
-      ) : (
-        <motion.form initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.18 }} onSubmit={handleSubmit}>
-          <div className="flex items-center gap-4 mb-5">
-            <span className="text-[#00d4ff] text-xs border border-[#00d4ff]/30 px-3 py-1">{problem}</span>
-            <button type="button" onClick={() => setStep("select")} className="text-[#4b5563] text-xs hover:text-white transition-colors">change</button>
-          </div>
-          <div className="grid grid-cols-3 gap-3 mb-3">
-            <input required placeholder="Name" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} className={inputCls} />
-            <input required type="email" placeholder="Email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} className={inputCls} />
-            <input placeholder="Organization" value={form.org} onChange={(e) => setForm((f) => ({ ...f, org: e.target.value }))} className={inputCls} />
-          </div>
-          <textarea required placeholder="Describe what you're trying to solve..." rows={3} value={form.message}
-            onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))}
-            className={`${inputCls} resize-none mb-5`} />
-          <button type="submit" className={btnPrimaryCls}>Route Inquiry →</button>
-        </motion.form>
-      )}
+      <PanelHeader
+        quote="Revenue discipline audits expose where pipeline activity, follow-up, accountability, and intervention timing are decaying."
+        onClose={onClose}
+      />
+      <p className="text-white text-[10px] uppercase tracking-widest mb-4 font-semibold">
+        What type of environment are you managing?
+      </p>
+      <div className="flex flex-wrap gap-3 mb-6">
+        {opts.map((o) => (
+          <button key={o} onClick={() => setSelected(o)} className={optionCls(selected === o)}>{o}</button>
+        ))}
+      </div>
+      <AnimatePresence>
+        {selected && (
+          <motion.form
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
+            onSubmit={handleSubmit}
+          >
+            <div className="grid grid-cols-3 gap-3 mb-3">
+              <input required placeholder="Name" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} className={inputCls} />
+              <input required type="email" placeholder="Email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} className={inputCls} />
+              <input placeholder="Organization" value={form.org} onChange={(e) => setForm((f) => ({ ...f, org: e.target.value }))} className={inputCls} />
+            </div>
+            <div className="mb-3">
+              <input placeholder="Audit Context" value={form.auditContext} onChange={(e) => setForm((f) => ({ ...f, auditContext: e.target.value }))} className={inputCls} />
+            </div>
+            <textarea required placeholder="Message..." rows={3} value={form.message}
+              onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))}
+              className={`${inputCls} resize-none mb-5`} />
+            <button type="submit" className={btnPrimaryCls}>REQUEST AUDIT →</button>
+          </motion.form>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
+
+// ─── Panel: Maintenance Gravity Audit ─────────────────────────────────────────
+
+function MaintenanceGravityPanel({ onClose }: { onClose: () => void }) {
+  const [selected, setSelected] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useState(false);
+  const [form, setForm] = useState({ name: "", email: "", org: "", systemUnderReview: "", message: "" });
+
+  const opts = ["Software / product system", "AI or automation workflow", "Operations process", "Team execution system"];
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // TODO: wire to Supabase insert or n8n webhook
+    const payload = {
+      route_type: "maintenance_gravity_audit",
+      internal_product: "Maintenance Gravity",
+      system_type: selected,
+      name: form.name,
+      email: form.email,
+      organization: form.org,
+      system_under_review: form.systemUnderReview,
+      message: form.message,
+    };
+    console.log("[ConnectPage] submission:", payload);
+    setSubmitted(true);
+  };
+
+  if (submitted) return <SubmittedState label="Maintenance Gravity Audit" onClose={onClose} />;
+
+  return (
+    <div>
+      <PanelHeader
+        quote="Maintenance Gravity audits expose the hidden operational weight that makes systems harder to sustain, scale, or delegate."
+        onClose={onClose}
+      />
+      <p className="text-white text-[10px] uppercase tracking-widest mb-4 font-semibold">
+        What system is under pressure?
+      </p>
+      <div className="flex flex-wrap gap-3 mb-6">
+        {opts.map((o) => (
+          <button key={o} onClick={() => setSelected(o)} className={optionCls(selected === o)}>{o}</button>
+        ))}
+      </div>
+      <AnimatePresence>
+        {selected && (
+          <motion.form
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
+            onSubmit={handleSubmit}
+          >
+            <div className="grid grid-cols-3 gap-3 mb-3">
+              <input required placeholder="Name" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} className={inputCls} />
+              <input required type="email" placeholder="Email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} className={inputCls} />
+              <input placeholder="Organization" value={form.org} onChange={(e) => setForm((f) => ({ ...f, org: e.target.value }))} className={inputCls} />
+            </div>
+            <div className="mb-3">
+              <input placeholder="System Under Review" value={form.systemUnderReview} onChange={(e) => setForm((f) => ({ ...f, systemUnderReview: e.target.value }))} className={inputCls} />
+            </div>
+            <textarea required placeholder="Message..." rows={3} value={form.message}
+              onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))}
+              className={`${inputCls} resize-none mb-5`} />
+            <button type="submit" className={btnPrimaryCls}>REQUEST AUDIT →</button>
+          </motion.form>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ─── Panel: Contact Cognitive Empire ──────────────────────────────────────────
 
 function ContactPanel({ onClose }: { onClose: () => void }) {
+  const [submitted, setSubmitted] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", org: "", inquiryType: "", message: "" });
-  const types = ["Product Inquiry", "Strategic Partnership", "Press & Media", "Investment", "General"];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const body = encodeURIComponent(`Name: ${form.name}\nOrganization: ${form.org}\nInquiry Type: ${form.inquiryType || "General"}\n\nMessage:\n${form.message}`);
-    window.location.href = `mailto:contact@cognitiveempire.com?subject=${encodeURIComponent(form.inquiryType || "Contact Inquiry")}&body=${body}`;
+    // TODO: wire to Supabase insert or n8n webhook
+    const payload = {
+      route_type: "general_contact",
+      internal_product: "CE",
+      name: form.name,
+      email: form.email,
+      organization: form.org,
+      inquiry_type: form.inquiryType,
+      message: form.message,
+    };
+    console.log("[ConnectPage] submission:", payload);
+    setSubmitted(true);
   };
+
+  if (submitted) return <SubmittedState label="Inquiry" onClose={onClose} />;
 
   return (
     <div>
-      <PanelHeader onClose={onClose} quote="Direct institutional contact for partnerships, strategic discussions, and serious inquiries." />
+      <PanelHeader
+        quote="Direct institutional contact for partnerships, strategic discussions, and serious inquiries."
+        onClose={onClose}
+      />
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-3 gap-3 mb-3">
           <input required placeholder="Name" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} className={inputCls} />
           <input required type="email" placeholder="Email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} className={inputCls} />
           <input placeholder="Organization" value={form.org} onChange={(e) => setForm((f) => ({ ...f, org: e.target.value }))} className={inputCls} />
         </div>
-        <select value={form.inquiryType} onChange={(e) => setForm((f) => ({ ...f, inquiryType: e.target.value }))}
-          className={`${inputCls} mb-3 appearance-none`}>
-          <option value="">Inquiry Type</option>
-          {types.map((t) => <option key={t} value={t}>{t}</option>)}
-        </select>
-        <textarea required placeholder="Your message..." rows={4} value={form.message}
+        <div className="mb-3">
+          <input placeholder="Inquiry Type" value={form.inquiryType} onChange={(e) => setForm((f) => ({ ...f, inquiryType: e.target.value }))} className={inputCls} />
+        </div>
+        <textarea required placeholder="Message..." rows={4} value={form.message}
           onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))}
           className={`${inputCls} resize-none mb-5`} />
-        <button type="submit" className={btnPrimaryCls}>Route Inquiry →</button>
+        <button type="submit" className={btnPrimaryCls}>ROUTE INQUIRY →</button>
       </form>
     </div>
   );
@@ -312,34 +355,58 @@ function ContactPanel({ onClose }: { onClose: () => void }) {
 
 // ─── Card data ─────────────────────────────────────────────────────────────────
 
-type CardDef = { id: number; number: string; Icon: React.FC; title: string; description: string };
+type CardDef = {
+  id: number;
+  number: string;
+  Icon: React.FC;
+  title: string;
+  description: string;
+  cta: string;
+};
 
 const CARDS: CardDef[] = [
-  { id: 1, number: "01", Icon: IconDrift, title: "EXPLORE DRIFT", description: "Revenue decay detection and intervention systems for active pipeline environments." },
-  { id: 2, number: "02", Icon: IconSignals, title: "EXPLORE SIGNALS", description: "Strategic signal intelligence and convergence analysis for informed advantage." },
-  { id: 3, number: "03", Icon: IconOps, title: "DISCUSS OPERATIONAL SYSTEMS", description: "Execution, governance, and operational intelligence systems built for serious operators." },
-  { id: 4, number: "04", Icon: IconBriefs, title: "READ CE RESEARCH", description: "Operator-grade intelligence, execution reports, and structural analysis." },
-  { id: 5, number: "05", Icon: IconContact, title: "CONTACT COGNITIVE EMPIRE", description: "Direct inquiries, partnerships, and strategic discussions." },
+  {
+    id: 1,
+    number: "01",
+    Icon: IconRevenue,
+    title: "REVENUE DISCIPLINE AUDIT",
+    description: "Detect revenue decay, intervention gaps, and execution accountability leaks before they become loss.",
+    cta: "Request Audit →",
+  },
+  {
+    id: 2,
+    number: "02",
+    Icon: IconGravity,
+    title: "MAINTENANCE GRAVITY AUDIT",
+    description: "Identify where systems accumulate hidden upkeep, coordination drag, tooling friction, and continuity debt.",
+    cta: "Request Audit →",
+  },
+  {
+    id: 3,
+    number: "03",
+    Icon: IconContact,
+    title: "CONTACT COGNITIVE EMPIRE",
+    description: "Direct inquiries, partnerships, strategic discussions, and serious institutional contact.",
+    cta: "Route Inquiry →",
+  },
 ];
 
 const NAV_LINKS = [
-  { label: "Home", href: "/home" },
-  { label: "Drift", href: "/drift" },
-  { label: "Signals", href: "/signals" },
-  { label: "CE Research", href: "/briefs" },
-  { label: "Work", href: "/work" },
+  { label: "Home",        href: "/home"       },
+  { label: "Drift",       href: "/drift"       },
+  { label: "Signals",     href: "/signals"     },
+  { label: "CE Research", href: "/briefs"      },
+  { label: "Work",        href: "/work"        },
   { label: "FoundryLabs", href: "/foundrylabs" },
-  { label: "Connect", href: "/connect", active: true },
+  { label: "Connect",     href: "/connect", active: true },
 ];
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function ConnectPage() {
   const [activeCard, setActiveCard] = useState<number | null>(null);
-  const router = useRouter();
 
   const handleCardClick = (id: number) => {
-    if (id === 4) { router.push("/briefs"); return; }
     setActiveCard((prev) => (prev === id ? null : id));
   };
 
@@ -348,7 +415,6 @@ export default function ConnectPage() {
       <style>{`
         @keyframes cursor-blink { 0%,100%{opacity:1} 50%{opacity:0} }
         .cursor-blink { animation: cursor-blink 1s step-end infinite; }
-        select option { background-color: #0a0a0f; color: #fff; }
       `}</style>
 
       {/* Navigation */}
@@ -398,7 +464,7 @@ export default function ConnectPage() {
 
       {/* Routing Cards */}
       <section className="max-w-7xl mx-auto px-8 pb-6">
-        <div className="grid grid-cols-5 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           {CARDS.map((card) => (
             <button key={card.id} onClick={() => handleCardClick(card.id)}
               className={`relative text-left p-5 bg-[#0a0a0f] border cursor-pointer transition-all duration-200 group flex flex-col ${
@@ -413,8 +479,10 @@ export default function ConnectPage() {
               </span>
               <h3 className="text-white font-bold text-lg uppercase tracking-[0.1em] mb-2 leading-snug">{card.title}</h3>
               <p className="text-[#6b7280] text-base leading-relaxed flex-1">{card.description}</p>
-              <span className={`text-xl mt-3 block transition-colors ${activeCard === card.id ? "text-[#00d4ff]" : "text-[#3d3d55] group-hover:text-[#00d4ff]"}`}>
-                →
+              <span className={`text-sm font-mono mt-4 block tracking-wider transition-colors ${
+                activeCard === card.id ? "text-[#00d4ff]" : "text-[#3d3d55] group-hover:text-[#00d4ff]"
+              }`}>
+                {card.cta}
               </span>
             </button>
           ))}
@@ -422,7 +490,7 @@ export default function ConnectPage() {
 
         {/* Inline Panel */}
         <AnimatePresence mode="wait">
-          {activeCard && activeCard !== 4 && (
+          {activeCard && (
             <motion.div key={activeCard}
               initial={{ opacity: 0, y: -6 }}
               animate={{ opacity: 1, y: 0 }}
@@ -430,10 +498,9 @@ export default function ConnectPage() {
               transition={{ duration: 0.18 }}
               className="mt-3 p-8 bg-[#0a0a0f] border border-[#1a1a2e]"
             >
-              {activeCard === 1 && <DriftPanel onClose={() => setActiveCard(null)} />}
-              {activeCard === 2 && <SignalsPanel onClose={() => setActiveCard(null)} />}
-              {activeCard === 3 && <OpsPanel onClose={() => setActiveCard(null)} />}
-              {activeCard === 5 && <ContactPanel onClose={() => setActiveCard(null)} />}
+              {activeCard === 1 && <RevenueDisciplinePanel onClose={() => setActiveCard(null)} />}
+              {activeCard === 2 && <MaintenanceGravityPanel onClose={() => setActiveCard(null)} />}
+              {activeCard === 3 && <ContactPanel onClose={() => setActiveCard(null)} />}
             </motion.div>
           )}
         </AnimatePresence>

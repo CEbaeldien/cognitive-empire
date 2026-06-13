@@ -3,6 +3,7 @@
    Command seal treatment: circular ring frame, CE emblem,
    prime doctrine in full serif, classification mark.
 ───────────────────────────────────────────────────────── */
+import { CEMark } from '@/app/components/CEMark';
 
 export function ClosingDoctrine() {
   return (
@@ -21,27 +22,8 @@ export function ClosingDoctrine() {
         {/* Inner content */}
         <div className="flex flex-col items-center justify-center text-center px-10">
 
-          {/* CE emblem — final locked logo (cropped to main mark only) */}
-          {/*
-            At width=210px, image height=210*(1086/1448)=157.5px.
-            Main mark occupies native y≈77–656 → display y≈11–95px.
-            Container height=100px clips out variant sheet (starts at ~92px).
-          */}
-          <div
-            className="mb-5 mx-auto"
-            style={{ width: 210, height: 100, overflow: 'hidden', position: 'relative' }}
-          >
-            <img
-              src="/brand/ce_logo_presentation_exact.svg"
-              alt="Cognitive Empire"
-              style={{
-                position: 'absolute',
-                width: 210,
-                height: 'auto',
-                top: 0,
-                left: 0,
-              }}
-            />
+          <div className="mb-5 text-[#C5A26F]">
+            <CEMark className="w-20 h-20 block mx-auto" />
           </div>
 
           {/* Doctrine lines */}

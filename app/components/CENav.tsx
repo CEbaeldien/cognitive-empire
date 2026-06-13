@@ -2,27 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
-function CELogoMark() {
-  return (
-    <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
-      <polygon
-        points="13,1.5 23.99,7.75 23.99,18.25 13,24.5 2.01,18.25 2.01,7.75"
-        fill="rgba(59,130,246,0.06)"
-        stroke="#3b82f6"
-        strokeWidth="1.5"
-      />
-      <text x="13" y="17" textAnchor="middle" fill="#3b82f6" fontSize="8.5" fontFamily="monospace" fontWeight="700">
-        CE
-      </text>
-    </svg>
-  );
-}
+import { CEMark } from "./CEMark";
 
 const NAV_LINKS = [
   { label: "Home",        href: "/home"       },
   { label: "Drift",       href: "/drift"       },
   { label: "Signals",     href: "/signals"     },
+  { label: "Doctrine",    href: "/doctrine"    },
   { label: "CE Research", href: "/briefs"      },
   { label: "Work",        href: "/work"        },
   { label: "FoundryLabs", href: "/foundrylabs" },
@@ -36,7 +22,9 @@ export default function CENav() {
     <nav className="sticky top-0 z-50 border-b border-[#1e2a45] bg-[#080d1a]/96 backdrop-blur-sm">
       <div className="max-w-7xl mx-auto px-6 md:px-8 py-5 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-3 group">
-          <CELogoMark />
+          <span className="text-white">
+            <CEMark className="w-6 h-6" />
+          </span>
           <span className="text-white text-sm font-bold tracking-widest uppercase group-hover:text-blue-400 transition-colors">
             Cognitive Empire
           </span>

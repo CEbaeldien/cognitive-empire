@@ -1,20 +1,5 @@
 import Link from "next/link";
-
-function CELogoMark() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 26 26" fill="none">
-      <polygon
-        points="13,1.5 23.99,7.75 23.99,18.25 13,24.5 2.01,18.25 2.01,7.75"
-        fill="rgba(59,130,246,0.06)"
-        stroke="#3b82f6"
-        strokeWidth="1.5"
-      />
-      <text x="13" y="17" textAnchor="middle" fill="#3b82f6" fontSize="8.5" fontFamily="monospace" fontWeight="700">
-        CE
-      </text>
-    </svg>
-  );
-}
+import { CEMark } from "./CEMark";
 
 export default function CEFooter() {
   return (
@@ -25,7 +10,9 @@ export default function CEFooter() {
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2 mb-3">
-              <CELogoMark />
+              <span className="text-white">
+                <CEMark className="w-5 h-5" />
+              </span>
               <span className="text-white text-xs font-bold tracking-widest uppercase">
                 Cognitive Empire
               </span>
