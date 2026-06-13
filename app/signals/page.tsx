@@ -927,7 +927,7 @@ function SignalIntelligenceLayout({ signals }: { signals: V2Signal[] }) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default async function SignalsPage() {
-  const v2Mode = process.env.NEXT_PUBLIC_SIGNALS_V2 === "true";
+  const v2Mode = process.env.SIGNALS_V2 === "true";
 
   // V2 path
   if (v2Mode) {
