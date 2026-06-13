@@ -1215,16 +1215,16 @@ html {
 }
 .mg-rail-item:last-child { border-bottom: none; }
 .mg-rail-label {
-  font-size: 8px;
+  font-size: 9px;
   letter-spacing: 1.8px;
   text-transform: uppercase;
-  color: #2A3548;
+  color: #3A4558;
   font-family: ui-monospace, monospace;
 }
 .mg-rail-value {
-  font-size: 9.5px;
-  letter-spacing: 0.5px;
-  color: #3D4F68;
+  font-size: 11.5px;
+  letter-spacing: 0.4px;
+  color: #4D6080;
   font-family: ui-monospace, monospace;
   text-transform: uppercase;
 }

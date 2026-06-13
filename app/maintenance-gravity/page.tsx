@@ -97,7 +97,7 @@ export default function MaintenanceGravityPage() {
 
         {/* ── Left column: hero + canon statement ────────── */}
         <div className="hidden lg:block w-[380px] xl:w-[440px] flex-shrink-0 border-r border-white/[0.07]">
-          <div className="sticky top-[68px] px-10 pt-14 pb-14 flex flex-col" style={{ maxHeight: 'calc(100vh - 68px)', overflowY: 'auto' }}>
+          <div className="sticky top-[68px] pl-14 pr-10 pt-14 pb-14 flex flex-col" style={{ maxHeight: 'calc(100vh - 68px)', overflowY: 'auto' }}>
 
             {/* Eyebrow */}
             <div className="mg-eyebrow flex items-center gap-x-4 mb-7">
@@ -360,23 +360,23 @@ export default function MaintenanceGravityPage() {
 
         {/* ── Right: Metadata rail ────────────────────────── */}
         <aside
-          className="hidden xl:block w-[162px] flex-shrink-0 border-l border-white/[0.07] px-6 pt-14 pb-14"
+          className="hidden xl:block w-[220px] flex-shrink-0 border-l border-white/[0.07] px-8 pt-14 pb-14"
           aria-label="Canon metadata"
         >
           <div className="mg-rail-fade sticky top-[68px] pt-2">
-            <div className="text-[7.5px] tracking-[2px] text-[#2A3548] uppercase font-mono mb-5 select-none">
+            <div className="text-[9.5px] tracking-[2px] text-[#3A4558] uppercase font-mono mb-5 select-none">
               Canon
             </div>
-            <div className="border border-white/[0.05] rounded-xl overflow-hidden">
+            <div className="border border-white/[0.10] rounded-xl overflow-hidden bg-[#0B1624]/50">
               {METADATA_RAIL.map(({ label, value }) => (
-                <div key={label} className="mg-rail-item px-3.5">
+                <div key={label} className="mg-rail-item px-5">
                   <div className="mg-rail-label">{label}</div>
                   <div className="mg-rail-value">{value}</div>
                 </div>
               ))}
             </div>
-            <div className="mt-8 w-full h-px bg-white/[0.04]" />
-            <div className="mt-5 text-[7.5px] tracking-[1.5px] text-[#2A3548] uppercase font-mono select-none leading-[1.9]">
+            <div className="mt-8 w-full h-px bg-white/[0.06]" />
+            <div className="mt-5 text-[9px] tracking-[1.5px] text-[#3A4558] uppercase font-mono select-none leading-[1.9]">
               Part of the<br />CE Canon Series
             </div>
           </div>
