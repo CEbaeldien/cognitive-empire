@@ -8,13 +8,8 @@
 
 export type SignalCategory =
   | "intelligence"
-  | "physical_systems"
-  | "infrastructure"
-  | "energy"
-  | "science_frontier"
   | "governance_stability"
-  | "markets_human_prosperity"
-  | "resources_continuity";
+  | "infrastructure";
 
 export type SourceType = "rss" | "api" | "scrape" | "manual";
 

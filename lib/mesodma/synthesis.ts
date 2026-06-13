@@ -22,9 +22,9 @@ const MAX_CLUSTERS      = 1;   // Vercel Hobby constraint: 1 cluster per call, m
 const MAX_TOKENS        = 4096;
 
 const VALID_CATEGORIES = [
-  "intelligence", "physical_systems", "infrastructure", "energy",
-  "science_frontier", "governance_stability", "markets_human_prosperity",
-  "resources_continuity",
+  "intelligence",
+  "governance_stability",
+  "infrastructure",
 ] as const;
 
 const VALID_ROUTING = ["internal", "human_review", "needs_more_evidence", "reject"] as const;
@@ -85,8 +85,13 @@ GOVERNANCE RULES — NEVER VIOLATE:
 4. Output language must be CE-voice: direct, structural, non-promotional, non-sensational.
 5. Your output is a draft candidate. It goes to human review before any publication decision.
 
-CE SIGNALS CATEGORIES (choose one):
-intelligence | physical_systems | infrastructure | energy | science_frontier | governance_stability | markets_human_prosperity | resources_continuity
+CE SIGNALS CATEGORIES — choose the top-level category (one of three):
+intelligence | governance_stability | infrastructure
+
+Subcategory guidance (informational — the category field is top-level only):
+  intelligence        › Science & Frontier
+  governance_stability › Markets & Human Prosperity
+  infrastructure      › Physical Systems | Energy | Resources & Continuity
 
 ROUTING OPTIONS:
 - human_review: strong candidate, well-supported, ready for founder review
