@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 106 82" fill="currentColor">
+  <!--
+    7 pillars  w=12  gap=3 (25% ratio)
+    Center at x=53, bottom at y=72
+    Plinth: full width, h=6
+    Gate: w=8 (2px walls), height=54% of center pillar
+    No signal lines — reduced/favicon variant
+  -->
+  <path fill-rule="evenodd" d="
+    M2,56  h12 v16 h-12 Z
+    M17,44 h12 v28 h-12 Z
+    M32,32 h12 v40 h-12 Z
+    M47,18 h12 v54 h-12 Z
+    M62,32 h12 v40 h-12 Z
+    M77,44 h12 v28 h-12 Z
+    M92,56 h12 v16 h-12 Z
+    M2,72  h102 v6  h-102 Z
+    M49,72 L49,54 C49,43 51,41 53,41 C55,41 57,43 57,54 L57,72 Z
+  "/>
+</svg>

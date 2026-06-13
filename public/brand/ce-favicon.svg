@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" fill="#050505"/>
+  <!-- Reduced mark in white, scaled to fill 56px wide centered in 64px square -->
+  <g transform="translate(4, 7) scale(0.528)" fill="white">
+    <path fill-rule="evenodd" d="
+      M2,56  h12 v16 h-12 Z
+      M17,44 h12 v28 h-12 Z
+      M32,32 h12 v40 h-12 Z
+      M47,18 h12 v54 h-12 Z
+      M62,32 h12 v40 h-12 Z
+      M77,44 h12 v28 h-12 Z
+      M92,56 h12 v16 h-12 Z
+      M2,72  h102 v6  h-102 Z
+      M49,72 L49,54 C49,43 51,41 53,41 C55,41 57,43 57,54 L57,72 Z
+    "/>
+  </g>
+</svg>

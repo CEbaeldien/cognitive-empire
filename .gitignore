@@ -43,3 +43,5 @@ next-env.d.ts
 # root-level screenshots and logs from dev/verify sessions
 /*.png
 /*.log
+
+.vercel
