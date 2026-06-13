@@ -23,10 +23,17 @@ const C = {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const CATEGORIES: SignalCategory[] = [
-  "intelligence", "physical_systems", "infrastructure", "energy",
-  "science_frontier", "governance_stability", "markets_human_prosperity", "resources_continuity",
+const CATEGORIES: { value: SignalCategory; label: string }[] = [
+  { value: "intelligence",         label: "Intelligence" },
+  { value: "governance_stability", label: "Governance & Stability" },
+  { value: "infrastructure",       label: "Infrastructure" },
 ];
+
+const SUBCATEGORIES: Record<SignalCategory, string[]> = {
+  intelligence:         ["Science & Frontier"],
+  governance_stability: ["Markets & Human Prosperity"],
+  infrastructure:       ["Physical Systems", "Energy", "Resources & Continuity"],
+};
 
 const IMPACT_LAYER_OPTIONS = [
   "Founder", "Operator", "Creator", "Builder", "Investor",
@@ -104,10 +111,6 @@ function computeFinalScore(s: ScoreState): number {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-function fmtCategory(s: string) {
-  return s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-}
 
 function fmtDate(iso: string | null | undefined) {
   if (!iso) return "—";
@@ -484,21 +487,28 @@ export default function SignalDetailPage() {
               <Label text="Category" />
               <select
                 value={editCategory}
-                onChange={(e) => setEditCategory(e.target.value as SignalCategory)}
+                onChange={(e) => {
+                  setEditCategory(e.target.value as SignalCategory);
+                  setEditSubcategory("");
+                }}
                 style={{ ...inputStyle, cursor: "pointer" }}
               >
-                {CATEGORIES.map((c) => <option key={c} value={c}>{fmtCategory(c)}</option>)}
+                {CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
               </select>
             </div>
             <div>
               <Label text="Subcategory" />
-              <input
-                type="text"
+              <select
                 value={editSubcategory}
                 onChange={(e) => setEditSubcategory(e.target.value)}
-                placeholder="Optional refinement"
-                style={inputStyle}
-              />
+                style={{ ...inputStyle, cursor: "pointer" }}
+                disabled={!editCategory}
+              >
+                <option value="">— none —</option>
+                {editCategory && SUBCATEGORIES[editCategory].map((sub) => (
+                  <option key={sub} value={sub}>{sub}</option>
+                ))}
+              </select>
             </div>
           </div>
 

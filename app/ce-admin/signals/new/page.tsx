@@ -20,15 +20,16 @@ const C = {
 } as const;
 
 const CATEGORIES: { value: SignalCategory; label: string }[] = [
-  { value: "intelligence",             label: "Intelligence" },
-  { value: "physical_systems",         label: "Physical Systems" },
-  { value: "infrastructure",           label: "Infrastructure" },
-  { value: "energy",                   label: "Energy" },
-  { value: "science_frontier",         label: "Science & Frontier" },
-  { value: "governance_stability",     label: "Governance & Stability" },
-  { value: "markets_human_prosperity", label: "Markets & Human Prosperity" },
-  { value: "resources_continuity",     label: "Resources & Continuity" },
+  { value: "intelligence",         label: "Intelligence" },
+  { value: "governance_stability", label: "Governance & Stability" },
+  { value: "infrastructure",       label: "Infrastructure" },
 ];
+
+const SUBCATEGORIES: Record<SignalCategory, string[]> = {
+  intelligence:         ["Science & Frontier"],
+  governance_stability: ["Markets & Human Prosperity"],
+  infrastructure:       ["Physical Systems", "Energy", "Resources & Continuity"],
+};
 
 const IMPACT_LAYER_OPTIONS = [
   "Founder", "Operator", "Creator", "Builder", "Investor",
@@ -214,7 +215,10 @@ export default function NewSignalPage() {
               <Label text="Category" required />
               <select
                 value={category}
-                onChange={(e) => setCategory(e.target.value as SignalCategory)}
+                onChange={(e) => {
+                  setCategory(e.target.value as SignalCategory);
+                  setSubcategory("");
+                }}
                 style={{ ...inputStyle, cursor: "pointer" }}
                 required
               >
@@ -223,14 +227,18 @@ export default function NewSignalPage() {
               </select>
             </div>
             <div>
-              <Label text="Subcategory" hint="Optional refinement within the category" />
-              <input
-                type="text"
+              <Label text="Subcategory" hint="Canonical refinement within the category" />
+              <select
                 value={subcategory}
                 onChange={(e) => setSubcategory(e.target.value)}
-                placeholder="e.g. Autonomous Systems"
-                style={inputStyle}
-              />
+                style={{ ...inputStyle, cursor: "pointer" }}
+                disabled={!category}
+              >
+                <option value="">— none —</option>
+                {category && SUBCATEGORIES[category].map((sub) => (
+                  <option key={sub} value={sub}>{sub}</option>
+                ))}
+              </select>
             </div>
           </div>
 

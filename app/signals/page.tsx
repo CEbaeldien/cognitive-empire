@@ -51,25 +51,15 @@ type ConvergenceResult = {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const CATEGORY_LABELS: Record<SignalCategory, string> = {
-  intelligence:               "Intelligence",
-  physical_systems:           "Physical Systems",
-  infrastructure:             "Infrastructure",
-  energy:                     "Energy",
-  science_frontier:           "Science Frontier",
-  governance_stability:       "Governance Stability",
-  markets_human_prosperity:   "Markets & Human Prosperity",
-  resources_continuity:       "Resources Continuity",
+  intelligence:         "Intelligence",
+  governance_stability: "Governance & Stability",
+  infrastructure:       "Infrastructure",
 };
 
 const CATEGORY_ORDER: SignalCategory[] = [
   "intelligence",
-  "physical_systems",
-  "infrastructure",
-  "energy",
-  "science_frontier",
   "governance_stability",
-  "markets_human_prosperity",
-  "resources_continuity",
+  "infrastructure",
 ];
 
 function fmtCategory(cat: SignalCategory): string {

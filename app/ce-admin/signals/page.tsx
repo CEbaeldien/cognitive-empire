@@ -26,14 +26,11 @@ const STATUS_TABS: { value: string; label: string }[] = [
   { value: "rejected",  label: "Rejected" },
 ];
 
-const CATEGORIES: SignalCategory[] = [
-  "intelligence", "physical_systems", "infrastructure", "energy",
-  "science_frontier", "governance_stability", "markets_human_prosperity", "resources_continuity",
+const CATEGORIES: { value: SignalCategory; label: string }[] = [
+  { value: "intelligence",         label: "Intelligence" },
+  { value: "governance_stability", label: "Governance & Stability" },
+  { value: "infrastructure",       label: "Infrastructure" },
 ];
-
-function fmtCategory(s: string) {
-  return s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-}
 
 function timeAgo(iso: string | null | undefined): string {
   if (!iso) return "—";
@@ -142,7 +139,7 @@ export default function SignalsListPage() {
           style={{ padding: "8px 12px", borderRadius: 7, border: `1px solid ${C.border}`, background: C.input, color: categoryFilter ? C.text : C.faint, fontSize: 12, outline: "none", cursor: "pointer" }}
         >
           <option value="">All categories</option>
-          {CATEGORIES.map((c) => <option key={c} value={c}>{fmtCategory(c)}</option>)}
+          {CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
         </select>
 
         {categoryFilter && (
@@ -190,7 +187,7 @@ export default function SignalsListPage() {
                     </p>
                   </td>
                   <td style={{ padding: "12px 14px", verticalAlign: "middle" }}>
-                    <span style={{ fontSize: 11, color: C.muted }}>{fmtCategory(s.category)}</span>
+                    <span style={{ fontSize: 11, color: C.muted }}>{CATEGORIES.find(c => c.value === s.category)?.label ?? s.category}</span>
                   </td>
                   <td style={{ padding: "12px 14px", verticalAlign: "middle" }}>
                     <StatusBadge status={s.status} />
