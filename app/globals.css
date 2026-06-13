@@ -1064,6 +1064,171 @@ html {
   border: 1px dashed rgba(197,162,111,0.10);
 }
 
+/* ─────────────────────────────────────────────────
+   MAINTENANCE GRAVITY — MG-001 Public Canon
+───────────────────────────────────────────────── */
+
+@keyframes gravity-rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes gravity-drift {
+  from { transform: translate3d(0, 0, 0) scale(1);    opacity: 0.75; }
+  to   { transform: translate3d(-10px, 8px, 0) scale(1.03); opacity: 1; }
+}
+
+/* Hero staggered entrance */
+.mg-eyebrow   { animation: gravity-rise  700ms cubic-bezier(0.16, 1, 0.3, 1)   0ms both; }
+.mg-title     { animation: gravity-rise 1000ms cubic-bezier(0.16, 1, 0.3, 1) 120ms both; }
+.mg-core-line { animation: gravity-rise  900ms cubic-bezier(0.16, 1, 0.3, 1) 300ms both; }
+.mg-hero-meta { animation: gravity-rise  800ms cubic-bezier(0.16, 1, 0.3, 1) 480ms both; }
+.mg-rail-fade { animation: gravity-rise  800ms cubic-bezier(0.16, 1, 0.3, 1) 640ms both; }
+
+/* Ambient gravity field */
+.mg-gravity-field {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  overflow: hidden;
+}
+.mg-gravity-field::before {
+  content: '';
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(circle at 35% 35%, rgba(197,162,111,0.035), transparent 22%),
+    radial-gradient(circle at 65% 55%, rgba(255,255,255,0.025), transparent 28%);
+  animation: gravity-drift 18s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+/* Gravity scroll reveal — heavier than sr-panel */
+.gr-panel {
+  opacity: 0;
+  transform: translateY(28px) scale(0.992);
+  filter: blur(4px);
+  transition:
+    opacity   800ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 800ms cubic-bezier(0.16, 1, 0.3, 1),
+    filter    800ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.gr-panel.gr-revealed {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  filter: blur(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .gr-panel {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+  }
+  .mg-eyebrow, .mg-title, .mg-core-line, .mg-hero-meta, .mg-rail-fade {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .mg-gravity-field::before { animation: none !important; }
+}
+
+/* Gravity card hover — gains mass, pulls attention */
+.gravity-card {
+  transition:
+    transform    260ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 260ms ease,
+    box-shadow   260ms ease,
+    background   260ms ease;
+}
+.gravity-card:hover {
+  transform: translateY(-2px) scale(1.006);
+  border-color: rgba(197, 162, 111, 0.42);
+  box-shadow:
+    0 0 0 1px rgba(197, 162, 111, 0.14),
+    0 24px 80px rgba(0, 0, 0, 0.42),
+    inset 0 0 40px rgba(197, 162, 111, 0.025);
+}
+
+/* Gravity list rows — shift right, show mass marker */
+.gravity-row {
+  transition:
+    transform    220ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 220ms ease,
+    background   220ms ease;
+}
+.gravity-row:hover {
+  transform: translateX(4px);
+  background: rgba(17, 28, 48, 0.80);
+  border-color: rgba(197, 162, 111, 0.28) !important;
+}
+.gravity-row-text    { transition: color   220ms ease; }
+.gravity-row-marker  { transition: opacity 220ms ease; }
+.gravity-row:hover .gravity-row-text   { color: #F4F7FB; }
+.gravity-row:hover .gravity-row-marker { opacity: 1; }
+
+/* Canon plate — MG variant */
+.mg-canon-plate {
+  border: 1px solid rgba(197, 162, 111, 0.26);
+  border-left: 3px solid #C5A26F;
+  background:
+    linear-gradient(90deg, rgba(197, 162, 111, 0.09), transparent 56%),
+    #0D1524;
+  padding: 26px 30px;
+  border-radius: 16px;
+  transition: all 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.mg-canon-plate:hover {
+  transform: scale(1.004);
+  border-color: rgba(197, 162, 111, 0.50);
+  background:
+    linear-gradient(90deg, rgba(197, 162, 111, 0.12), transparent 58%),
+    rgba(13, 21, 36, 0.94);
+}
+
+/* Doctrine seal frame */
+.mg-seal {
+  border: 1px solid rgba(197, 162, 111, 0.22);
+  border-radius: 20px;
+  position: relative;
+  background: rgba(13, 21, 36, 0.60);
+  padding: 52px 44px;
+}
+.mg-seal-corner {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  pointer-events: none;
+}
+.mg-seal-corner-tl { top: -1px; left: -1px;  border-top:    1.5px solid rgba(197,162,111,0.65); border-left:   1.5px solid rgba(197,162,111,0.65); }
+.mg-seal-corner-tr { top: -1px; right: -1px; border-top:    1.5px solid rgba(197,162,111,0.65); border-right:  1.5px solid rgba(197,162,111,0.65); }
+.mg-seal-corner-bl { bottom: -1px; left: -1px;  border-bottom: 1.5px solid rgba(197,162,111,0.65); border-left:   1.5px solid rgba(197,162,111,0.65); }
+.mg-seal-corner-br { bottom: -1px; right: -1px; border-bottom: 1.5px solid rgba(197,162,111,0.65); border-right:  1.5px solid rgba(197,162,111,0.65); }
+
+/* Metadata rail */
+.mg-rail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.mg-rail-item:last-child { border-bottom: none; }
+.mg-rail-label {
+  font-size: 8px;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: #2A3548;
+  font-family: ui-monospace, monospace;
+}
+.mg-rail-value {
+  font-size: 9.5px;
+  letter-spacing: 0.5px;
+  color: #3D4F68;
+  font-family: ui-monospace, monospace;
+  text-transform: uppercase;
+}
+
 /* Override migration row hover with transform */
 .migration-row:hover {
   background-color: var(--ce-panel-elevated) !important;
