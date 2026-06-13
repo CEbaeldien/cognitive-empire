@@ -32,7 +32,19 @@ export async function GET(req: NextRequest) {
   const { data, error, count } = await q;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  return NextResponse.json({ signals: data ?? [], total: count ?? 0 });
+  // Attach source_url from raw_items (no FK join needed — lookup by id set)
+  const rawIds = [...new Set((data ?? []).map((s: { raw_item_id: string | null }) => s.raw_item_id).filter(Boolean))] as string[];
+  const urlMap: Record<string, string | null> = {};
+  if (rawIds.length > 0) {
+    const { data: rawItems } = await sb().from("raw_items").select("id, url").in("id", rawIds);
+    for (const ri of rawItems ?? []) urlMap[ri.id] = ri.url ?? null;
+  }
+  const signals = (data ?? []).map((s: Record<string, unknown>) => ({
+    ...s,
+    source_url: s.raw_item_id ? (urlMap[s.raw_item_id as string] ?? null) : null,
+  }));
+
+  return NextResponse.json({ signals, total: count ?? 0 });
 }
 
 export async function POST(req: NextRequest) {
