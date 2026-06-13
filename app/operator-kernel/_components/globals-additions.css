@@ -1,0 +1,241 @@
+/* ─────────────────────────────────────────────────
+   CE OPERATOR KERNEL — globals.css additions
+   Append this block to your app/globals.css
+───────────────────────────────────────────────── */
+
+:root {
+  --ce-black:           #05070B;
+  --ce-black-soft:      #080B12;
+  --ce-navy:            #07111F;
+  --ce-navy-2:          #0B1628;
+  --ce-panel:           #0D1524;
+  --ce-panel-elevated:  #111C30;
+
+  --ce-white:           #F4F7FB;
+  --ce-text:            #E6EDF7;
+  --ce-muted:           #8B9AB3;
+  --ce-dim:             #5E6B80;
+
+  --ce-cyan:            #00D8FF;
+  --ce-blue:            #2E8CFF;
+
+  --ce-gold:            #C5A26F;
+  --ce-gold-soft:       rgba(197, 162, 111, 0.16);
+  --ce-gold-border:     rgba(197, 162, 111, 0.42);
+
+  --ce-border:          rgba(255, 255, 255, 0.10);
+  --ce-border-blue:     rgba(46, 140, 255, 0.18);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* ── Typography ─────────────────────────────────── */
+.heading-serif {
+  font-family: var(--font-playfair), Georgia, "Times New Roman", serif;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.doctrine-prose {
+  font-size: 1.03rem;
+  line-height: 1.78;
+  color: var(--ce-text);
+}
+
+.section-number {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  color: rgba(139, 154, 179, 0.35);
+}
+
+/* ── Layout ─────────────────────────────────────── */
+.section-shell {
+  scroll-margin-top: 110px;
+}
+
+/* ── Card system ─────────────────────────────────── */
+.ce-card {
+  background: var(--ce-panel);
+  border: 1px solid var(--ce-border);
+  transition:
+    transform    220ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 220ms ease,
+    box-shadow   220ms ease,
+    background   220ms ease;
+}
+
+.ce-card:hover {
+  transform:    translateY(-3px) scale(1.012);
+  border-color: var(--ce-gold-border);
+  background:   linear-gradient(180deg, rgba(197, 162, 111, 0.06), var(--ce-panel-elevated));
+  box-shadow:   0 0 0 1px rgba(197, 162, 111, 0.18), 0 20px 60px rgba(0, 0, 0, 0.38);
+}
+
+/* Law cards: same transition, lighter hover (no bg gradient) */
+.law-card:hover {
+  transform:    translateY(-2px) scale(1);
+  border-color: var(--ce-gold-border);
+  background:   var(--ce-panel);
+  box-shadow:   0 0 0 1px rgba(197, 162, 111, 0.18);
+}
+
+/* ── Canon plate ─────────────────────────────────── */
+.canon-plate {
+  border:       1px solid rgba(197, 162, 111, 0.26);
+  border-left:  3px solid #C5A26F;
+  background:
+    linear-gradient(90deg, rgba(197, 162, 111, 0.10), transparent 55%),
+    var(--ce-panel);
+  transition: all 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.canon-plate:hover {
+  transform:    scale(1.01);
+  border-color: rgba(197, 162, 111, 0.55);
+}
+
+/* ── Migration board rows ────────────────────────── */
+.migration-row {
+  border-bottom: 1px solid var(--ce-border);
+  transition: all 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.migration-row:last-child {
+  border-bottom: none;
+}
+
+.migration-row:hover {
+  background-color: var(--ce-panel-elevated);
+  padding-left:     1.25rem;
+  border-color:     var(--ce-gold-border);
+}
+
+/* ── Nav active state ────────────────────────────── */
+.mini-index-link {
+  transition: color 120ms ease, padding-left 120ms ease;
+  color: var(--ce-muted);
+}
+
+.mini-index-link:hover,
+.mini-index-link[data-active="true"] {
+  color:        #C5A26F;
+  padding-left: 4px;
+}
+
+/* ─────────────────────────────────────────────────
+   PRINT STYLESHEET — doctrine booklet format
+───────────────────────────────────────────────── */
+@media print {
+  * { transition: none !important; animation: none !important; }
+
+  nav,
+  aside,
+  .print-hidden { display: none !important; }
+
+  html, body {
+    background: #ffffff !important;
+    color: #1a1a2e !important;
+    font-size: 11pt;
+  }
+
+  .ce-kernel-root {
+    background: #ffffff !important;
+  }
+
+  main {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+
+  .doctrine-prose {
+    color: #2d2d3e !important;
+    font-size: 10.5pt;
+    line-height: 1.7;
+  }
+
+  .section-number {
+    color: rgba(0, 0, 0, 0.18) !important;
+  }
+
+  h1, h2, h3 {
+    color: #0b0b1a !important;
+    page-break-after: avoid;
+  }
+
+  h1.heading-serif {
+    font-size: 28pt;
+    color: #0b0b1a !important;
+  }
+
+  h1.heading-serif span {
+    color: #8B6F3F !important;
+  }
+
+  .canon-plate {
+    background: rgba(197, 162, 111, 0.07) !important;
+    border-left: 3px solid #8B6F3F !important;
+    border-color: rgba(139, 111, 63, 0.35) !important;
+    page-break-inside: avoid;
+    color: #1a1a2e !important;
+  }
+
+  .canon-plate span {
+    color: #8B6F3F !important;
+  }
+
+  .ce-card,
+  .law-card {
+    background: #f6f6f8 !important;
+    border: 1px solid #d8d8e0 !important;
+    box-shadow: none !important;
+    page-break-inside: avoid;
+    color: #2d2d3e !important;
+  }
+
+  .law-card p,
+  .ce-card p {
+    color: #4a4a5e !important;
+  }
+
+  .migration-row {
+    border-color: #d8d8e0 !important;
+    color: #2d2d3e !important;
+  }
+
+  .migration-row .font-mono {
+    color: #8B6F3F !important;
+  }
+
+  section {
+    page-break-inside: avoid;
+  }
+
+  section.section-shell {
+    margin-bottom: 2rem !important;
+    page-break-before: auto;
+  }
+
+  #eight-laws, #signals, #closing {
+    page-break-before: always;
+  }
+
+  .text-\[\#8B9AB3\], .text-\[\#5E6B80\] {
+    color: #555566 !important;
+  }
+
+  footer {
+    display: block !important;
+    color: #888899 !important;
+    background: #ffffff !important;
+    padding: 1rem 0;
+    font-size: 8pt;
+    text-align: center;
+    border-top: 1px solid #d8d8e0 !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
