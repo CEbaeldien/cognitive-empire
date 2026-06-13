@@ -96,7 +96,7 @@ export default function MaintenanceGravityPage() {
       <div className="max-w-[1480px] mx-auto flex flex-col lg:flex-row">
 
         {/* ── Left column: hero + canon statement ────────── */}
-        <div className="hidden lg:block w-[380px] xl:w-[440px] flex-shrink-0 border-r border-white/[0.07]">
+        <div className="hidden lg:block w-[430px] xl:w-[490px] flex-shrink-0 border-r border-white/[0.07]">
           <div className="sticky top-[68px] pl-14 pr-10 pt-14 pb-14 flex flex-col" style={{ maxHeight: 'calc(100vh - 68px)', overflowY: 'auto' }}>
 
             {/* Eyebrow */}
@@ -107,7 +107,7 @@ export default function MaintenanceGravityPage() {
             </div>
 
             {/* Title */}
-            <h1 className="mg-title heading-serif text-[3.4rem] xl:text-[4.2rem] leading-[0.88] tracking-[-3px] text-[#F4F7FB] mb-8">
+            <h1 className="mg-title heading-serif text-[3.2rem] xl:text-[3.9rem] leading-[0.88] tracking-[-3px] text-[#F4F7FB] mb-8">
               Maintenance<br />Gravity
             </h1>
 
@@ -363,13 +363,13 @@ export default function MaintenanceGravityPage() {
           className="hidden xl:block w-[220px] flex-shrink-0 border-l border-white/[0.07] px-8 pt-14 pb-14"
           aria-label="Canon metadata"
         >
-          <div className="mg-rail-fade sticky top-[68px] pt-2">
+          <div className="mg-rail-fade sticky top-[68px] pt-2 text-center">
             <div className="text-[9.5px] tracking-[2px] text-[#3A4558] uppercase font-mono mb-5 select-none">
               Canon
             </div>
             <div className="border border-white/[0.10] rounded-xl overflow-hidden bg-[#0B1624]/50">
               {METADATA_RAIL.map(({ label, value }) => (
-                <div key={label} className="mg-rail-item px-5">
+                <div key={label} className="mg-rail-item px-5 items-center">
                   <div className="mg-rail-label">{label}</div>
                   <div className="mg-rail-value">{value}</div>
                 </div>
