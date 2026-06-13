@@ -21,7 +21,7 @@ function sb() {
   );
 }
 
-const RUN_SIZE = 20;
+const RUN_SIZE = 50;
 
 // Returns pending item IDs — no AI calls, completes well within Vercel Hobby 10s limit.
 // Actual processing is done client-side (cockpit) or per-item by n8n.
