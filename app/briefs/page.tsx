@@ -303,7 +303,6 @@ export default function CEResearchPage() {
           /* Quote strip */
           .ce-quote-strip { padding: 36px 20px !important; }
         }
-      `}
 
         /* Premium entrance — blur + translate + opacity */
         @keyframes ceReveal {
