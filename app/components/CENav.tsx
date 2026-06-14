@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 
 const NAV_LINKS = [
-  { label: "Home",        href: "/home"    },
+  { label: "Home",        href: "/"        },
   { label: "Drift",       href: "/drift"   },
   { label: "Signals",     href: "/signals" },
   { label: "CE Research", href: "/briefs"  },
@@ -160,7 +160,7 @@ export default function CENav() {
           }}
         >
           {/* ── Brand ── */}
-          <Link href="/home" className="ce-brand">
+          <Link href="/" className="ce-brand">
             <img
               src="/brand/ce-mark-white.svg"
               alt=""
