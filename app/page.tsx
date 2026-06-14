@@ -148,6 +148,21 @@ export default function HomePage() {
           .ce-s1, .ce-s2, .ce-s3, .ce-s4, .ce-s5,
           .ce-p1, .ce-c1 { opacity: 1; transform: none; filter: none; }
         }
+
+        /* ── Hero video ── */
+        .ce-hero-video {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          object-position: center center;
+          display: block;
+          opacity: 1;
+        }
+        @media (max-width: 768px) {
+          .ce-hero-video {
+            object-fit: contain;
+          }
+        }
       `}</style>
 
       <div style={{
@@ -157,14 +172,16 @@ export default function HomePage() {
       }}>
         <CENav />
 
-        {/* ══════════ HERO — full-screen animation ══════════ */}
+        {/* ══════════ HERO — full-bleed animation ══════════ */}
         <section
           aria-label="Cognitive Empire — Structuring Intelligence."
           style={{
+            width: "100%",
             height: "calc(100vh - 68px)",
-            background: "#03050A",
+            background: "#020713",
             overflow: "hidden",
-            borderBottom: `1px solid ${P.border}`,
+            display: "block",
+            position: "relative",
           }}
         >
           {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
@@ -175,12 +192,7 @@ export default function HomePage() {
             loop
             playsInline
             preload="metadata"
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "contain",
-              display: "block",
-            }}
+            className="ce-hero-video"
           />
         </section>
 
