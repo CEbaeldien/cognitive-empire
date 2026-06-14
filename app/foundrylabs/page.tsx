@@ -121,7 +121,7 @@ export default function FoundryLabsPage() {
           </p>
           <div className="flex gap-4">
             <Link
-              href="/briefs"
+              href="/ce-research"
               className="px-6 py-3 border border-[#1a1a2e] text-white text-sm uppercase tracking-wide hover:border-[#00d4ff]/40 hover:text-[#00d4ff] transition-all"
             >
               Read CE Research →

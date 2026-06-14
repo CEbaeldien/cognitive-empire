@@ -580,7 +580,7 @@ export default function WorkPage() {
                 description="Identifies where revenue execution is decaying through stale opportunities, weak follow-up, missing next steps, poor pipeline hygiene, and unreliable forecasting."
                 tags={["Pipeline Decay Detection", "Execution Discipline"]}
                 flowHref="#revenue-discipline-flow"
-                doctrineHref="/briefs"
+                doctrineHref="/ce-research"
                 auditHref="/connect?audit=revenue-discipline"
               />
               <SystemCard
@@ -595,7 +595,7 @@ export default function WorkPage() {
                 description="Identifies where operational maintenance load, complexity, automation debt, governance gaps, and continuity risk are consuming disproportionate capacity relative to value output."
                 tags={["System Survivability", "Operational Drag"]}
                 flowHref="#maintenance-gravity-flow"
-                doctrineHref="/briefs"
+                doctrineHref="/ce-research"
                 auditHref="/connect?audit=maintenance-gravity"
               />
             </div>

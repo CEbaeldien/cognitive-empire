@@ -84,7 +84,7 @@ const SYSTEMS = [
   {
     n: "03", title: "CE Research",
     body: "The canon command center for doctrine, principles, and structural releases.",
-    href: "/briefs",
+    href: "/ce-research",
   },
   {
     n: "04", title: "Work",
