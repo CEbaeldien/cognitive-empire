@@ -16,14 +16,12 @@ export function CEMark({ className }: { className?: string }) {
       <line x1="91" y1="50" x2="98" y2="50" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.35" />
       {/* CE mark */}
       <g fill="currentColor">
-        {/* C — back, top arm, bottom arm */}
-        <rect x="14" y="25" width="12" height="50" />
-        <rect x="14" y="25" width="48" height="11" />
-        <rect x="14" y="64" width="48" height="11" />
-        {/* E — back, top bar, mid bar (shorter), bottom bar */}
+        {/* C — beveled outer-left corners, diagonal arm tips */}
+        <path d="M20,25 L62,25 L57,36 L26,36 L26,64 L57,64 L62,75 L20,75 L14,69 L14,31 Z" />
+        {/* E — back + top bar + mid bar (shorter) + bottom bar */}
         <rect x="50" y="38" width="7"  height="24" />
         <rect x="50" y="38" width="22" height="6"  />
-        <rect x="50" y="47" width="16" height="5"  />
+        <rect x="50" y="47" width="17" height="6"  />
         <rect x="50" y="56" width="22" height="6"  />
       </g>
     </svg>
