@@ -228,7 +228,7 @@ function StepModule({ n, title, body }: { n: string; title: string; body: string
 // ── Step connector arrow ──────────────────────────────────────────────────────
 function StepConnector() {
   return (
-    <div style={{
+    <div className="ce-flow-connector" style={{
       width: 36, flexShrink: 0,
       display: "flex", alignItems: "flex-start",
       justifyContent: "center", paddingTop: 26,
@@ -272,7 +272,7 @@ function FlowPanel({
       }}
     >
       {/* Header strip */}
-      <div style={{
+      <div className="ce-flow-header" style={{
         background: P.panelDeep,
         borderBottom: `1px solid rgba(197,162,111,0.10)`,
         padding: "12px 22px",
@@ -297,7 +297,7 @@ function FlowPanel({
         </div>
 
         {/* Right: micro-labels */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div className="ce-flow-header-right" style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <span style={{
             fontSize: "0.56rem", fontWeight: 700, letterSpacing: "0.24em",
             textTransform: "uppercase", color: P.dim,
@@ -318,7 +318,7 @@ function FlowPanel({
       </div>
 
       {/* Steps */}
-      <div style={{ display: "flex", alignItems: "stretch", padding: "20px 20px 18px", gap: 0 }}>
+      <div className="ce-flow-steps" style={{ display: "flex", alignItems: "stretch", padding: "20px 20px 18px", gap: 0 }}>
         {steps.flatMap((step, i) => {
           const els: React.ReactNode[] = [<StepModule key={step.n} {...step} />];
           if (i < steps.length - 1) els.push(<StepConnector key={`c${i}`} />);
@@ -353,7 +353,7 @@ function FlowPanel({
 // ── Doctrine certification strip ──────────────────────────────────────────────
 function DoctrineCertStrip({ animClass }: { animClass: string }) {
   return (
-    <div className={animClass} style={{
+    <div className={`${animClass} ce-cert-strip-inner`} style={{
       borderTop:    `1px solid rgba(197,162,111,0.18)`,
       borderBottom: `1px solid rgba(255,255,255,0.05)`,
       background:   P.panelDeep,
@@ -376,7 +376,7 @@ function DoctrineCertStrip({ animClass }: { animClass: string }) {
       <div style={{ width: 1, height: 16, background: "rgba(197,162,111,0.22)", margin: "0 18px", flexShrink: 0 }} />
 
       {/* Constraints */}
-      <p style={{ fontSize: "0.7rem", color: P.dim, margin: 0, lineHeight: 1.5, letterSpacing: "0.04em" }}>
+      <p className="ce-cert-strip-text" style={{ fontSize: "0.7rem", color: P.dim, margin: 0, lineHeight: 1.5, letterSpacing: "0.04em" }}>
         <span style={{ color: "rgba(197,162,111,0.55)" }}>·</span>{" "}
         Clarity over Noise
         {"  "}
@@ -498,6 +498,29 @@ export default function WorkPage() {
             opacity: 1; transform: none; filter: none;
           }
         }
+
+        /* ── Mobile responsive ── */
+        @media (max-width: 768px) {
+          /* Hero: stack, hide radar */
+          .ce-work-hero-grid { grid-template-columns: 1fr !important; }
+          .ce-work-hero-root { padding: 40px 20px 36px !important; }
+          .ce-work-radar     { display: none !important; }
+
+          /* System cards: single column */
+          .ce-work-cards-wrap { padding: 36px 20px 0 !important; }
+          .ce-work-cards-grid { grid-template-columns: 1fr !important; }
+
+          /* Flow panels: stack steps vertically */
+          .ce-flow-section   { padding: 40px 20px 60px !important; }
+          .ce-flow-steps     { flex-direction: column !important; align-items: stretch !important; padding: 16px 14px 14px !important; gap: 0 !important; }
+          .ce-flow-connector { display: none !important; }
+          .ce-step-module    { min-width: 0 !important; margin-bottom: 8px; }
+          .ce-flow-header    { flex-wrap: wrap !important; gap: 6px !important; padding: 10px 14px !important; }
+          .ce-flow-header-right { display: none !important; }
+          .ce-cert-strip-inner  { flex-wrap: wrap !important; gap: 8px !important; padding: 12px 16px !important; }
+          .ce-cert-strip-text   { font-size: 0.65rem !important; }
+        }
+
       `}</style>
 
       <div style={{
@@ -510,7 +533,7 @@ export default function WorkPage() {
 
         {/* ══════════ HERO ══════════ */}
         <section style={{ borderBottom: `1px solid ${P.border}` }}>
-          <div style={{
+          <div className="ce-work-hero-root ce-work-hero-grid" style={{
             maxWidth: 1280, margin: "0 auto", padding: "56px 48px 52px",
             display: "grid", gridTemplateColumns: "1fr 420px", gap: 48, alignItems: "center",
           }}>
@@ -533,7 +556,7 @@ export default function WorkPage() {
                 Systems, not services.
               </p>
             </div>
-            <div className="ce-hero-radar" style={{ position: "relative", height: 360 }}>
+            <div className="ce-hero-radar ce-work-radar" style={{ position: "relative", height: 360 }}>
               <RadarGraphic />
             </div>
           </div>
@@ -541,8 +564,8 @@ export default function WorkPage() {
 
         {/* ══════════ SYSTEM CARDS ══════════ */}
         <section>
-          <div style={{ maxWidth: 1280, margin: "0 auto", padding: "48px 48px 0" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+          <div className="ce-work-cards-wrap" style={{ maxWidth: 1280, margin: "0 auto", padding: "48px 48px 0" }}>
+            <div className="ce-work-cards-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
               <SystemCard
                 number="01"
                 animClass="ce-work-card-1"
@@ -580,7 +603,7 @@ export default function WorkPage() {
         </section>
 
         {/* ══════════ OPERATIONAL REVIEW FLOW ══════════ */}
-        <section style={{ maxWidth: 1280, margin: "0 auto", padding: "64px 48px 80px" }}>
+        <section className="ce-flow-section" style={{ maxWidth: 1280, margin: "0 auto", padding: "64px 48px 80px" }}>
 
           {/* Section header */}
           <div className="ce-flow-hdr" style={{ marginBottom: 36 }}>

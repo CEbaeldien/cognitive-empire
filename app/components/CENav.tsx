@@ -95,8 +95,12 @@ export default function CENav() {
           background: none;
           border: none;
           cursor: pointer;
-          padding: 8px;
-          margin-right: -8px;
+          padding: 13px;
+          margin-right: -13px;
+          min-width: 44px;
+          min-height: 44px;
+          align-items: center;
+          justify-content: center;
         }
         .ce-hamburger span {
           display: block;
@@ -120,15 +124,18 @@ export default function CENav() {
         }
         .ce-mobile-nav-item {
           display: block;
-          font-size: 0.68rem;
-          letter-spacing: 0.24em;
+          font-size: 0.82rem;
+          letter-spacing: 0.18em;
           text-transform: uppercase;
           padding: 18px 32px;
+          min-height: 56px;
+          display: flex;
+          align-items: center;
           border-bottom: 1px solid rgba(255,255,255,0.04);
           text-decoration: none;
           transition: color 120ms ease, background 120ms ease;
         }
-        .ce-mobile-nav-item:hover { background: rgba(197,162,111,0.03); }
+        .ce-mobile-nav-item:hover { background: rgba(197,162,111,0.04); }
 
         @media (max-width: 767px) {
           .ce-desktop-links { display: none; }
@@ -214,7 +221,7 @@ export default function CENav() {
                 key={link.label}
                 href={link.href}
                 className="ce-mobile-nav-item"
-                style={{ color: isActive ? "#C5A26F" : "#4D6080" }}
+                style={{ color: isActive ? "#C5A26F" : "#8B9AB3" }}
               >
                 {link.label}
               </Link>

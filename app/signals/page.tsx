@@ -443,7 +443,7 @@ function V2TagChip({ tag }: { tag: V2Tag }) {
 
 function V2Nav() {
   return (
-    <nav style={{
+    <nav className="ce-v2-nav" style={{
       position: "sticky", top: 0, zIndex: 50,
       background: BG_DEEP,
       display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -479,7 +479,7 @@ function PrimarySignalCard({ signal }: { signal: V2Signal }) {
   const tags   = getSignalTags(signal);
 
   return (
-    <div className="ce-primary-card" style={{
+    <div className="ce-primary-card ce-primary-card-grid" style={{
       border: `1px solid ${GOLD_DIM}`, borderRadius: 10,
       background: "rgba(6, 12, 22, 0.60)",
       display: "grid", gridTemplateColumns: "65fr 35fr",
@@ -514,7 +514,7 @@ function PrimarySignalCard({ signal }: { signal: V2Signal }) {
       </div>
 
       {/* Divider */}
-      <div style={{ borderLeft: "1px solid rgba(201,169,97,0.12)", display: "flex" }}>
+      <div className="ce-primary-card-right" style={{ borderLeft: "1px solid rgba(201,169,97,0.12)", display: "flex" }}>
         {/* Right: confidence */}
         <div style={{
           flex: 1, padding: "28px 26px",
@@ -601,7 +601,7 @@ function SignalListRow({ signal }: { signal: V2Signal }) {
         </div>
 
         {/* Tags */}
-        <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+        <div className="ce-list-row-tags" style={{ display: "flex", gap: 6, flexShrink: 0 }}>
           {tags.map((t) => <V2TagChip key={t.label} tag={t} />)}
         </div>
 
@@ -817,6 +817,25 @@ function SignalIntelligenceLayout({ signals }: { signals: V2Signal[] }) {
 
         .ce-primary-slot { background: #03050A; }
 
+        /* ── Mobile responsive ── */
+        @media (max-width: 768px) {
+          .ce-v2-nav  { padding: 0 20px !important; }
+          .ce-v2-main { padding: 36px 20px 60px !important; }
+
+          /* Primary card: stack left/right panels */
+          .ce-primary-card-grid { grid-template-columns: 1fr !important; }
+          .ce-primary-card-right { border-left: none !important; border-top: 1px solid rgba(201,169,97,0.12) !important; }
+
+          /* List row: hide tags column on small screens */
+          .ce-list-row-tags { display: none !important; }
+
+          /* Judgment strip: 2-col on mobile */
+          .ce-judgment-strip { grid-template-columns: 1fr 1fr !important; }
+          .ce-judgment-stage:nth-child(odd)  { border-right: 1px solid rgba(201,169,97,0.12); }
+          .ce-judgment-stage:nth-child(even) { border-right: none !important; }
+          .ce-judgment-stage { border-bottom: 1px solid rgba(201,169,97,0.08); }
+        }
+
         /* prefers-reduced-motion — fall back to static final states */
         @media (prefers-reduced-motion: reduce) {
           .ce-el-1, .ce-el-2, .ce-el-3, .ce-el-4 {
@@ -923,7 +942,7 @@ function SignalIntelligenceLayout({ signals }: { signals: V2Signal[] }) {
       <div style={{ position: "relative" }}>
         <V2Nav />
 
-        <main style={{ maxWidth: 960, margin: "0 auto", padding: "52px 40px 80px" }}>
+        <main className="ce-v2-main" style={{ maxWidth: 960, margin: "0 auto", padding: "52px 40px 80px" }}>
 
           {/* Eyebrow — stagger 1 */}
           <div className="ce-el-1" style={{ marginBottom: 18 }}>

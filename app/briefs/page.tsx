@@ -279,6 +279,32 @@ export default function CEResearchPage() {
       <style>{`
         /* ── CE Research — Canon Command Center v2 motion system ── */
 
+        /* ── Mobile responsive ── */
+        @media (max-width: 768px) {
+          /* Hero section: stack columns */
+          .ce-hero-grid   { grid-template-columns: 1fr !important; gap: 24px !important; }
+          .ce-hero-root   { padding: 40px 20px 32px !important; }
+          /* Status panel becomes normal flow */
+          .ce-status-panel { position: static !important; }
+
+          /* Tab row: scrollable on mobile */
+          .ce-tab-root  { padding: 0 20px !important; flex-wrap: wrap; gap: 0; }
+          .ce-tab-bar   { overflow-x: auto; -webkit-overflow-scrolling: touch; display: flex; flex-shrink: 0; scrollbar-width: none; }
+          .ce-tab-bar::-webkit-scrollbar { display: none; }
+          .ce-tab-filters { display: none !important; }
+
+          /* Main grid: stack, sidebar below */
+          .ce-main-wrap  { padding: 32px 20px 60px !important; }
+          .ce-main-grid  { grid-template-columns: 1fr !important; gap: 24px !important; }
+
+          /* Release cards: single column */
+          .ce-release-grid { grid-template-columns: 1fr !important; }
+
+          /* Quote strip */
+          .ce-quote-strip { padding: 36px 20px !important; }
+        }
+      `}
+
         /* Premium entrance — blur + translate + opacity */
         @keyframes ceReveal {
           from {
@@ -431,7 +457,7 @@ export default function CEResearchPage() {
 
           {/* ══════════ HERO ══════════ */}
           <section style={{ borderBottom: `1px solid ${P.border}` }}>
-            <div style={{
+            <div className="ce-hero-grid ce-hero-root" style={{
               maxWidth: 1280, margin: "0 auto", padding: "56px 48px 48px",
               display: "grid", gridTemplateColumns: "1fr 280px", gap: 48, alignItems: "start",
             }}>
@@ -462,7 +488,7 @@ export default function CEResearchPage() {
               </div>
 
               {/* Right: Canon Status Panel */}
-              <div className="ce-status" style={{
+              <div className="ce-status ce-status-panel" style={{
                 border:     `1px solid ${P.border}`,
                 borderTop:  `2px solid ${P.goldBorder}`,
                 background: P.panel,
@@ -514,12 +540,12 @@ export default function CEResearchPage() {
 
           {/* ══════════ TAB ROW ══════════ */}
           <section className="ce-tabs" style={{ borderBottom: `1px solid ${P.border}`, background: P.panel }}>
-            <div style={{
+            <div className="ce-tab-root" style={{
               maxWidth: 1280, margin: "0 auto", padding: "0 48px",
               display: "flex", alignItems: "center", justifyContent: "space-between",
             }}>
               {/* Tabs */}
-              <div style={{ display: "flex" }}>
+              <div className="ce-tab-bar" style={{ display: "flex" }}>
                 {[
                   { label: "Canon Library", active: true  },
                   { label: "Principles",    active: false },
@@ -548,7 +574,7 @@ export default function CEResearchPage() {
               </div>
 
               {/* Search + filters */}
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div className="ce-tab-filters" style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <div style={{
                   display: "flex", alignItems: "center", gap: 7,
                   border: `1px solid ${P.border}`, background: "#080B12",
@@ -577,8 +603,8 @@ export default function CEResearchPage() {
           </section>
 
           {/* ══════════ MAIN ══════════ */}
-          <section style={{ maxWidth: 1280, margin: "0 auto", padding: "44px 48px 80px" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 288px", gap: 36, alignItems: "start" }}>
+          <section className="ce-main-wrap" style={{ maxWidth: 1280, margin: "0 auto", padding: "44px 48px 80px" }}>
+            <div className="ce-main-grid" style={{ display: "grid", gridTemplateColumns: "1fr 288px", gap: 36, alignItems: "start" }}>
 
               {/* Left: Canonical Releases */}
               <div>
@@ -591,7 +617,7 @@ export default function CEResearchPage() {
                   </p>
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}>
+                <div className="ce-release-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}>
                   <ReleaseCard rel={RELEASES[0]} animClass="ce-card-1" />
                   <ReleaseCard rel={RELEASES[1]} animClass="ce-card-2" />
                 </div>
@@ -657,7 +683,7 @@ export default function CEResearchPage() {
 
           {/* ══════════ QUOTE STRIP ══════════ */}
           <section className="ce-quote" style={{ borderTop: `1px solid ${P.border}`, background: "#06090E" }}>
-            <div style={{ maxWidth: 1280, margin: "0 auto", padding: "48px 48px" }}>
+            <div className="ce-quote-strip" style={{ maxWidth: 1280, margin: "0 auto", padding: "48px 48px" }}>
               <div style={{ display: "flex", alignItems: "flex-start", gap: 24 }}>
                 <div style={{ flexShrink: 0, marginTop: 6, opacity: 0.45 }}>
                   <CitadelMark w={28} h={28} fill={P.gold} />

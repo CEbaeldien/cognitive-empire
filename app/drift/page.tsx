@@ -294,12 +294,59 @@ export default function DriftMarketingPage() {
         .d-step:hover       { border-color: rgba(201,169,97,0.28) !important; }
         .d-plan:hover       { transform: translateY(-3px); }
         .d-footer-link:hover { color: #7A8DA6 !important; }
+
+        /* ── Mobile responsive ── */
+        @media (max-width: 767px) {
+          /* Nav: hide center links on mobile */
+          .d-nav-center { display: none !important; }
+          /* Nav: reduce padding */
+          .d-nav-root { padding: 0 20px !important; }
+
+          /* Hero: stack columns */
+          .d-hero-grid { grid-template-columns: 1fr !important; gap: 36px !important; }
+          .d-hero-root { padding: 64px 20px 48px !important; }
+
+          /* Intervention section */
+          .d-intervention-section { padding: 48px 20px !important; }
+          .d-table-desktop { display: none !important; }
+          .d-table-mobile  { display: flex !important; flex-direction: column; gap: 12px; }
+
+          /* Mobile intervention cards */
+          .d-mobile-card { border-radius: 8px; padding: 18px; position: relative; }
+          .d-mobile-card-badge { display: inline-block; padding: 3px 10px; border-radius: 4px; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; }
+          .d-mobile-field-label { font-size: 9px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; opacity: 0.5; margin-bottom: 2px; }
+          .d-mobile-field-value { font-size: 13px; color: #CBD5E1; line-height: 1.5; }
+
+          /* Problem section */
+          .d-problem-section { padding: 60px 20px !important; }
+          .d-problem-grid { grid-template-columns: 1fr !important; }
+
+          /* Core loop section */
+          .d-loop-section { padding: 60px 20px !important; }
+          .d-loop-grid { grid-template-columns: 1fr !important; }
+
+          /* Pricing section */
+          .d-pricing-section { padding: 60px 20px !important; }
+          .d-pricing-grid { grid-template-columns: 1fr !important; }
+
+          /* Final CTA section */
+          .d-cta-section { padding: 60px 20px !important; }
+
+          /* Drift footer */
+          .d-footer-root { padding: 40px 20px 24px !important; }
+          .d-footer-grid { grid-template-columns: 1fr 1fr !important; gap: 28px !important; }
+          .d-footer-brand { grid-column: 1 / -1 !important; }
+          .d-footer-newsletter { grid-column: 1 / -1 !important; }
+          .d-footer-email-row { flex-direction: column !important; }
+          .d-footer-email-row input { border-radius: 6px !important; border-right: 1px solid #1E2A45 !important; border-bottom: none !important; margin-bottom: 0 !important; }
+          .d-footer-email-row button { border-radius: 6px !important; width: 100%; padding: 10px 0 !important; }
+        }
       `}</style>
 
       <div style={{ background: C.bg, color: C.text, fontFamily: "system-ui, -apple-system, sans-serif", minHeight: "100vh" }}>
 
         {/* ══════════ NAV ══════════ */}
-        <nav style={{
+        <nav className="d-nav-root" style={{
           position: "sticky", top: 0, zIndex: 50,
           background: "rgba(5,8,15,0.96)",
           backdropFilter: "blur(12px)",
@@ -316,8 +363,8 @@ export default function DriftMarketingPage() {
             <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: "0.06em", color: C.text }}>DRIFT</span>
           </div>
 
-          {/* Center nav */}
-          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 28 }}>
+          {/* Center nav — hidden on mobile */}
+          <div className="d-nav-center" style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 28 }}>
             {[
               { label: "Overview",    href: "#" },
               { label: "How It Works", href: "#how-it-works" },
@@ -351,8 +398,8 @@ export default function DriftMarketingPage() {
         </nav>
 
         {/* ══════════ HERO ══════════ */}
-        <section style={{ maxWidth: 1200, margin: "0 auto", padding: "100px 40px 80px" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 72, alignItems: "center" }}>
+        <section className="d-hero-root" style={{ maxWidth: 1200, margin: "0 auto", padding: "100px 40px 80px" }}>
+          <div className="d-hero-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 72, alignItems: "center" }}>
 
             {/* Left */}
             <div>
@@ -413,10 +460,10 @@ export default function DriftMarketingPage() {
         </section>
 
         {/* ══════════ LIVE INTERVENTION QUEUE ══════════ */}
-        <section style={{ borderTop: `1px solid ${C.border}`, padding: "72px 40px" }}>
+        <section className="d-intervention-section" style={{ borderTop: `1px solid ${C.border}`, padding: "72px 40px" }}>
           <div style={{ maxWidth: 1200, margin: "0 auto" }}>
 
-            <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 32 }}>
+            <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 32, flexWrap: "wrap", gap: 12 }}>
               <div>
                 <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.32em", color: C.gold, margin: "0 0 10px" }}>
                   Live Intervention Queue
@@ -430,7 +477,8 @@ export default function DriftMarketingPage() {
               </a>
             </div>
 
-            <div style={{ borderRadius: 10, border: `1px solid ${C.border}`, overflow: "hidden" }}>
+            {/* Desktop table */}
+            <div className="d-table-desktop" style={{ borderRadius: 10, border: `1px solid ${C.border}`, overflow: "hidden" }}>
               {/* Header row */}
               <div style={{
                 display: "grid",
@@ -499,11 +547,62 @@ export default function DriftMarketingPage() {
                 <span style={{ fontSize: 11, color: C.gold }}>View all interventions →</span>
               </div>
             </div>
+
+            {/* Mobile cards — shown only on small screens */}
+            <div className="d-table-mobile" style={{ display: "none" }}>
+              {MOCK_ROWS.map(row => (
+                <div key={row.account} style={{
+                  borderRadius: 8,
+                  border: `1px solid ${C.border}`,
+                  borderLeft: `3px solid ${row.color}`,
+                  background: C.panel,
+                  padding: "18px 16px",
+                }}>
+                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 14 }}>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 2 }}>{row.account}</div>
+                      <div style={{ fontSize: 12, color: C.muted }}>{row.deal}</div>
+                    </div>
+                    <span style={{
+                      padding: "3px 10px", borderRadius: 4,
+                      border: `1px solid ${row.color}`,
+                      color: row.color, fontSize: 9, fontWeight: 700,
+                      letterSpacing: "0.12em", background: `${row.color}12`,
+                      flexShrink: 0, marginLeft: 8,
+                    }}>
+                      {row.badge}
+                    </span>
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px 16px", marginBottom: 14 }}>
+                    <div>
+                      <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", color: C.muted, marginBottom: 2 }}>Stage</div>
+                      <div style={{ fontSize: 13, color: C.muted }}>{row.stage}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", color: C.muted, marginBottom: 2 }}>Exposure</div>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: row.color }}>{row.exposure}</div>
+                    </div>
+                  </div>
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", color: C.muted, marginBottom: 6 }}>Decay Reasons</div>
+                    {row.reasons.map(r => (
+                      <div key={r} style={{ display: "flex", gap: 6, fontSize: 12, color: C.muted, marginBottom: 4 }}>
+                        <span style={{ color: C.faint, flexShrink: 0 }}>·</span>{r}
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
+                    <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", color: C.muted, marginBottom: 4 }}>Intervention</div>
+                    <div style={{ fontSize: 13, color: "#CBD5E1", lineHeight: 1.55 }}>{row.action}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
         {/* ══════════ PROBLEM ══════════ */}
-        <section style={{ borderTop: `1px solid ${C.border}`, padding: "96px 40px" }}>
+        <section className="d-problem-section" style={{ borderTop: `1px solid ${C.border}`, padding: "96px 40px" }}>
           <div style={{ maxWidth: 1200, margin: "0 auto" }}>
             <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.32em", color: C.gold, marginBottom: 20 }}>
               The Problem
@@ -512,7 +611,7 @@ export default function DriftMarketingPage() {
               Your CRM stores opportunities. Drift shows which ones are dying.
             </h2>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
+            <div className="d-problem-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
               {[
                 {
                   icon: (
@@ -556,7 +655,7 @@ export default function DriftMarketingPage() {
         </section>
 
         {/* ══════════ CORE LOOP ══════════ */}
-        <section id="how-it-works" style={{ borderTop: `1px solid ${C.border}`, padding: "96px 40px" }}>
+        <section id="how-it-works" className="d-loop-section" style={{ borderTop: `1px solid ${C.border}`, padding: "96px 40px" }}>
           <div style={{ maxWidth: 1200, margin: "0 auto" }}>
             <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.32em", color: C.gold, marginBottom: 20 }}>
               The Core Loop
@@ -565,7 +664,7 @@ export default function DriftMarketingPage() {
               Six steps from pipeline import to revenue protection.
             </h2>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+            <div className="d-loop-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
               {STEPS.map(step => (
                 <div key={step.n} className="d-step" style={{
                   display: "flex", gap: 18,
@@ -590,7 +689,7 @@ export default function DriftMarketingPage() {
         </section>
 
         {/* ══════════ PRICING ══════════ */}
-        <section id="pricing" style={{ borderTop: `1px solid ${C.border}`, padding: "96px 40px" }}>
+        <section id="pricing" className="d-pricing-section" style={{ borderTop: `1px solid ${C.border}`, padding: "96px 40px" }}>
           <div style={{ maxWidth: 1200, margin: "0 auto" }}>
             <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.32em", color: C.gold, marginBottom: 20 }}>
               Pricing
@@ -599,7 +698,7 @@ export default function DriftMarketingPage() {
               Most serious operators start with Pro.
             </h2>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20, alignItems: "stretch" }}>
+            <div className="d-pricing-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20, alignItems: "stretch" }}>
               {PLANS.map(plan => (
                 <div key={plan.name} className="d-plan" style={{
                   borderRadius: 10,
@@ -666,7 +765,7 @@ export default function DriftMarketingPage() {
         </section>
 
         {/* ══════════ FINAL CTA ══════════ */}
-        <section style={{ borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, padding: "96px 40px", background: "#060810" }}>
+        <section className="d-cta-section" style={{ borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, padding: "96px 40px", background: "#060810" }}>
           <div style={{ maxWidth: 640, margin: "0 auto", textAlign: "center" }}>
             <h2 style={{ fontSize: "clamp(1.5rem, 2.5vw, 2.25rem)", fontWeight: 800, letterSpacing: "-0.025em", color: C.text, marginBottom: 14, lineHeight: 1.2 }}>
               Import your pipeline. See where revenue is decaying.
@@ -687,14 +786,14 @@ export default function DriftMarketingPage() {
         </section>
 
         {/* ══════════ FOOTER ══════════ */}
-        <footer style={{ padding: "56px 40px 32px", background: C.bg, borderTop: `1px solid ${C.border}` }}>
+        <footer className="d-footer-root" style={{ padding: "56px 40px 32px", background: C.bg, borderTop: `1px solid ${C.border}` }}>
           <div style={{ maxWidth: 1200, margin: "0 auto" }}>
 
             {/* Top grid */}
-            <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1.7fr", gap: 48, marginBottom: 48 }}>
+            <div className="d-footer-grid" style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1.7fr", gap: 48, marginBottom: 48 }}>
 
               {/* Brand column */}
-              <div>
+              <div className="d-footer-brand">
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
                   <img src="/brand/ce-mark-white.svg" width={24} height={24} style={{ objectFit: "contain", flexShrink: 0 }} alt="" />
                   <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: C.muted }}>Cognitive Empire</span>
@@ -742,12 +841,12 @@ export default function DriftMarketingPage() {
               </div>
 
               {/* Newsletter */}
-              <div>
+              <div className="d-footer-newsletter">
                 <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.24em", textTransform: "uppercase", color: C.muted, marginBottom: 12 }}>Stay informed</p>
                 <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.65, marginBottom: 16 }}>
                   Insights on revenue discipline, decay prevention, and execution.
                 </p>
-                <div style={{ display: "flex" }}>
+                <div className="d-footer-email-row" style={{ display: "flex" }}>
                   <input
                     type="email"
                     placeholder="Email address"

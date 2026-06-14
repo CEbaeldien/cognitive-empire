@@ -149,6 +149,16 @@ export default function HomePage() {
           .ce-p1, .ce-c1 { opacity: 1; transform: none; filter: none; }
         }
 
+        /* ── Mobile layout overrides ── */
+        @media (max-width: 768px) {
+          .ce-systems-wrap    { padding: 36px 20px !important; }
+          .ce-sys-row-3       { grid-template-columns: 1fr !important; gap: 12px !important; margin-bottom: 12px !important; }
+          .ce-sys-row-2       { grid-template-columns: 1fr !important; gap: 12px !important; }
+          .ce-op-section      { padding: 40px 20px !important; }
+          .ce-cta-section     { padding: 40px 20px 56px !important; }
+          .ce-tagline-strip   { padding: 16px 20px !important; }
+        }
+
         /* ── Hero video ── */
         .ce-hero-video {
           width: 100%;
@@ -201,7 +211,7 @@ export default function HomePage() {
           background: `linear-gradient(180deg, #05070B 0%, #07111F 60%, #05070B 100%)`,
           borderBottom: `1px solid ${P.border}`,
         }}>
-          <div style={{ maxWidth: 1280, margin: "0 auto", padding: "52px 48px" }}>
+          <div className="ce-systems-wrap" style={{ maxWidth: 1280, margin: "0 auto", padding: "52px 48px" }}>
 
             <div style={{ marginBottom: 32 }}>
               <p style={{
@@ -215,13 +225,13 @@ export default function HomePage() {
               </p>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14, marginBottom: 14 }}>
+            <div className="ce-sys-row-3" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14, marginBottom: 14 }}>
               {SYSTEMS.slice(0, 3).map((s, i) => (
                 <SystemCard key={s.n} {...s} animClass={`ce-s${i + 1}`} />
               ))}
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 14 }}>
+            <div className="ce-sys-row-2" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 14 }}>
               {SYSTEMS.slice(3).map((s, i) => (
                 <SystemCard key={s.n} {...s} animClass={`ce-s${i + 4}`} />
               ))}
@@ -231,7 +241,7 @@ export default function HomePage() {
 
         {/* ══════════ OPERATING PRINCIPLE ══════════ */}
         <section className="ce-p1" style={{ borderBottom: `1px solid ${P.border}` }}>
-          <div style={{ maxWidth: 1280, margin: "0 auto", padding: "56px 48px" }}>
+          <div className="ce-op-section" style={{ maxWidth: 1280, margin: "0 auto", padding: "56px 48px" }}>
             <p style={{
               fontSize: "0.6rem", fontWeight: 700, letterSpacing: "0.38em",
               textTransform: "uppercase", color: P.gold, margin: "0 0 22px",
@@ -271,7 +281,7 @@ export default function HomePage() {
 
         {/* ══════════ ENTRY CTA ══════════ */}
         <section className="ce-c1">
-          <div style={{
+          <div className="ce-cta-section" style={{
             maxWidth: 1280, margin: "0 auto", padding: "56px 48px 72px",
             display: "flex", flexDirection: "column", alignItems: "flex-start",
           }}>
@@ -317,7 +327,7 @@ export default function HomePage() {
         </section>
 
         {/* CE mark + tagline strip */}
-        <div style={{
+        <div className="ce-tagline-strip" style={{
           borderTop:  `1px solid ${P.border}`,
           background: P.bgDeep,
           padding:    "18px 48px",

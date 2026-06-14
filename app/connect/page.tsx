@@ -430,7 +430,7 @@ function RevenueDisciplinePanel({ onClose }: { onClose: () => void }) {
           >
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_268px]">
               <div className="space-y-2">
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <Field required placeholder="Name" value={form.name}
                     onChange={(e) => setForm((f) => ({ ...f, name: (e.target as HTMLInputElement).value }))} />
                   <Field required type="email" placeholder="Email" value={form.email}
@@ -529,7 +529,7 @@ function MaintenanceGravityPanel({ onClose }: { onClose: () => void }) {
           >
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_268px]">
               <div className="space-y-2">
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <Field required placeholder="Name" value={form.name}
                     onChange={(e) => setForm((f) => ({ ...f, name: (e.target as HTMLInputElement).value }))} />
                   <Field required type="email" placeholder="Email" value={form.email}
@@ -714,7 +714,7 @@ export default function ConnectPage() {
       <CENav />
 
       {/* Hero */}
-      <section className="max-w-[1440px] mx-auto px-10 pt-14 pb-8">
+      <section className="max-w-[1440px] mx-auto px-5 lg:px-10 pt-14 pb-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-20 items-center"
           style={{ minHeight: "260px" }}>
           <div>
@@ -761,7 +761,7 @@ export default function ConnectPage() {
       </section>
 
       {/* Routing Cards */}
-      <section className="max-w-[1440px] mx-auto px-10 pb-6">
+      <section className="max-w-[1440px] mx-auto px-5 lg:px-10 pb-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {CARDS.map((card) => {
             const isActive = activeCard === card.id;
@@ -827,7 +827,7 @@ export default function ConnectPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.2 }}
-              className="mt-3 p-8"
+              className="mt-3 p-5 lg:p-8"
               style={{
                 background: "rgba(7,9,11,0.88)",
                 border: "1px solid rgba(245,242,232,0.1)",
@@ -852,7 +852,7 @@ export default function ConnectPage() {
         className="mt-16"
         style={{ borderTop: "1px solid rgba(245,242,232,0.07)" }}
       >
-        <div className="max-w-[1440px] mx-auto px-10 py-6 flex items-center justify-between">
+        <div className="max-w-[1440px] mx-auto px-5 lg:px-10 py-6 flex items-center justify-between">
           <span
             className="text-[9px] tracking-[0.34em] uppercase"
             style={{ color: "rgba(196,197,194,0.22)" }}
