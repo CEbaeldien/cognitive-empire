@@ -45,125 +45,6 @@ function CitadelMark({ w, h, fill }: { w: number; h: number; fill: string }) {
   );
 }
 
-// ── Authority Core Visual — command surface SVG ───────────────────────────────
-function AuthorityCoreVisual() {
-  const gold = (o: number) => `rgba(197,162,111,${o})`;
-  const white = (o: number) => `rgba(255,255,255,${o})`;
-
-  // Tick marks around the slow-orbit ring (160 radius, 8 positions)
-  const orbitTicks = [0, 45, 90, 135, 180, 225, 270, 315].map((deg) => {
-    const r = (deg * Math.PI) / 180;
-    return {
-      x1: 220 + 155 * Math.cos(r), y1: 220 + 155 * Math.sin(r),
-      x2: 220 + 164 * Math.cos(r), y2: 220 + 164 * Math.sin(r),
-    };
-  });
-
-  // Spokes at 45° inside static rings
-  const spokes = [22.5, 67.5, 112.5, 157.5].map((deg) => {
-    const r = (deg * Math.PI) / 180;
-    return {
-      x1: 220 + 50 * Math.cos(r), y1: 220 + 50 * Math.sin(r),
-      x2: 220 + 118 * Math.cos(r), y2: 220 + 118 * Math.sin(r),
-    };
-  });
-
-  return (
-    <div style={{ position: "relative", width: "100%", maxWidth: 440, aspectRatio: "1" }}>
-      <svg viewBox="0 0 440 440" fill="none" aria-hidden="true"
-        style={{ width: "100%", height: "100%" }}>
-
-        {/* ── Outer command frame ─────────────────────────────────────── */}
-        <rect x="18" y="18" width="404" height="404"
-          stroke={gold(0.11)} strokeWidth="1" />
-
-        {/* Corner brackets — TL */}
-        <path d="M18,46 L18,18 L46,18" stroke={gold(0.50)} strokeWidth="1.5" />
-        {/* Corner brackets — TR */}
-        <path d="M394,18 L422,18 L422,46" stroke={gold(0.50)} strokeWidth="1.5" />
-        {/* Corner brackets — BL */}
-        <path d="M18,394 L18,422 L46,422" stroke={gold(0.50)} strokeWidth="1.5" />
-        {/* Corner brackets — BR */}
-        <path d="M394,422 L422,422 L422,394" stroke={gold(0.50)} strokeWidth="1.5" />
-
-        {/* Mid-edge tick accents */}
-        <line x1="220" y1="18" x2="220" y2="26" stroke={gold(0.28)} strokeWidth="1" />
-        <line x1="220" y1="414" x2="220" y2="422" stroke={gold(0.20)} strokeWidth="1" />
-        <line x1="18" y1="220" x2="26" y2="220" stroke={gold(0.20)} strokeWidth="1" />
-        <line x1="414" y1="220" x2="422" y2="220" stroke={gold(0.20)} strokeWidth="1" />
-
-        {/* ── Static orbital rings ─────────────────────────────────────── */}
-        <circle cx="220" cy="220" r="166" stroke={white(0.035)} strokeWidth="1" />
-        <circle cx="220" cy="220" r="128" stroke={gold(0.07)} strokeWidth="1" />
-        <circle cx="220" cy="220" r="88"  stroke={gold(0.08)} strokeWidth="1" strokeDasharray="5 10" />
-        <circle cx="220" cy="220" r="50"  stroke={gold(0.11)} strokeWidth="0.75" />
-
-        {/* ── Spoke lines ─────────────────────────────────────────────── */}
-        {spokes.map((sp, i) => (
-          <line key={i} x1={sp.x1} y1={sp.y1} x2={sp.x2} y2={sp.y2}
-            stroke={gold(0.055)} strokeWidth="0.75" />
-        ))}
-
-        {/* ── Slow-orbit ring group ────────────────────────────────────── */}
-        <g className="ce-orbit-slow" style={{ transformBox: "fill-box", transformOrigin: "center" }}>
-          <circle cx="220" cy="220" r="160"
-            stroke={gold(0.055)} strokeWidth="0.75" strokeDasharray="3 22" />
-          {orbitTicks.map((t, i) => (
-            <line key={i} x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2}
-              stroke={gold(0.28)} strokeWidth="1" />
-          ))}
-        </g>
-
-        {/* ── Counter-orbit dashed ring ────────────────────────────────── */}
-        <g className="ce-orbit-counter" style={{ transformBox: "fill-box", transformOrigin: "center" }}>
-          <circle cx="220" cy="220" r="108"
-            stroke={gold(0.045)} strokeWidth="0.75" strokeDasharray="2 14" />
-        </g>
-
-        {/* ── CE mark — centered ────────────────────────────────────── */}
-        <g transform="translate(188, 183) scale(0.75)" fill={gold(0.55)}>
-          <path d="M20,25 L62,25 L57,36 L26,36 L26,64 L57,64 L62,75 L20,75 L14,69 L14,31 Z" />
-          <rect x="50" y="38" width="7"  height="24" />
-          <rect x="50" y="38" width="22" height="6"  />
-          <rect x="50" y="47" width="17" height="6"  />
-          <rect x="50" y="56" width="22" height="6"  />
-        </g>
-
-        {/* ── Crosshair at center ──────────────────────────────────────── */}
-        <circle cx="220" cy="220" r="4.5" fill="none" stroke={gold(0.24)} strokeWidth="0.75" />
-        <line x1="210" y1="220" x2="215" y2="220" stroke={gold(0.20)} strokeWidth="0.75" />
-        <line x1="225" y1="220" x2="230" y2="220" stroke={gold(0.20)} strokeWidth="0.75" />
-        <line x1="220" y1="210" x2="220" y2="215" stroke={gold(0.20)} strokeWidth="0.75" />
-        <line x1="220" y1="225" x2="220" y2="230" stroke={gold(0.20)} strokeWidth="0.75" />
-
-        {/* ── Cardinal status dots ─────────────────────────────────────── */}
-        <circle className="ce-status-dot" cx="220" cy="54"  r="2.5" fill={gold(0.38)} />
-        <circle                            cx="386" cy="220" r="2"   fill={gold(0.22)} />
-        <circle                            cx="220" cy="386" r="2"   fill={gold(0.18)} />
-        <circle                            cx="54"  cy="220" r="2"   fill={gold(0.22)} />
-
-        {/* ── Micro readout text ───────────────────────────────────────── */}
-        <text x="228" y="57" fill={gold(0.28)} fontSize="7" letterSpacing="2.2"
-          fontFamily="ui-monospace,monospace">CE·SYS·01</text>
-        <text x="22"  y="34" fill={gold(0.22)} fontSize="6.5" letterSpacing="1.5"
-          fontFamily="ui-monospace,monospace">KR</text>
-        <text x="394" y="34" fill={gold(0.22)} fontSize="6.5" letterSpacing="1.5"
-          fontFamily="ui-monospace,monospace">AR</text>
-        <text x="22"  y="412" fill={gold(0.16)} fontSize="6" letterSpacing="1.2"
-          fontFamily="ui-monospace,monospace">DOCTRINE</text>
-
-        {/* ── Data point accents ───────────────────────────────────────── */}
-        <circle cx="308" cy="138" r="2"   fill={gold(0.22)} />
-        <circle cx="142" cy="302" r="1.5" fill={gold(0.16)} />
-        <circle cx="318" cy="310" r="1.5" fill={gold(0.12)} />
-        <line x1="308" y1="138" x2="324" y2="134" stroke={gold(0.14)} strokeWidth="0.75" />
-        <text x="326" y="138" fill={gold(0.22)} fontSize="6" letterSpacing="1"
-          fontFamily="ui-monospace,monospace">SIG</text>
-      </svg>
-    </div>
-  );
-}
-
 // ── System card ───────────────────────────────────────────────────────────────
 function SystemCard({
   n, title, body, href, animClass,
@@ -248,16 +129,6 @@ export default function HomePage() {
           to   { opacity: 1; transform: translateY(0);    filter: blur(0);   }
         }
 
-        @keyframes ceSlowOrbit {
-          from { transform: rotate(0deg); }
-          to   { transform: rotate(360deg); }
-        }
-
-        @keyframes ceCounterOrbit {
-          from { transform: rotate(0deg); }
-          to   { transform: rotate(-360deg); }
-        }
-
         @keyframes cePulse {
           0%, 100% { opacity: 0.35; }
           50%       { opacity: 0.75; }
@@ -268,7 +139,7 @@ export default function HomePage() {
         .ce-h2  { opacity: 0; animation: ceReveal 900ms cubic-bezier(0.16,1,0.3,1)  80ms forwards; }
         .ce-h3  { opacity: 0; animation: ceReveal 900ms cubic-bezier(0.16,1,0.3,1) 160ms forwards; }
         .ce-h4  { opacity: 0; animation: ceReveal 900ms cubic-bezier(0.16,1,0.3,1) 240ms forwards; }
-        .ce-vis { opacity: 0; animation: ceReveal 1100ms cubic-bezier(0.16,1,0.3,1) 180ms forwards; }
+        .ce-vis { opacity: 0; animation: ceReveal 1100ms cubic-bezier(0.16,1,0.3,1) 280ms forwards; }
 
         .ce-s1  { opacity: 0; animation: ceReveal 700ms cubic-bezier(0.16,1,0.3,1) 360ms forwards; }
         .ce-s2  { opacity: 0; animation: ceReveal 700ms cubic-bezier(0.16,1,0.3,1) 420ms forwards; }
@@ -277,21 +148,6 @@ export default function HomePage() {
         .ce-s5  { opacity: 0; animation: ceReveal 700ms cubic-bezier(0.16,1,0.3,1) 600ms forwards; }
         .ce-p1  { opacity: 0; animation: ceReveal 800ms cubic-bezier(0.16,1,0.3,1) 620ms forwards; }
         .ce-c1  { opacity: 0; animation: ceReveal 800ms cubic-bezier(0.16,1,0.3,1) 680ms forwards; }
-
-        /* Authority core visual */
-        .ce-orbit-slow {
-          transform-box:    fill-box;
-          transform-origin: center;
-          animation: ceSlowOrbit 120s linear infinite;
-        }
-        .ce-orbit-counter {
-          transform-box:    fill-box;
-          transform-origin: center;
-          animation: ceCounterOrbit 80s linear infinite;
-        }
-        .ce-status-dot {
-          animation: cePulse 4.5s ease-in-out infinite;
-        }
 
         /* System cards */
         .home-card {
@@ -322,6 +178,52 @@ export default function HomePage() {
         .ce-cta-gold:hover     { background: rgba(197,162,111,0.16) !important; border-color: rgba(197,162,111,0.50) !important; transform: translateX(2px); }
         .ce-cta-primary:hover  { background: rgba(197,162,111,0.22) !important; border-color: rgba(197,162,111,0.75) !important; transform: translateX(2px); }
 
+        /* Hero grid */
+        .ce-hero-grid {
+          display: grid;
+          grid-template-columns: 1fr 460px;
+          gap: 64px;
+          align-items: center;
+        }
+
+        /* Video panel */
+        .ce-video-panel {
+          width: 100%;
+          aspect-ratio: 1 / 1;
+          background: #060A12;
+          border: 1px solid rgba(197,162,111,0.22);
+          border-radius: 10px;
+          box-shadow:
+            0 0 0 1px rgba(197,162,111,0.06),
+            0 32px 80px rgba(0,0,0,0.65),
+            0 0 60px rgba(197,162,111,0.04);
+          overflow: hidden;
+          position: relative;
+        }
+
+        .ce-video-panel video {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+          display: block;
+        }
+
+        /* Mobile — stack video below copy */
+        @media (max-width: 860px) {
+          .ce-hero-grid {
+            grid-template-columns: 1fr;
+            gap: 40px;
+          }
+          .ce-hero-vis {
+            width: 100%;
+            max-width: 480px;
+            margin: 0 auto;
+          }
+          .ce-video-panel {
+            aspect-ratio: 16 / 9;
+          }
+        }
+
         @media (prefers-reduced-motion: reduce) {
           *, *::before, *::after { animation: none !important; transition: none !important; }
           .ce-h1, .ce-h2, .ce-h3, .ce-h4, .ce-vis,
@@ -344,10 +246,8 @@ export default function HomePage() {
 
         {/* ══════════ HERO ══════════ */}
         <section style={{ borderBottom: `1px solid ${P.border}` }}>
-          <div style={{
+          <div className="ce-hero-grid" style={{
             maxWidth: 1280, margin: "0 auto", padding: "68px 48px 64px",
-            display: "grid", gridTemplateColumns: "1fr 440px",
-            gap: 64, alignItems: "center",
           }}>
 
             {/* Left — Doctrine positioning */}
@@ -387,7 +287,7 @@ export default function HomePage() {
                 fontSize: "1.05rem", color: P.muted, lineHeight: 1.8,
                 maxWidth: 480, margin: "0 0 36px",
               }}>
-                Cognitive Empire builds doctrine-governed intelligence systems for operators, teams, and institutions working under intelligence abundance.
+                Systems for judgment, continuity, and operational survivability in intelligence-abundant environments.
               </p>
 
               {/* CTAs */}
@@ -406,7 +306,7 @@ export default function HomePage() {
                   border: `1px solid ${P.goldDim}`, background: P.goldSoft,
                   padding: "9px 18px", display: "inline-flex", alignItems: "center",
                 }}>
-                  View CE Research →
+                  Review Doctrine →
                 </Link>
                 <Link href="/connect" className="ce-cta-primary" style={{
                   fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.16em",
@@ -420,9 +320,35 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Right — Authority Core Visual */}
-            <div className="ce-vis" style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-              <AuthorityCoreVisual />
+            {/* Right — CE Animation */}
+            <div className="ce-vis ce-hero-vis">
+              <div className="ce-video-panel">
+                {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+                <video
+                  src="/media/ce-structuring-intelligence.mp4"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="metadata"
+                  aria-label="Cognitive Empire logo animation — Structuring Intelligence."
+                />
+              </div>
+              {/* Doctrine anchor */}
+              <div style={{
+                display: "flex", alignItems: "center", justifyContent: "center",
+                gap: 8, marginTop: 14, opacity: 0.6,
+              }}>
+                <div style={{ width: 18, height: 0.5, background: "rgba(197,162,111,0.5)" }} />
+                <span style={{
+                  fontSize: "0.57rem", fontFamily: "monospace",
+                  letterSpacing: "0.26em", textTransform: "uppercase",
+                  color: "rgba(197,162,111,0.65)",
+                }}>
+                  Structuring Intelligence
+                </span>
+                <div style={{ width: 18, height: 0.5, background: "rgba(197,162,111,0.5)" }} />
+              </div>
             </div>
           </div>
         </section>
