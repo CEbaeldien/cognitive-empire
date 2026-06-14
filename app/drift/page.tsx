@@ -102,26 +102,6 @@ const PLANS = [
   },
 ];
 
-// ── CE Mark (locked monogram) ─────────────────────────────────────────────────
-function CEMark({ w = 24, h = 24, fill = "#EEF3FA" }: { w?: number; h?: number; fill?: string }) {
-  return (
-    <svg width={w} height={h} viewBox="0 0 100 100" fill="none" aria-hidden="true">
-      <circle cx="50" cy="50" r="44" stroke={fill} strokeWidth="2" opacity="0.50" />
-      <line x1="50" y1="2"  x2="50" y2="9"  stroke={fill} strokeWidth="1.5" opacity="0.30" />
-      <line x1="50" y1="91" x2="50" y2="98" stroke={fill} strokeWidth="1.5" opacity="0.30" />
-      <line x1="2"  y1="50" x2="9"  y2="50" stroke={fill} strokeWidth="1.5" opacity="0.30" />
-      <line x1="91" y1="50" x2="98" y2="50" stroke={fill} strokeWidth="1.5" opacity="0.30" />
-      <g fill={fill}>
-        <path d="M20,25 L62,25 L57,36 L26,36 L26,64 L57,64 L62,75 L20,75 L14,69 L14,31 Z" />
-        <rect x="50" y="38" width="7"  height="24" />
-        <rect x="50" y="38" width="22" height="6"  />
-        <rect x="50" y="47" width="17" height="6"  />
-        <rect x="50" y="56" width="22" height="6"  />
-      </g>
-    </svg>
-  );
-}
-
 // ── Inline sidebar icons ──────────────────────────────────────────────────────
 function IconGrid({ color }: { color: string }) {
   return (
@@ -201,7 +181,7 @@ function DashboardPreview() {
           display: "flex", flexDirection: "column", alignItems: "center",
           paddingTop: 14, gap: 14,
         }}>
-          <CEMark w={18} h={18} fill={C.gold} />
+          <img src="/brand/ce-mark-gold.svg" width={18} height={18} style={{ objectFit: "contain", flexShrink: 0 }} alt="" />
           <div style={{ marginTop: 6, display: "flex", flexDirection: "column", gap: 10 }}>
             {[
               { icon: <IconGrid color={C.gold} />,  active: true  },
@@ -324,13 +304,13 @@ export default function DriftMarketingPage() {
           background: "rgba(5,8,15,0.96)",
           backdropFilter: "blur(12px)",
           WebkitBackdropFilter: "blur(12px)",
-          borderBottom: `1px solid ${C.border}`,
+          borderBottom: "1px solid rgba(197,162,111,0.14)",
           display: "flex", alignItems: "center",
           padding: "0 40px", height: 56, gap: 0,
         }}>
           {/* Brand */}
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
-            <CEMark />
+            <img src="/brand/ce-mark-white.svg" width={22} height={22} style={{ objectFit: "contain", flexShrink: 0 }} alt="" />
             <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: C.muted }}>Cognitive Empire</span>
             <span style={{ width: 1, height: 16, background: C.border, flexShrink: 0 }} />
             <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: "0.06em", color: C.text }}>DRIFT</span>
@@ -716,7 +696,7 @@ export default function DriftMarketingPage() {
               {/* Brand column */}
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                  <CEMark w={24} h={24} />
+                  <img src="/brand/ce-mark-white.svg" width={24} height={24} style={{ objectFit: "contain", flexShrink: 0 }} alt="" />
                   <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: C.muted }}>Cognitive Empire</span>
                   <span style={{ width: 1, height: 13, background: C.border, flexShrink: 0 }} />
                   <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: "0.06em", color: C.text }}>DRIFT</span>

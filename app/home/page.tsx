@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import CENav from "../components/CENav";
 import CEFooter from "../components/CEFooter";
+import { CEMark } from "../components/CEMark";
 
 export const metadata: Metadata = {
   title: "Cognitive Empire — Signal. Judgment. Systems.",
@@ -24,26 +25,6 @@ const P = {
   goldBorder: "rgba(197,162,111,0.30)",
   goldDim:    "rgba(197,162,111,0.15)",
 } as const;
-
-// ── CE mark (locked monogram) ─────────────────────────────────────────────────
-function CitadelMark({ w, h, fill }: { w: number; h: number; fill: string }) {
-  return (
-    <svg width={w} height={h} viewBox="0 0 100 100" fill="none" aria-hidden="true">
-      <circle cx="50" cy="50" r="44" stroke={fill} strokeWidth="2" opacity="0.50" />
-      <line x1="50" y1="2"  x2="50" y2="9"  stroke={fill} strokeWidth="1.5" opacity="0.30" />
-      <line x1="50" y1="91" x2="50" y2="98" stroke={fill} strokeWidth="1.5" opacity="0.30" />
-      <line x1="2"  y1="50" x2="9"  y2="50" stroke={fill} strokeWidth="1.5" opacity="0.30" />
-      <line x1="91" y1="50" x2="98" y2="50" stroke={fill} strokeWidth="1.5" opacity="0.30" />
-      <g fill={fill}>
-        <path d="M20,25 L62,25 L57,36 L26,36 L26,64 L57,64 L62,75 L20,75 L14,69 L14,31 Z" />
-        <rect x="50" y="38" width="7"  height="24" />
-        <rect x="50" y="38" width="22" height="6"  />
-        <rect x="50" y="47" width="17" height="6"  />
-        <rect x="50" y="56" width="22" height="6"  />
-      </g>
-    </svg>
-  );
-}
 
 // ── System card ───────────────────────────────────────────────────────────────
 function SystemCard({
@@ -331,7 +312,7 @@ export default function HomePage() {
           display:    "flex", alignItems: "center", gap: 12,
           maxWidth:   1280, margin: "0 auto",
         }}>
-          <CitadelMark w={20} h={20} fill="rgba(197,162,111,0.35)" />
+          <CEMark style={{ width: 20, height: 20, flexShrink: 0, color: "rgba(197,162,111,0.35)" }} />
           <p style={{ fontSize: "0.68rem", color: P.dim, letterSpacing: "0.18em", margin: 0, textTransform: "uppercase" }}>
             Signal. Judgment. Systems.
           </p>

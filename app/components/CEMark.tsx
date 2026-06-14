@@ -1,29 +1,26 @@
-export function CEMark({ className }: { className?: string }) {
+import React from "react";
+
+// Locked CE mark — exact geometry from /public/brand/ce-mark-current.svg
+// Uses fill="currentColor" so callers control color via CSS `color` property.
+
+interface CEMarkProps {
+  className?: string;
+  style?: React.CSSProperties;
+}
+
+export function CEMark({ className, style }: CEMarkProps) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 100 100"
-      fill="none"
-      aria-hidden="true"
+      viewBox="0 0 512 512"
+      role="img"
+      aria-label="Cognitive Empire"
+      fill="currentColor"
       className={className}
+      style={style}
     >
-      {/* Circle ring */}
-      <circle cx="50" cy="50" r="44" stroke="currentColor" strokeWidth="2" strokeOpacity="0.55" />
-      {/* Crosshair ticks */}
-      <line x1="50" y1="2"  x2="50" y2="9"  stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.35" />
-      <line x1="50" y1="91" x2="50" y2="98" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.35" />
-      <line x1="2"  y1="50" x2="9"  y2="50" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.35" />
-      <line x1="91" y1="50" x2="98" y2="50" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.35" />
-      {/* CE mark */}
-      <g fill="currentColor">
-        {/* C — beveled outer-left corners, diagonal arm tips */}
-        <path d="M20,25 L62,25 L57,36 L26,36 L26,64 L57,64 L62,75 L20,75 L14,69 L14,31 Z" />
-        {/* E — back + top bar + mid bar (shorter) + bottom bar */}
-        <rect x="50" y="38" width="7"  height="24" />
-        <rect x="50" y="38" width="22" height="6"  />
-        <rect x="50" y="47" width="17" height="6"  />
-        <rect x="50" y="56" width="22" height="6"  />
-      </g>
+      <path d="M332 82 L184 82 L82 256 L184 430 L332 430 L294 360 L221 360 L160 256 L221 152 L294 152 Z" />
+      <path d="M342 194 H425 V226 H376 V242 H417 V270 H376 V286 H425 V318 H342 Z" />
     </svg>
   );
 }

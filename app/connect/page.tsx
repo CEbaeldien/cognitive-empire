@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import CENav from "../components/CENav";
 
 // ─── Routing Visual ────────────────────────────────────────────────────────────
 
@@ -689,15 +690,6 @@ const CARDS: CardDef[] = [
   },
 ];
 
-const NAV_LINKS = [
-  { label: "Home",        href: "/home"       },
-  { label: "Drift",       href: "/drift"       },
-  { label: "Signals",     href: "/signals"     },
-  { label: "CE Research", href: "/briefs"      },
-  { label: "Work",        href: "/work"        },
-  { label: "FoundryLabs", href: "/foundrylabs" },
-  { label: "Connect",     href: "/connect", active: true },
-];
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
@@ -719,53 +711,7 @@ export default function ConnectPage() {
         .ce-btn-primary:hover { background: rgba(245,242,232,0.04); border-color: rgba(245,242,232,0.46) !important; }
       `}</style>
 
-      {/* Navigation */}
-      <nav
-        className="sticky top-0 z-50 backdrop-blur-sm"
-        style={{
-          background: "rgba(3,4,5,0.96)",
-          borderBottom: "1px solid rgba(245,242,232,0.07)",
-        }}
-      >
-        <div
-          className="max-w-[1440px] mx-auto px-10 flex items-center justify-between"
-          style={{ height: "72px" }}
-        >
-          <Link
-            href="/home"
-            className="text-[11px] font-bold tracking-[0.28em] uppercase"
-            style={{ color: "rgba(246,244,238,0.82)" }}
-          >
-            Cognitive Empire
-          </Link>
-          <div className="hidden md:flex items-center gap-7">
-            {NAV_LINKS.map((link) => (
-              <Link
-                key={link.label}
-                href={link.href}
-                className="text-[11px] tracking-[0.07em] transition-colors"
-                style={{
-                  color: link.active
-                    ? "rgba(246,244,238,0.9)"
-                    : "rgba(196,197,194,0.48)",
-                  borderBottom: link.active
-                    ? "1px solid rgba(245,242,232,0.38)"
-                    : "none",
-                  paddingBottom: link.active ? "1px" : undefined,
-                }}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </div>
-          <span
-            className="text-[10px] tracking-[0.2em] uppercase"
-            style={{ color: "rgba(196,197,194,0.42)" }}
-          >
-            · DR. E INTERFACE
-          </span>
-        </div>
-      </nav>
+      <CENav />
 
       {/* Hero */}
       <section className="max-w-[1440px] mx-auto px-10 pt-14 pb-8">
