@@ -3,6 +3,7 @@ import { Playfair_Display } from "next/font/google";
 import CENav from "@/app/components/CENav";
 import Link from "next/link";
 import type { SignalCategory } from "@/types/signals";
+import { SignalWithContext } from "@/app/components/SignalJudgmentContext";
 
 export const dynamic = "force-dynamic";
 
@@ -741,6 +742,81 @@ function SignalIntelligenceLayout({ signals }: { signals: V2Signal[] }) {
         }
         .ce-under-review:hover { opacity: 0.75; }
 
+        /* ── Judgment process strip + context panels ──────────────────── */
+
+        .ce-judgment-eyebrow {
+          font-family: ui-monospace, monospace;
+          font-size: 10px;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: #5E6B80;
+          margin: 0 0 0.6rem;
+        }
+        .ce-judgment-eyebrow--gold { color: #C9A961; }
+
+        .ce-judgment-strip {
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          border: 1px solid rgba(255,255,255,0.07);
+          border-radius: 4px;
+          overflow: hidden;
+          margin-bottom: 1.25rem;
+        }
+
+        .ce-judgment-stage {
+          padding: 0.9rem 1.1rem;
+          border-right: 1px solid rgba(201,169,97,0.12);
+          background: rgba(3,5,10,0.65);
+        }
+        .ce-judgment-stage:last-child { border-right: none; }
+
+        .ce-stage-copy {
+          font-size: 11.5px;
+          line-height: 1.65;
+          color: #4A5A6E;
+          margin: 0;
+        }
+
+        .ce-signal-row {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 1px;
+          background: rgba(255,255,255,0.055);
+          border-radius: 10px;
+          overflow: hidden;
+        }
+        @media (min-width: 900px) {
+          .ce-signal-row { grid-template-columns: 1fr 1.8fr 1fr; }
+        }
+
+        .ce-context-panel {
+          padding: 1.35rem 1.25rem;
+          background: rgba(4,7,14,0.82);
+          transition: transform 220ms ease, border-color 220ms ease;
+        }
+        .ce-context-panel:hover { transform: translateY(-2px); }
+        .ce-context-panel--left  { border-left:  1px solid rgba(201,169,97,0.55); }
+        .ce-context-panel--right { border-right: 1px solid rgba(201,169,97,0.55); }
+        .ce-context-panel--left:hover  { border-left-color:  rgba(201,169,97,0.85); }
+        .ce-context-panel--right:hover { border-right-color: rgba(201,169,97,0.85); }
+
+        .ce-context-body {
+          font-size: 12.5px;
+          line-height: 1.72;
+          color: #C5D0E0;
+        }
+        .ce-context-body p           { margin: 0 0 0.65rem; }
+        .ce-context-body p:last-child { margin-bottom: 0; }
+
+        .ce-context-meta {
+          font-size: 10.5px;
+          color: #4A5A6E;
+          margin: 0;
+          font-style: italic;
+        }
+
+        .ce-primary-slot { background: #03050A; }
+
         /* prefers-reduced-motion — fall back to static final states */
         @media (prefers-reduced-motion: reduce) {
           .ce-el-1, .ce-el-2, .ce-el-3, .ce-el-4 {
@@ -759,6 +835,8 @@ function SignalIntelligenceLayout({ signals }: { signals: V2Signal[] }) {
             animation: none;
             opacity: 1;
           }
+          .ce-context-panel { transition: none; }
+          .ce-context-panel:hover { transform: none; }
         }
       `}</style>
 
@@ -879,7 +957,7 @@ function SignalIntelligenceLayout({ signals }: { signals: V2Signal[] }) {
               {/* Primary signal card — stagger 3 */}
               {primary && (
                 <div className="ce-el-3" style={{ marginBottom: 44 }}>
-                  <PrimarySignalCard signal={primary} />
+                  <SignalWithContext primarySignal={<PrimarySignalCard signal={primary} />} />
                 </div>
               )}
 
