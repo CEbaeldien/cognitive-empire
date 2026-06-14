@@ -66,11 +66,6 @@ export default function CEFooter() {
                   Work
                 </Link>
               </li>
-              <li>
-                <Link href="/foundrylabs" className="text-[#64748b] text-xs hover:text-white transition-colors">
-                  FoundryLabs
-                </Link>
-              </li>
             </ul>
           </div>
 

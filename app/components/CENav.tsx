@@ -5,14 +5,12 @@ import { usePathname } from "next/navigation";
 import { CEMark } from "./CEMark";
 
 const NAV_LINKS = [
-  { label: "Home",        href: "/home"       },
-  { label: "Drift",       href: "/drift"       },
-  { label: "Signals",     href: "/signals"     },
-  { label: "Doctrine",    href: "/doctrine"    },
-  { label: "CE Research", href: "/briefs"      },
-  { label: "Work",        href: "/work"        },
-  { label: "FoundryLabs", href: "/foundrylabs" },
-  { label: "Connect",     href: "/connect"     },
+  { label: "Home",       href: "/home"    },
+  { label: "Drift",      href: "/drift"   },
+  { label: "Signals",    href: "/signals" },
+  { label: "CE Research", href: "/briefs"  },
+  { label: "Work",       href: "/work"    },
+  { label: "Connect",    href: "/connect" },
 ];
 
 export default function CENav() {
