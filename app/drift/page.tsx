@@ -102,18 +102,24 @@ const PLANS = [
   },
 ];
 
-// ── CE Mark ───────────────────────────────────────────────────────────────────
-function CEMark({ w = 28, h = 22, fill = "#EEF3FA" }: { w?: number; h?: number; fill?: string }) {
+// ── CE Mark (locked monogram) ─────────────────────────────────────────────────
+function CEMark({ w = 24, h = 24, fill = "#EEF3FA" }: { w?: number; h?: number; fill?: string }) {
   return (
-    <svg width={w} height={h} viewBox="0 0 106 82" fill="none" aria-hidden="true">
-      <path
-        fill={fill}
-        fillRule="evenodd"
-        d="M2,56 h12 v16 h-12 Z M17,44 h12 v28 h-12 Z M32,32 h12 v40 h-12 Z
-           M47,18 h12 v54 h-12 Z M62,32 h12 v40 h-12 Z M77,44 h12 v28 h-12 Z
-           M92,56 h12 v16 h-12 Z M2,72 h102 v6 h-102 Z
-           M49,72 L49,54 C49,43 51,41 53,41 C55,41 57,43 57,54 L57,72 Z"
-      />
+    <svg width={w} height={h} viewBox="0 0 100 100" fill="none" aria-hidden="true">
+      <circle cx="50" cy="50" r="44" stroke={fill} strokeWidth="2" opacity="0.50" />
+      <line x1="50" y1="2"  x2="50" y2="9"  stroke={fill} strokeWidth="1.5" opacity="0.30" />
+      <line x1="50" y1="91" x2="50" y2="98" stroke={fill} strokeWidth="1.5" opacity="0.30" />
+      <line x1="2"  y1="50" x2="9"  y2="50" stroke={fill} strokeWidth="1.5" opacity="0.30" />
+      <line x1="91" y1="50" x2="98" y2="50" stroke={fill} strokeWidth="1.5" opacity="0.30" />
+      <g fill={fill}>
+        <rect x="14" y="25" width="12" height="50" />
+        <rect x="14" y="25" width="48" height="11" />
+        <rect x="14" y="64" width="48" height="11" />
+        <rect x="50" y="38" width="7"  height="24" />
+        <rect x="50" y="38" width="22" height="6"  />
+        <rect x="50" y="47" width="16" height="5"  />
+        <rect x="50" y="56" width="22" height="6"  />
+      </g>
     </svg>
   );
 }
@@ -197,7 +203,7 @@ function DashboardPreview() {
           display: "flex", flexDirection: "column", alignItems: "center",
           paddingTop: 14, gap: 14,
         }}>
-          <CEMark w={18} h={14} fill={C.gold} />
+          <CEMark w={18} h={18} fill={C.gold} />
           <div style={{ marginTop: 6, display: "flex", flexDirection: "column", gap: 10 }}>
             {[
               { icon: <IconGrid color={C.gold} />,  active: true  },
@@ -712,7 +718,7 @@ export default function DriftMarketingPage() {
               {/* Brand column */}
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                  <CEMark w={24} h={19} />
+                  <CEMark w={24} h={24} />
                   <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: C.muted }}>Cognitive Empire</span>
                   <span style={{ width: 1, height: 13, background: C.border, flexShrink: 0 }} />
                   <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: "0.06em", color: C.text }}>DRIFT</span>

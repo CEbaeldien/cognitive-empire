@@ -27,17 +27,24 @@ const P = {
   goldFaint:  "rgba(197,162,111,0.10)",
 } as const;
 
-// ── Inline citadel mark ───────────────────────────────────────────────────────
+// ── CE mark (locked monogram) ─────────────────────────────────────────────────
 function CitadelMark({ w, h, fill }: { w: number; h: number; fill: string }) {
   return (
-    <svg width={w} height={h} viewBox="0 0 106 82" fill="none" aria-hidden="true">
-      <path
-        fill={fill} fillRule="evenodd"
-        d="M2,56 h12 v16 h-12 Z M17,44 h12 v28 h-12 Z M32,32 h12 v40 h-12 Z
-           M47,18 h12 v54 h-12 Z M62,32 h12 v40 h-12 Z M77,44 h12 v28 h-12 Z
-           M92,56 h12 v16 h-12 Z M2,72 h102 v6 h-102 Z
-           M49,72 L49,54 C49,43 51,41 53,41 C55,41 57,43 57,54 L57,72 Z"
-      />
+    <svg width={w} height={h} viewBox="0 0 100 100" fill="none" aria-hidden="true">
+      <circle cx="50" cy="50" r="44" stroke={fill} strokeWidth="2" opacity="0.50" />
+      <line x1="50" y1="2"  x2="50" y2="9"  stroke={fill} strokeWidth="1.5" opacity="0.30" />
+      <line x1="50" y1="91" x2="50" y2="98" stroke={fill} strokeWidth="1.5" opacity="0.30" />
+      <line x1="2"  y1="50" x2="9"  y2="50" stroke={fill} strokeWidth="1.5" opacity="0.30" />
+      <line x1="91" y1="50" x2="98" y2="50" stroke={fill} strokeWidth="1.5" opacity="0.30" />
+      <g fill={fill}>
+        <rect x="14" y="25" width="12" height="50" />
+        <rect x="14" y="25" width="48" height="11" />
+        <rect x="14" y="64" width="48" height="11" />
+        <rect x="50" y="38" width="7"  height="24" />
+        <rect x="50" y="38" width="22" height="6"  />
+        <rect x="50" y="47" width="16" height="5"  />
+        <rect x="50" y="56" width="22" height="6"  />
+      </g>
     </svg>
   );
 }
@@ -358,7 +365,7 @@ function DoctrineCertStrip({ animClass }: { animClass: string }) {
     }}>
       {/* Mark + label */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
-        <CitadelMark w={18} h={14} fill={P.gold} />
+        <CitadelMark w={18} h={18} fill={P.gold} />
         <span style={{
           fontSize: "0.6rem", fontWeight: 800, letterSpacing: "0.26em",
           textTransform: "uppercase", color: P.gold,

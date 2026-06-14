@@ -25,17 +25,24 @@ const P = {
   goldDim:    "rgba(197,162,111,0.15)",
 } as const;
 
-// ── CE citadel mark ───────────────────────────────────────────────────────────
+// ── CE mark (locked monogram) ─────────────────────────────────────────────────
 function CitadelMark({ w, h, fill }: { w: number; h: number; fill: string }) {
   return (
-    <svg width={w} height={h} viewBox="0 0 106 82" fill="none" aria-hidden="true">
-      <path
-        fill={fill} fillRule="evenodd"
-        d="M2,56 h12 v16 h-12 Z M17,44 h12 v28 h-12 Z M32,32 h12 v40 h-12 Z
-           M47,18 h12 v54 h-12 Z M62,32 h12 v40 h-12 Z M77,44 h12 v28 h-12 Z
-           M92,56 h12 v16 h-12 Z M2,72 h102 v6 h-102 Z
-           M49,72 L49,54 C49,43 51,41 53,41 C55,41 57,43 57,54 L57,72 Z"
-      />
+    <svg width={w} height={h} viewBox="0 0 100 100" fill="none" aria-hidden="true">
+      <circle cx="50" cy="50" r="44" stroke={fill} strokeWidth="2" opacity="0.50" />
+      <line x1="50" y1="2"  x2="50" y2="9"  stroke={fill} strokeWidth="1.5" opacity="0.30" />
+      <line x1="50" y1="91" x2="50" y2="98" stroke={fill} strokeWidth="1.5" opacity="0.30" />
+      <line x1="2"  y1="50" x2="9"  y2="50" stroke={fill} strokeWidth="1.5" opacity="0.30" />
+      <line x1="91" y1="50" x2="98" y2="50" stroke={fill} strokeWidth="1.5" opacity="0.30" />
+      <g fill={fill}>
+        <rect x="14" y="25" width="12" height="50" />
+        <rect x="14" y="25" width="48" height="11" />
+        <rect x="14" y="64" width="48" height="11" />
+        <rect x="50" y="38" width="7"  height="24" />
+        <rect x="50" y="38" width="22" height="6"  />
+        <rect x="50" y="47" width="16" height="5"  />
+        <rect x="50" y="56" width="22" height="6"  />
+      </g>
     </svg>
   );
 }
@@ -115,15 +122,15 @@ function AuthorityCoreVisual() {
             stroke={gold(0.045)} strokeWidth="0.75" strokeDasharray="2 14" />
         </g>
 
-        {/* ── CE Citadel mark — centered ──────────────────────────────── */}
-        <g transform="translate(194, 202) scale(0.47)">
-          <path
-            fill={gold(0.55)} fillRule="evenodd"
-            d="M2,56 h12 v16 h-12 Z M17,44 h12 v28 h-12 Z M32,32 h12 v40 h-12 Z
-               M47,18 h12 v54 h-12 Z M62,32 h12 v40 h-12 Z M77,44 h12 v28 h-12 Z
-               M92,56 h12 v16 h-12 Z M2,72 h102 v6 h-102 Z
-               M49,72 L49,54 C49,43 51,41 53,41 C55,41 57,43 57,54 L57,72 Z"
-          />
+        {/* ── CE mark — centered ────────────────────────────────────── */}
+        <g transform="translate(188, 183) scale(0.75)" fill={gold(0.55)}>
+          <rect x="14" y="25" width="12" height="50" />
+          <rect x="14" y="25" width="48" height="11" />
+          <rect x="14" y="64" width="48" height="11" />
+          <rect x="50" y="38" width="7"  height="24" />
+          <rect x="50" y="38" width="22" height="6"  />
+          <rect x="50" y="47" width="16" height="5"  />
+          <rect x="50" y="56" width="22" height="6"  />
         </g>
 
         {/* ── Crosshair at center ──────────────────────────────────────── */}
@@ -552,7 +559,7 @@ export default function HomePage() {
           display:     "flex", alignItems: "center", gap: 12,
           maxWidth:    1280, margin: "0 auto",
         }}>
-          <CitadelMark w={20} h={16} fill={`rgba(197,162,111,0.35)`} />
+          <CitadelMark w={20} h={20} fill={`rgba(197,162,111,0.35)`} />
           <p style={{ fontSize: "0.68rem", color: P.dim, letterSpacing: "0.18em", margin: 0, textTransform: "uppercase" }}>
             Signal. Judgment. Systems.
           </p>

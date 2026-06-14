@@ -96,18 +96,24 @@ const PRINCIPLES = [
   { n: "04", title: "Durability by Design",  desc: "Build for longevity. Everything else is maintenance." },
 ];
 
-// ── Inline citadel mark ───────────────────────────────────────────────────────
+// ── CE mark (locked monogram) ─────────────────────────────────────────────────
 function CitadelMark({ w, h, fill }: { w: number; h: number; fill: string }) {
   return (
-    <svg width={w} height={h} viewBox="0 0 106 82" fill="none" aria-hidden="true">
-      <path
-        fill={fill}
-        fillRule="evenodd"
-        d="M2,56 h12 v16 h-12 Z M17,44 h12 v28 h-12 Z M32,32 h12 v40 h-12 Z
-           M47,18 h12 v54 h-12 Z M62,32 h12 v40 h-12 Z M77,44 h12 v28 h-12 Z
-           M92,56 h12 v16 h-12 Z M2,72 h102 v6 h-102 Z
-           M49,72 L49,54 C49,43 51,41 53,41 C55,41 57,43 57,54 L57,72 Z"
-      />
+    <svg width={w} height={h} viewBox="0 0 100 100" fill="none" aria-hidden="true">
+      <circle cx="50" cy="50" r="44" stroke={fill} strokeWidth="2" opacity="0.50" />
+      <line x1="50" y1="2"  x2="50" y2="9"  stroke={fill} strokeWidth="1.5" opacity="0.30" />
+      <line x1="50" y1="91" x2="50" y2="98" stroke={fill} strokeWidth="1.5" opacity="0.30" />
+      <line x1="2"  y1="50" x2="9"  y2="50" stroke={fill} strokeWidth="1.5" opacity="0.30" />
+      <line x1="91" y1="50" x2="98" y2="50" stroke={fill} strokeWidth="1.5" opacity="0.30" />
+      <g fill={fill}>
+        <rect x="14" y="25" width="12" height="50" />
+        <rect x="14" y="25" width="48" height="11" />
+        <rect x="14" y="64" width="48" height="11" />
+        <rect x="50" y="38" width="7"  height="24" />
+        <rect x="50" y="38" width="22" height="6"  />
+        <rect x="50" y="47" width="16" height="5"  />
+        <rect x="50" y="56" width="22" height="6"  />
+      </g>
     </svg>
   );
 }
@@ -154,7 +160,7 @@ function ReleaseCard({ rel, animClass }: { rel: Release; animClass: string }) {
           borderRadius: 3,
           display: "flex", alignItems: "center", justifyContent: "center",
         }}>
-          <CitadelMark w={20} h={16} fill={P.gold} />
+          <CitadelMark w={20} h={20} fill={P.gold} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <span style={{
@@ -656,7 +662,7 @@ export default function CEResearchPage() {
             <div style={{ maxWidth: 1280, margin: "0 auto", padding: "48px 48px" }}>
               <div style={{ display: "flex", alignItems: "flex-start", gap: 24 }}>
                 <div style={{ flexShrink: 0, marginTop: 6, opacity: 0.45 }}>
-                  <CitadelMark w={28} h={22} fill={P.gold} />
+                  <CitadelMark w={28} h={28} fill={P.gold} />
                 </div>
                 <div>
                   <p style={{
