@@ -356,12 +356,12 @@ export default function DriftMarketingPage() {
           padding: "0 40px", height: 56, gap: 0,
         }}>
           {/* Brand */}
-          <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
-            <img src="/brand/ce-mark-white.svg" width={22} height={22} style={{ objectFit: "contain", flexShrink: 0 }} alt="" />
+          <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0, textDecoration: "none" }}>
+            <img src="/brand/ce-mark-white.svg" width={22} height={22} style={{ objectFit: "contain", flexShrink: 0 }} alt="Cognitive Empire" />
             <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: C.muted }}>Cognitive Empire</span>
             <span style={{ width: 1, height: 16, background: C.border, flexShrink: 0 }} />
             <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: "0.06em", color: C.text }}>DRIFT</span>
-          </div>
+          </Link>
 
           {/* Center nav — hidden on mobile */}
           <div className="d-nav-center" style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 28 }}>
