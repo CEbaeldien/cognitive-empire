@@ -1,0 +1,176 @@
+.ce-doctrine {
+  --ce-black: #05070b;
+  --ce-navy: #07111f;
+  --ce-panel: #0d1524;
+  --ce-panel-elevated: #111c30;
+  --ce-text: #e6edf7;
+  --ce-white: #f4f7fb;
+  --ce-muted: #8b9ab3;
+  --ce-dim: #5e6b80;
+  --ce-gold: #c5a26f;
+  --ce-gold-soft: rgba(197, 162, 111, 0.12);
+  --ce-gold-border: rgba(197, 162, 111, 0.42);
+  --ce-border: rgba(255, 255, 255, 0.1);
+
+  background: var(--ce-black);
+  color: var(--ce-text);
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Arial, sans-serif;
+}
+
+.ce-doctrine * {
+  box-sizing: border-box;
+}
+
+/* ── reveal-on-load ───────────────────────────────────────────── */
+
+.ce-reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  filter: blur(4px);
+  animation: ceReveal 850ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes ceReveal {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+/* ── command card ─────────────────────────────────────────────── */
+
+.command-card {
+  background: var(--ce-panel);
+  border: 1px solid var(--ce-border);
+  border-radius: 18px;
+  transition: transform 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
+}
+
+.command-card:hover {
+  transform: translateY(-3px) scale(1.006);
+  border-color: var(--ce-gold-border);
+  box-shadow: 0 0 0 1px rgba(197, 162, 111, 0.12), 0 24px 80px rgba(0, 0, 0, 0.38);
+}
+
+/* ── toc ──────────────────────────────────────────────────────── */
+
+.toc-link {
+  display: block;
+  color: var(--ce-muted);
+  text-decoration: none;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  transition: transform 150ms ease, color 150ms ease, background-color 150ms ease;
+}
+
+.toc-link:hover {
+  transform: translateX(4px);
+  color: var(--ce-white);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.toc-link.toc-active {
+  color: var(--ce-gold);
+  background: var(--ce-gold-soft);
+  font-weight: 500;
+}
+
+/* ── search highlight ────────────────────────────────────────── */
+
+.ce-doctrine .search-highlight {
+  background: var(--ce-gold-soft);
+  color: var(--ce-gold);
+  border-radius: 3px;
+  padding: 0 2px;
+}
+
+/* ── manuscript typography ───────────────────────────────────── */
+
+.doctrine-manuscript h1 {
+  font-size: 2.1rem;
+  line-height: 1.12;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--ce-white);
+  margin: 0 0 1rem;
+}
+
+.doctrine-manuscript h2 {
+  font-size: 1.5rem;
+  line-height: 1.25;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ce-white);
+  margin: 0 0 1rem;
+}
+
+.doctrine-manuscript h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--ce-text);
+  margin: 1.6rem 0 0.6rem;
+}
+
+.doctrine-manuscript p {
+  margin: 0 0 1rem;
+  line-height: 1.75;
+  color: var(--ce-text);
+  font-size: 15px;
+}
+
+.doctrine-manuscript strong {
+  color: var(--ce-white);
+  font-weight: 600;
+}
+
+.doctrine-manuscript ul,
+.doctrine-manuscript ol {
+  margin: 0.5rem 0 1rem 1.4rem;
+}
+
+.doctrine-manuscript li {
+  margin-bottom: 0.5rem;
+  line-height: 1.7;
+  color: var(--ce-text);
+}
+
+.doctrine-manuscript .law {
+  background: var(--ce-panel-elevated);
+  border-left: 3px solid var(--ce-gold);
+  padding: 0.9rem 1.1rem;
+  margin: 1rem 0;
+  border-radius: 0 12px 12px 0;
+  font-size: 14.5px;
+  line-height: 1.6;
+}
+
+/* ── scrollbar ────────────────────────────────────────────────── */
+
+.ce-doctrine .ce-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ce-doctrine .ce-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+}
+
+/* ── reduced motion ──────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .ce-doctrine * {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── mobile safety ───────────────────────────────────────────── */
+
+.ce-doctrine {
+  overflow-x: hidden;
+  max-width: 100%;
+}
