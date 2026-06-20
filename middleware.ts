@@ -15,7 +15,7 @@ const HOLD_EXEMPT = new Set([
   "/disclaimer",
 ]);
 
-export function proxy(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Site hold: redirect every non-exempt page path to home.
@@ -26,7 +26,6 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(url, 307);
   }
 
-  // ── Existing auth-gating (unchanged) ──────────────────────────────────────
   const isAuthenticated = !!request.cookies.get("sb-auth")?.value;
 
   const isProtected =
@@ -54,6 +53,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Run on all routes; exclude Next.js internals and static assets.
   matcher: ["/((?!_next/static|_next/image|favicon\\.ico|media/).*)" ],
 };
