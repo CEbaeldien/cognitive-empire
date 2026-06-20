@@ -34,114 +34,45 @@ export function PasswordGate() {
   }
 
   return (
-    <div
-      className="ce-doctrine ce-reveal"
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 24,
-      }}
-    >
+    <div className="ce-doctrine ce-reveal doctrine-auth-screen">
       <form
         onSubmit={handleSubmit}
-        className="command-card"
-        style={{ width: "100%", maxWidth: 380, padding: "40px 32px" }}
+        className="doctrine-card doctrine-auth-card"
       >
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: 24 }}>
-          <div
-            style={{
-              width: 56,
-              height: 56,
-              borderRadius: 14,
-              border: "1px solid var(--ce-gold-border)",
-              background: "var(--ce-gold-soft)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <CEMark style={{ width: 26, height: 26, color: "var(--ce-gold)" }} />
+        <div className="doctrine-auth-mark-wrap">
+          <div className="doctrine-brand-mark" style={{ width: 58, height: 58, borderRadius: 15 }}>
+            <CEMark style={{ width: 27, height: 27, color: "var(--ce-gold)" }} />
           </div>
         </div>
 
-        <div style={{ textAlign: "center", marginBottom: 28 }}>
-          <div
-            style={{
-              fontSize: 11,
-              letterSpacing: "0.18em",
-              textTransform: "uppercase",
-              color: "var(--ce-gold)",
-              marginBottom: 6,
-            }}
-          >
-            Restricted Access
-          </div>
-          <div style={{ fontSize: 20, fontWeight: 600, color: "var(--ce-white)", letterSpacing: "-0.02em" }}>
-            CE Doctrine OS
-          </div>
-          <div style={{ fontSize: 12, color: "var(--ce-muted)", marginTop: 4 }}>
-            Operator Kernel Internal Console
-          </div>
+        <div className="doctrine-auth-copy">
+          <div className="doctrine-panel-kicker">Restricted Access</div>
+          <div className="doctrine-auth-title">CE Doctrine OS</div>
+          <div className="doctrine-auth-subtitle">Operator Kernel Internal Console</div>
         </div>
 
-        <label
-          style={{
-            display: "block",
-            fontSize: 11,
-            letterSpacing: "0.06em",
-            textTransform: "uppercase",
-            color: "var(--ce-dim)",
-            marginBottom: 8,
-          }}
-        >
-          Password
-        </label>
+        <label className="doctrine-auth-label">Password</label>
         <input
           type="password"
           autoFocus
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          style={{
-            width: "100%",
-            background: "var(--ce-navy)",
-            border: "1px solid var(--ce-border)",
-            borderRadius: 10,
-            padding: "11px 14px",
-            color: "var(--ce-text)",
-            fontSize: 14,
-            outline: "none",
-          }}
+          className="doctrine-auth-input"
         />
 
         {error && (
-          <div style={{ marginTop: 12, fontSize: 12.5, color: "#e2887a" }}>{error}</div>
+          <div className="doctrine-auth-error">{error}</div>
         )}
 
         <button
           type="submit"
           disabled={loading || !password}
-          style={{
-            width: "100%",
-            marginTop: 20,
-            padding: "12px 0",
-            borderRadius: 10,
-            border: "1px solid var(--ce-gold-border)",
-            background: loading ? "var(--ce-gold-soft)" : "var(--ce-gold)",
-            color: loading ? "var(--ce-gold)" : "#1a1306",
-            fontWeight: 600,
-            fontSize: 13.5,
-            letterSpacing: "0.02em",
-            cursor: loading || !password ? "default" : "pointer",
-            opacity: !password ? 0.6 : 1,
-            transition: "all 150ms ease",
-          }}
+          className="doctrine-primary-button"
         >
-          {loading ? "Verifying…" : "Enter Console"}
+          {loading ? "Verifying..." : "Enter Console"}
         </button>
 
-        <div style={{ marginTop: 20, fontSize: 11, color: "var(--ce-dim)", textAlign: "center", lineHeight: 1.5 }}>
+        <div className="doctrine-auth-footnote">
           Internal use only. Not indexed. Not linked from any public surface.
         </div>
       </form>

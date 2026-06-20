@@ -3,6 +3,7 @@ import Link from "next/link";
 import CENav from "./components/CENav";
 import CEFooter from "./components/CEFooter";
 import { CEMark } from "./components/CEMark";
+import SiteHoldBanner from "./components/SiteHoldBanner";
 
 export const metadata: Metadata = {
   title: "Cognitive Empire — Signal. Judgment. Systems.",
@@ -180,6 +181,7 @@ export default function HomePage() {
         color: P.text,
         fontFamily: "system-ui, -apple-system, sans-serif",
       }}>
+        <SiteHoldBanner />
         <CENav />
 
         {/* ══════════ HERO — full-bleed animation ══════════ */}
