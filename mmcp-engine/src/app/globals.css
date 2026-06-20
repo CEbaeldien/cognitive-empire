@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+/* ── CE Visual Doctrine ────────────────────────────────────────
+   Black/navy body. White voice. Muted gold (#c9a96e) for
+   authority markers only — never decoration.
+───────────────────────────────────────────────────────────────── */
+:root {
+  --ce-bg:        #0a0c0f;
+  --ce-surface:   #0f1115;
+  --ce-border:    rgba(255, 255, 255, 0.06);
+  --ce-text:      #ffffff;
+  --ce-muted:     rgba(255, 255, 255, 0.40);
+  --ce-faint:     rgba(255, 255, 255, 0.15);
+  --ce-gold:      #c9a96e;
+  --ce-gold-dim:  rgba(201, 169, 110, 0.30);
+}
+
+html, body {
+  background-color: var(--ce-bg);
+  color: var(--ce-text);
+}
