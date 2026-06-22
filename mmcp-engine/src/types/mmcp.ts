@@ -18,6 +18,9 @@ export type ConfidenceLevel = 'low' | 'medium' | 'high'
 // Authority levels — R4 always requires explicit Principal approval
 export type AuthorityLevel = 'R0' | 'R1' | 'R2' | 'R3' | 'R4'
 
+// Instance scope — 'principal' injects CE doctrine header into synthesis
+export type InstanceScope = 'principal' | 'public'
+
 // Intelligence Models available in v0
 export type ModelName = 'claude' | 'claude-code' | 'codex' | 'grok' | 'chatgpt' | 'gemini'
 
@@ -29,6 +32,7 @@ export interface MmcpSession {
   title: string
   status: SessionStatus
   priority: SessionPriority
+  instance_scope: InstanceScope
   created_at: string
   updated_at: string
   closed_at: string | null
@@ -203,6 +207,7 @@ export const MODEL_META: Record<ModelName, { label: string; role: string }> = {
 export interface CreateSessionInput {
   title: string
   priority: SessionPriority
+  instance_scope: InstanceScope
 }
 
 export interface CreateMissionInput {

@@ -11,6 +11,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { logEvent, AUDIT_EVENT, AUDIT_ENTITY } from '@/lib/mmcp/audit'
 import { setKey, getKey, hasKey, clearKey } from '@/lib/mmcp/keys'
+import { loadAttachments, formatBytes, type Attachment } from '@/lib/mmcp/attachments'
 import { MODEL_META, type ModelName, type ModelOutput, type MissionBrief } from '@/types/mmcp'
 
 // Models with API proxy support in v1
@@ -39,6 +40,7 @@ export default function OEPPage() {
 
   const [mission, setMission] = useState<MissionBrief | null>(null)
   const [outputs, setOutputs] = useState<Record<ModelName, OutputDraft>>({} as Record<ModelName, OutputDraft>)
+  const [attachments, setAttachments] = useState<Attachment[]>([])
   // Per-model key entry state (ephemeral UI — not persisted)
   const [keyInputs, setKeyInputs] = useState<Partial<Record<ModelName, string>>>({})
   // Whether each panel is showing the key entry UI
@@ -94,11 +96,14 @@ export default function OEPPage() {
 
       setOutputs(drafts as Record<ModelName, OutputDraft>)
 
+      // Load attachments from localStorage
+      setAttachments(loadAttachments(sessionId))
+
       // Initialise key-entry visibility: show if API model and no key loaded yet
       const visibility: Partial<Record<ModelName, boolean>> = {}
       for (const model of m.models_selected as ModelName[]) {
         if (API_MODELS.has(model)) {
-          visibility[model] = !hasKey(sessionId, model)
+          visibility[model] = !hasKey(model)
         }
       }
       setShowKeyEntry(visibility)
@@ -106,18 +111,18 @@ export default function OEPPage() {
     load()
   }, [sessionId])
 
-  // ── Load key from sessionStorage ──────────────────────────
+  // ── Load key into localStorage ────────────────────────────
   function loadKey(model: ModelName) {
     const raw = (keyInputs[model] ?? '').trim()
     if (!raw) return
-    setKey(sessionId, model, raw)
+    setKey(model, raw)
     setKeyInputs(prev => ({ ...prev, [model]: '' }))
     setShowKeyEntry(prev => ({ ...prev, [model]: false }))
   }
 
   // ── Revoke key ────────────────────────────────────────────
   function revokeKey(model: ModelName) {
-    clearKey(sessionId, model)
+    clearKey(model)
     setShowKeyEntry(prev => ({ ...prev, [model]: true }))
     setOutputs(prev => ({ ...prev, [model]: { ...prev[model], error: null } }))
   }
@@ -127,7 +132,7 @@ export default function OEPPage() {
     if (!mission) return
     const draft   = outputs[model]
     const prompt  = draft.input_prompt.trim()
-    const key     = getKey(sessionId, model)
+    const key     = getKey(model)
     const route   = PROXY_ROUTE[model]
 
     if (!prompt) {
@@ -151,7 +156,7 @@ export default function OEPPage() {
       const res = await fetch(route, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ key, prompt, sessionId, missionId: mission.id }),
+        body:    JSON.stringify({ key, prompt, attachments, sessionId, missionId: mission.id }),
       })
 
       const json = await res.json() as { output?: string; tokenCount?: number; error?: string }
@@ -292,6 +297,25 @@ export default function OEPPage() {
         <span className="text-white/30">Mission: </span>{mission.objective}
       </div>
 
+      {/* Attachment indicators */}
+      {attachments.length > 0 && (
+        <div className="mb-5 flex flex-wrap gap-1.5">
+          {attachments.map(a => (
+            <div
+              key={a.name}
+              title={`${a.name} — ${formatBytes(a.size)}`}
+              className="flex items-center gap-1.5 px-2 py-1 bg-[#c9a96e]/6 border border-[#c9a96e]/20 rounded text-[10px] text-[#c9a96e]/70"
+            >
+              <span className="uppercase font-medium">{a.type}</span>
+              <span className="text-[#c9a96e]/40 truncate max-w-[120px]">{a.name}</span>
+            </div>
+          ))}
+          <span className="text-[10px] text-white/20 self-center ml-1">
+            {attachments.length} attachment{attachments.length > 1 ? 's' : ''} — passed to API models
+          </span>
+        </div>
+      )}
+
       {/* Model panels */}
       <div
         className="grid gap-4"
@@ -301,7 +325,7 @@ export default function OEPPage() {
           const meta    = MODEL_META[model]
           const draft   = outputs[model] ?? { raw_output: '', input_prompt: '', saved: false, saving: false, running: false, error: null }
           const isApi   = API_MODELS.has(model)
-          const keyReady = isApi && hasKey(sessionId, model) && !showKeyEntry[model]
+          const keyReady = isApi && hasKey(model) && !showKeyEntry[model]
 
           return (
             <div
@@ -361,7 +385,8 @@ export default function OEPPage() {
                     </button>
                   </div>
                   <p className="text-[10px] text-white/20 mt-1">
-                    Stored in sessionStorage only. Never sent to our database.
+                    Stored in localStorage. Persists across reloads. Revoke from{' '}
+                    <a href="/keys" className="underline hover:text-white/40">key management</a>.
                   </p>
                 </div>
               )}

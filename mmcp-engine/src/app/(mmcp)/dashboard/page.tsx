@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { logEvent, AUDIT_EVENT, AUDIT_ENTITY } from '@/lib/mmcp/audit'
-import type { MmcpSession, SessionPriority, CreateSessionInput } from '@/types/mmcp'
+import type { MmcpSession, SessionPriority, InstanceScope, CreateSessionInput } from '@/types/mmcp'
 
 const STATUS_COLOR: Record<string, string> = {
   open:             'text-white/40 bg-white/5',
@@ -33,7 +33,7 @@ export default function DashboardPage() {
   const [creating, setCreating] = useState(false)
   const [showNew, setShowNew] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
-  const [form, setForm] = useState<CreateSessionInput>({ title: '', priority: 'normal' })
+  const [form, setForm] = useState<CreateSessionInput>({ title: '', priority: 'normal', instance_scope: 'public' })
 
   // ── Load sessions ──────────────────────────────────────────
   useEffect(() => {
@@ -62,11 +62,12 @@ export default function DashboardPage() {
     const { data: session, error } = await supabase
       .from('mmcp_sessions')
       .insert({
-        principal_id: userId,
-        title:        form.title.trim(),
-        priority:     form.priority,
-        status:       'open',
-        closed_at:    null,
+        principal_id:   userId,
+        title:          form.title.trim(),
+        priority:       form.priority,
+        instance_scope: form.instance_scope,
+        status:         'open',
+        closed_at:      null,
       })
       .select()
       .single()
@@ -132,6 +133,29 @@ export default function DashboardPage() {
               <option value="high">High</option>
               <option value="critical">Critical</option>
             </select>
+
+            {/* Instance scope toggle */}
+            <div className="flex gap-2">
+              {(['public', 'principal'] as InstanceScope[]).map(scope => (
+                <button
+                  key={scope}
+                  type="button"
+                  onClick={() => setForm(f => ({ ...f, instance_scope: scope }))}
+                  className={`flex-1 px-3 py-2 text-xs rounded border transition-colors ${
+                    form.instance_scope === scope
+                      ? scope === 'principal'
+                        ? 'border-[#c9a96e]/50 bg-[#c9a96e]/10 text-[#c9a96e]'
+                        : 'border-white/20 bg-white/8 text-white'
+                      : 'border-white/8 text-white/35 hover:text-white/55'
+                  }`}
+                >
+                  <span className="font-medium capitalize">{scope}</span>
+                  <span className="block text-[10px] opacity-60 mt-0.5">
+                    {scope === 'principal' ? 'Dr. E — CE doctrine injected' : 'Clean synthesis'}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
           <div className="flex gap-3 mt-4">
             <button
@@ -174,6 +198,11 @@ export default function DashboardPage() {
                   {new Date(session.created_at).toLocaleDateString()}
                 </p>
               </div>
+              {session.instance_scope === 'principal' && (
+                <span className="text-[10px] px-2 py-0.5 rounded text-[#c9a96e]/70 bg-[#c9a96e]/8 border border-[#c9a96e]/15">
+                  Dr. E
+                </span>
+              )}
               <span className={`text-xs px-2 py-0.5 rounded ${PRIORITY_BADGE[session.priority]}`}>
                 {session.priority}
               </span>

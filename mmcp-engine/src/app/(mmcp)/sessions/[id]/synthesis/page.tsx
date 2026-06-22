@@ -25,11 +25,12 @@ export default function SynthesisPage() {
   const { id: sessionId } = useParams<{ id: string }>()
   const supabase = createClient()
 
-  const [missionId,   setMissionId]  = useState<string | null>(null)
-  const [comparison,  setComparison] = useState<OEPComparison | null>(null)
-  const [synthesis,   setSynthesis]  = useState<Synthesis | null>(null)
-  const [approval,    setApproval]   = useState<Approval | null>(null)
-  const [userId,      setUserId]     = useState<string | null>(null)
+  const [missionId,     setMissionId]   = useState<string | null>(null)
+  const [comparison,    setComparison]  = useState<OEPComparison | null>(null)
+  const [synthesis,     setSynthesis]   = useState<Synthesis | null>(null)
+  const [approval,      setApproval]    = useState<Approval | null>(null)
+  const [userId,        setUserId]      = useState<string | null>(null)
+  const [instanceScope, setInstanceScope] = useState<'principal' | 'public'>('public')
   const [saving, setSaving] = useState(false)
 
   // Synthesis form
@@ -62,6 +63,11 @@ export default function SynthesisPage() {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
       setUserId(user?.id ?? null)
+
+      // Load session scope for Dr. E doctrine injection
+      const { data: sess } = await supabase
+        .from('mmcp_sessions').select('instance_scope').eq('id', sessionId).single()
+      if (sess) setInstanceScope((sess as { instance_scope: 'principal' | 'public' }).instance_scope ?? 'public')
 
       const { data: m } = await supabase
         .from('mission_briefs').select('id').eq('session_id', sessionId)
@@ -248,6 +254,20 @@ export default function SynthesisPage() {
       {!isApproved && (
         <section className="space-y-4">
           <h2 className="text-sm font-medium text-white/70">Write Synthesis</h2>
+
+          {/* Dr. E doctrine frame — principal scope only */}
+          {instanceScope === 'principal' && (
+            <div className="px-4 py-3 border border-[#c9a96e]/25 bg-[#c9a96e]/4 rounded-lg">
+              <p className="text-[10px] text-[#c9a96e]/60 uppercase tracking-widest mb-2">CE Doctrine Frame · Dr. E</p>
+              <div className="space-y-1 text-[11px] text-[#c9a96e]/50 font-mono">
+                <p>Instance: Principal Operator</p>
+                <p>Framework: Cognitive Empire Operator Kernel</p>
+                <p>Eight Laws: Active</p>
+                <p>Doctrine-first reasoning. Uncertainty flags preserved.</p>
+                <p>No model output references another model&apos;s output.</p>
+              </div>
+            </div>
+          )}
 
           <div>
             <label className={LABEL}>Synthesis</label>

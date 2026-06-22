@@ -4,11 +4,15 @@
 // Select which Intelligence Models will receive the mission.
 // Creates mission_brief + audit log on save.
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { logEvent, AUDIT_EVENT, AUDIT_ENTITY } from '@/lib/mmcp/audit'
 import { MODEL_META, type ModelName, type MissionBrief, type CreateMissionInput } from '@/types/mmcp'
+import {
+  fileToAttachment, saveAttachments, loadAttachments, ACCEPTED_MIME, formatBytes,
+  type Attachment,
+} from '@/lib/mmcp/attachments'
 
 const ALL_MODELS = Object.entries(MODEL_META) as [ModelName, { label: string; role: string }][]
 
@@ -19,6 +23,9 @@ export default function MissionPage() {
 
   const [existing, setExisting] = useState<MissionBrief | null>(null)
   const [saving, setSaving] = useState(false)
+  const [attachments, setAttachments] = useState<Attachment[]>([])
+  const [attachError, setAttachError] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [form, setForm] = useState<Omit<CreateMissionInput, 'session_id'>>({
     title: '',
     context: '',
@@ -48,6 +55,9 @@ export default function MissionPage() {
           models_selected: data.models_selected as ModelName[],
         })
       }
+
+      // Load any previously attached files from localStorage
+      setAttachments(loadAttachments(sessionId))
     }
     load()
   }, [sessionId])
@@ -60,6 +70,32 @@ export default function MissionPage() {
         ? f.models_selected.filter(m => m !== model)
         : [...f.models_selected, model],
     }))
+  }
+
+  // ── Handle file attachment ────────────────────────────────
+  async function handleFiles(files: FileList | null) {
+    if (!files || files.length === 0) return
+    setAttachError(null)
+    const next = [...attachments]
+    for (const file of Array.from(files)) {
+      try {
+        const att = await fileToAttachment(file)
+        const idx = next.findIndex(a => a.name === att.name)
+        if (idx >= 0) next[idx] = att  // replace on re-upload
+        else next.push(att)
+      } catch (err) {
+        setAttachError(err instanceof Error ? err.message : 'Could not read file')
+      }
+    }
+    setAttachments(next)
+    saveAttachments(sessionId, next)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  function removeAttachment(name: string) {
+    const next = attachments.filter(a => a.name !== name)
+    setAttachments(next)
+    saveAttachments(sessionId, next)
   }
 
   // ── Save mission brief ─────────────────────────────────────
@@ -165,6 +201,55 @@ export default function MissionPage() {
             rows={2}
             className={INPUT}
           />
+        </Field>
+
+        {/* Attachments */}
+        <Field label="Attachments" hint="PDF, DOCX, TXT, PNG, JPG — passed inline to API models">
+          <div
+            className="border border-dashed border-white/15 rounded px-3 py-3 cursor-pointer hover:border-white/25 transition-colors"
+            onClick={() => fileInputRef.current?.click()}
+            onDragOver={e => { e.preventDefault(); e.stopPropagation() }}
+            onDrop={e => { e.preventDefault(); void handleFiles(e.dataTransfer.files) }}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept={ACCEPTED_MIME}
+              multiple
+              className="hidden"
+              onChange={e => void handleFiles(e.target.files)}
+            />
+            {attachments.length === 0 ? (
+              <p className="text-xs text-white/25 text-center select-none">
+                Click to attach files, or drag and drop
+              </p>
+            ) : (
+              <div className="space-y-1.5">
+                {attachments.map(a => (
+                  <div key={a.name} className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-[10px] text-[#c9a96e]/70 bg-[#c9a96e]/8 px-1.5 py-0.5 rounded uppercase shrink-0">
+                        {a.type}
+                      </span>
+                      <span className="text-xs text-white/60 truncate">{a.name}</span>
+                      <span className="text-[10px] text-white/20 shrink-0">{formatBytes(a.size)}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={e => { e.stopPropagation(); removeAttachment(a.name) }}
+                      className="text-[10px] text-white/20 hover:text-red-400 transition-colors shrink-0"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+                <p className="text-[10px] text-white/20 pt-1">Click to add more</p>
+              </div>
+            )}
+          </div>
+          {attachError && (
+            <p className="text-xs text-red-400 mt-1">{attachError}</p>
+          )}
         </Field>
 
         {/* Model selector */}

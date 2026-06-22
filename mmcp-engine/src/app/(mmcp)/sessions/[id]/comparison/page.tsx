@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { logEvent, AUDIT_EVENT, AUDIT_ENTITY } from '@/lib/mmcp/audit'
+import { getKey } from '@/lib/mmcp/keys'
 import type { OEPComparison, ModelOutput } from '@/types/mmcp'
 
 type ComparisonFormFields = {
@@ -44,6 +45,8 @@ export default function ComparisonPage() {
   const [outputs, setOutputs] = useState<ModelOutput[]>([])
   const [existing, setExisting] = useState<OEPComparison | null>(null)
   const [saving, setSaving] = useState(false)
+  const [autofilling, setAutofilling] = useState(false)
+  const [autofillError, setAutofillError] = useState<string | null>(null)
   const [form, setForm] = useState<ComparisonFormFields>({
     convergence_notes:   '',
     divergence_notes:    '',
@@ -95,6 +98,80 @@ export default function ComparisonPage() {
     }
     load()
   }, [sessionId])
+
+  // ── Auto-fill comparison via Claude ───────────────────────
+  async function autoFill() {
+    if (outputs.length < 2) {
+      setAutofillError('Need at least 2 saved outputs to auto-fill.')
+      return
+    }
+    const key = getKey('claude')
+    if (!key) {
+      setAutofillError('Claude API key not loaded. Add it in Key Management first.')
+      return
+    }
+
+    setAutofilling(true)
+    setAutofillError(null)
+
+    const outputSection = outputs
+      .map(o => `=== ${o.model_name.toUpperCase()} ===\n${o.raw_output}`)
+      .join('\n\n')
+
+    const prompt = `You are a structured analysis assistant. I will give you multiple AI model outputs for the same mission prompt. Your job is to analyze them and return a structured JSON object with exactly these 6 keys:
+
+- convergence_notes: What did all models agree on? Key shared conclusions.
+- divergence_notes: Where did models differ significantly? Highlight the most important disagreements.
+- blind_spots: What did no model cover or raise that seems relevant?
+- contradictions: Direct conflicts or mutually exclusive claims between outputs.
+- risk_notes: Risks surfaced by the comparison itself (not just from individual outputs).
+- missing_assumptions: Assumptions no model named explicitly but appear to be present.
+
+Be analytical, terse, and specific. Do not pad. Return ONLY valid JSON — no explanation before or after.
+
+MODEL OUTPUTS:
+${outputSection}`
+
+    try {
+      const res = await fetch('/api/mmcp/run/claude', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ key, prompt }),
+      })
+
+      const json = await res.json() as { output?: string; error?: string }
+
+      if (!res.ok || json.error) {
+        setAutofillError(json.error ?? `Error ${res.status}`)
+        setAutofilling(false)
+        return
+      }
+
+      // Parse the JSON from Claude's output
+      const raw = json.output ?? ''
+      const jsonMatch = raw.match(/\{[\s\S]*\}/)
+      if (!jsonMatch) {
+        setAutofillError('Claude returned an unexpected format. Try again.')
+        setAutofilling(false)
+        return
+      }
+
+      const parsed = JSON.parse(jsonMatch[0]) as Partial<ComparisonFormFields>
+
+      setForm(f => ({
+        convergence_notes:   parsed.convergence_notes   ?? f.convergence_notes,
+        divergence_notes:    parsed.divergence_notes    ?? f.divergence_notes,
+        blind_spots:         parsed.blind_spots         ?? f.blind_spots,
+        contradictions:      parsed.contradictions      ?? f.contradictions,
+        risk_notes:          parsed.risk_notes          ?? f.risk_notes,
+        missing_assumptions: parsed.missing_assumptions ?? f.missing_assumptions,
+      }))
+    } catch (err) {
+      setAutofillError(err instanceof Error ? err.message : 'Unexpected error')
+    }
+
+    setAutofilling(false)
+  }
 
   // ── Save comparison ────────────────────────────────────────
   async function handleSave(markComplete: boolean) {
@@ -158,6 +235,25 @@ export default function ComparisonPage() {
               <p className="text-xs text-white/50 line-clamp-3">{o.raw_output}</p>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Auto-fill */}
+      <div className="mb-5 flex items-center gap-3">
+        <button
+          onClick={() => void autoFill()}
+          disabled={autofilling || outputs.length < 2}
+          className="px-4 py-2 text-sm border border-[#c9a96e]/30 text-[#c9a96e] rounded hover:bg-[#c9a96e]/8 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        >
+          {autofilling ? 'Analyzing…' : '⚡ Auto-fill with Claude'}
+        </button>
+        <span className="text-xs text-white/25">
+          Requires Claude key. Populates all fields — review before completing.
+        </span>
+      </div>
+      {autofillError && (
+        <div className="mb-4 px-3 py-2 bg-red-950/40 border border-red-800/40 rounded text-xs text-red-300">
+          {autofillError}
         </div>
       )}
 

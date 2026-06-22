@@ -32,6 +32,7 @@ export default function MmcpLayout({ children }: { children: React.ReactNode }) 
         <p className="text-[10px] text-[#c9a96e] uppercase tracking-widest px-2 mb-3">MMCP Engine</p>
         <NavLink href="/dashboard" active={pathname === '/dashboard'}>Sessions</NavLink>
         <NavLink href="/memory" active={pathname === '/memory'}>Memory / Canon</NavLink>
+        <NavLink href="/keys" active={pathname === '/keys'}>API Keys</NavLink>
       </nav>
       <main className="flex-1 overflow-auto">
         {children}
