@@ -2,8 +2,8 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-export function createClient() {
-  const cookieStore = cookies();
+export async function createClient() {
+  const cookieStore = await cookies();
   return createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -22,7 +22,7 @@ export function createClient() {
 }
 
 export async function requireFounder() {
-  const client = createClient();
+  const client = await createClient();
   const { data: { user } } = await client.auth.getUser();
   if (user?.email !== "founder@cognitiveempire.com") {
     redirect("/auth/signin");
