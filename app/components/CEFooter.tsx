@@ -22,20 +22,6 @@ export default function CEFooter() {
             </p>
           </div>
 
-          {/* Products */}
-          <div>
-            <h4 className="text-white text-[10px] font-semibold uppercase tracking-widest mb-4">
-              Products
-            </h4>
-            <ul className="space-y-2">
-              <li>
-                <Link href="/drift" className="text-[#64748b] text-xs hover:text-white transition-colors">
-                  Drift
-                </Link>
-              </li>
-            </ul>
-          </div>
-
           {/* Intelligence */}
           <div>
             <h4 className="text-white text-[10px] font-semibold uppercase tracking-widest mb-4">
