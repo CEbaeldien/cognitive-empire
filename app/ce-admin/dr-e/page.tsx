@@ -1,7 +1,5 @@
 "use client";
 
-// TODO: wire command input to AI API (claude-sonnet) with CE Runtime context injection
-
 import { useEffect, useState, useRef } from "react";
 
 const C = {
@@ -71,14 +69,6 @@ type CEState = {
   actions:  SystemStatus;
 };
 
-const MOCK_RESPONSE = `Acknowledged. Processing your command.
-
-Current context: CE Runtime is stable, 4 actions pending review. Priority signals: 3 require founder assessment.
-
-Recommended next action: Review the two critical projects — Company Registration (decay risk: high) and Dr. E Internal (build in progress). Both have time-sensitive dependencies.
-
-Command logged. No external action taken without approval.`;
-
 export default function DrECommandPage() {
   const [time,    setTime]    = useState(new Date());
   const [state,   setState]   = useState<CEState | null>(null);
@@ -123,16 +113,39 @@ export default function DrECommandPage() {
     fetchState();
   }, []);
 
-  function handleCommand(e: React.FormEvent) {
+  async function handleCommand(e: React.FormEvent) {
     e.preventDefault();
     if (!command.trim()) return;
     setLoading(true);
-    setResponse(null);
-    // V1: structured mock response
-    setTimeout(() => {
-      setResponse(MOCK_RESPONSE);
+    setResponse("");
+
+    try {
+      const res = await fetch("/api/ce/dr-e", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ command }),
+      });
+
+      if (!res.ok || !res.body) {
+        setResponse("Error: could not reach Dr. E.");
+        return;
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        setResponse((prev) => (prev ?? "") + decoder.decode(value, { stream: true }));
+      }
+
+      setCommand("");
+    } catch {
+      setResponse("Error: request failed.");
+    } finally {
       setLoading(false);
-    }, 800);
+    }
   }
 
   const timeStr = time.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
@@ -260,12 +273,25 @@ export default function DrECommandPage() {
             </button>
           </form>
 
-          {response && (
-            <div style={{ marginTop: 16, padding: "14px 16px", borderRadius: 8, border: `1px solid ${C.border}`, background: C.panelDeep }}>
-              <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.45em", textTransform: "uppercase", color: C.faint, margin: "0 0 8px" }}>
-                Response
-              </p>
-              <p style={{ fontSize: 13, color: C.muted, margin: 0, lineHeight: 1.7, whiteSpace: "pre-line" }}>{response}</p>
+          {(response !== null && response !== undefined) && (
+            <div style={{ marginTop: 16, borderRadius: 8, border: `1px solid ${C.border}`, background: "#030210", overflow: "hidden" }}>
+              <div style={{ padding: "6px 14px", borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.45em", textTransform: "uppercase", color: C.faint }}>Dr. E</span>
+                {loading && <span style={{ fontSize: 9, color: "#C5A26F", letterSpacing: "0.1em" }}>▌</span>}
+              </div>
+              <pre style={{
+                margin: 0,
+                padding: "14px 16px",
+                fontSize: 12,
+                color: "#C5A26F",
+                fontFamily: "ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, monospace",
+                lineHeight: 1.75,
+                whiteSpace: "pre-wrap",
+                wordBreak: "break-word",
+                minHeight: 40,
+              }}>
+                {response || " "}
+              </pre>
             </div>
           )}
         </div>
