@@ -20,7 +20,7 @@ export function middleware(request: NextRequest) {
 
   // Site hold: redirect every non-exempt page path to home.
   // API routes bypass the hold so backend functionality stays intact.
-  if (HOLD_ACTIVE && !pathname.startsWith("/api/") && !HOLD_EXEMPT.has(pathname)) {
+  if (HOLD_ACTIVE && !pathname.startsWith("/api/") && !pathname.startsWith("/admin") && !pathname.startsWith("/ce-admin") && !pathname.startsWith("/auth") && !HOLD_EXEMPT.has(pathname)) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url, 307);
@@ -53,5 +53,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon\\.ico|media/).*)" ],
+  matcher: ["/((?!_next/static|_next/image|favicon\\.ico|media/|auth/callback).*)" ],
 };
