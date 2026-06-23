@@ -1,9 +1,10 @@
+export const runtime = 'edge'
+export const maxDuration = 30
+
 import { requireFounder } from '@/utils/supabase/server'
 import { createClient } from '@supabase/supabase-js'
 import Anthropic from '@anthropic-ai/sdk'
 import { NextRequest } from 'next/server'
-
-export const maxDuration = 10
 
 export async function POST(request: NextRequest) {
   await requireFounder()
