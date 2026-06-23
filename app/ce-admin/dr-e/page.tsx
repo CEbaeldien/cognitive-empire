@@ -127,7 +127,12 @@ export default function DrECommandPage() {
       });
 
       if (!res.ok || !res.body) {
-        setResponse("Error: could not reach Dr. E.");
+        try {
+          const data = await res.json();
+          setResponse(`Error: ${data.error ?? "could not reach Dr. E"}`);
+        } catch {
+          setResponse(`Error: HTTP ${res.status} — could not reach Dr. E`);
+        }
         return;
       }
 

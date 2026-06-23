@@ -5,12 +5,37 @@ import { requireFounder } from '@/utils/supabase/server'
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest } from 'next/server'
 
-export async function POST(request: NextRequest) {
-  await requireFounder()
+function jsonErr(message: string, status: number) {
+  return new Response(JSON.stringify({ error: message }), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  })
+}
 
-  const { command } = await request.json()
+export async function POST(request: NextRequest) {
+  // Auth guard — re-throw Next.js redirects so the framework handles them
+  try {
+    await requireFounder()
+  } catch (err) {
+    if ((err as { digest?: string })?.digest?.startsWith('NEXT_REDIRECT')) throw err
+    const msg = err instanceof Error ? err.message : String(err)
+    return jsonErr(`Auth error: ${msg}`, 401)
+  }
+
+  let command: string
+  try {
+    const body = await request.json()
+    command = body?.command
+  } catch {
+    return jsonErr('Invalid JSON body', 400)
+  }
+
   if (!command?.trim()) {
-    return new Response('Missing command', { status: 400 })
+    return jsonErr('Missing command', 400)
+  }
+
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return jsonErr('ANTHROPIC_API_KEY is not configured', 500)
   }
 
   const supabase = createClient(
@@ -36,24 +61,31 @@ export async function POST(request: NextRequest) {
     `Current CE Runtime state: ${activeSystems} active systems, ${openApprovals} open approvals, ${memoryCount} memory records, ${openTasks} open tasks. ` +
     `Respond with operational precision. No fluff.`
 
-  const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'x-api-key': process.env.ANTHROPIC_API_KEY!,
-      'anthropic-version': '2023-06-01',
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 1024,
-      stream: true,
-      system: systemPrompt,
-      messages: [{ role: 'user', content: command }],
-    }),
-  })
+  let anthropicRes: Response
+  try {
+    anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1024,
+        stream: true,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: command }],
+      }),
+    })
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    return jsonErr(`Anthropic fetch failed: ${msg}`, 502)
+  }
 
   if (!anthropicRes.ok || !anthropicRes.body) {
-    return new Response('Anthropic API error', { status: 502 })
+    const errBody = await anthropicRes.text().catch(() => '(no body)')
+    return jsonErr(`Anthropic ${anthropicRes.status} ${anthropicRes.statusText}: ${errBody}`, 502)
   }
 
   const encoder = new TextEncoder()
