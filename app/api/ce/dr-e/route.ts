@@ -1,9 +1,8 @@
-export const runtime = 'edge'
-export const maxDuration = 30
-
 import { requireFounder } from '@/utils/supabase/server'
 import { createClient } from '@supabase/supabase-js'
-import { NextRequest } from 'next/server'
+
+export const runtime = 'edge'
+export const maxDuration = 30
 
 function jsonErr(message: string, status: number) {
   return new Response(JSON.stringify({ error: message }), {
@@ -12,14 +11,12 @@ function jsonErr(message: string, status: number) {
   })
 }
 
-export async function POST(request: NextRequest) {
-  // Auth guard — re-throw Next.js redirects so the framework handles them
+export async function POST(request: Request) {
   try {
     await requireFounder()
-  } catch (err) {
-    if ((err as { digest?: string })?.digest?.startsWith('NEXT_REDIRECT')) throw err
-    const msg = err instanceof Error ? err.message : String(err)
-    return jsonErr(`Auth error: ${msg}`, 401)
+  } catch {
+    // In an API route never redirect — the browser would re-POST to /auth/signin → 405
+    return jsonErr('Unauthorized', 401)
   }
 
   let command: string
