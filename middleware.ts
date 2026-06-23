@@ -29,8 +29,6 @@ export function middleware(request: NextRequest) {
   const isAuthenticated = !!request.cookies.get("sb-auth")?.value;
 
   const isProtected =
-    pathname === "/app" ||
-    pathname.startsWith("/app/") ||
     pathname.startsWith("/admin/");
 
   const isAuthPage =
@@ -45,7 +43,7 @@ export function middleware(request: NextRequest) {
 
   if (isAuthPage && isAuthenticated) {
     const url = request.nextUrl.clone();
-    url.pathname = "/app";
+    url.pathname = "/ce-admin";
     return NextResponse.redirect(url);
   }
 
