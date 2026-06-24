@@ -34,7 +34,7 @@ export default function SignInPage() {
       if (data.session) {
         document.cookie = `sb-auth=1; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`;
       }
-      router.replace("/app");
+      router.replace("/ce-admin");
     } finally {
       setLoading(false);
     }

@@ -60,7 +60,7 @@ export default function SignUpPage() {
 
       if (data.session) {
         document.cookie = `sb-auth=1; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`;
-        router.replace("/app");
+        router.replace("/ce-admin");
       } else {
         // Email confirmation required
         setSuccess(true);
