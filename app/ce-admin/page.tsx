@@ -16,6 +16,7 @@ export default async function CEAdminPage() {
           <Link href="/ce-admin/runtime" style={{ padding: '1rem 1.25rem', border: '1px solid rgba(230,237,247,0.1)', color: '#E6EDF7', textDecoration: 'none' }}>CE Runtime</Link>
           <Link href="/ce-admin/signals" style={{ padding: '1rem 1.25rem', border: '1px solid rgba(230,237,247,0.1)', color: '#E6EDF7', textDecoration: 'none' }}>Signals Admin</Link>
           <Link href="/mmcp" style={{ padding: '1rem 1.25rem', border: '1px solid rgba(230,237,247,0.1)', color: '#E6EDF7', textDecoration: 'none' }}>MMCP</Link>
+          <Link href="/ce-admin/mesodma" style={{ padding: '1rem 1.25rem', border: '1px solid rgba(230,237,247,0.1)', color: '#E6EDF7', textDecoration: 'none' }}>Mesodma</Link>
         </nav>
       </div>
     </div>
