@@ -26,20 +26,11 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url, 307);
   }
 
-  const isAuthenticated = !!request.cookies.get("sb-auth")?.value;
-
-  const isProtected =
-    pathname.startsWith("/admin/");
+  const isAuthenticated = request.cookies.getAll().some(c => c.name.startsWith("sb-") && c.name.endsWith("-auth-token"));
 
   const isAuthPage =
     pathname === "/auth/signin" ||
     pathname === "/auth/signup";
-
-  if (isProtected && !isAuthenticated) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/auth/signin";
-    return NextResponse.redirect(url);
-  }
 
   if (isAuthPage && isAuthenticated) {
     const url = request.nextUrl.clone();
