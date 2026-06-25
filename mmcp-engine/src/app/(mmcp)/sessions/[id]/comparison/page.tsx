@@ -2,9 +2,6 @@
 // ── Screen 4: Comparison Panel ───────────────────────────────
 // Principal records structured adversarial comparison of outputs.
 // Preserves disagreement — does NOT synthesize yet.
-// Fields: convergence, divergence, blind spots, contradictions,
-//         risk notes, missing assumptions.
-// Saves oep_comparisons row + audit log.
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
@@ -13,40 +10,52 @@ import { logEvent, AUDIT_EVENT, AUDIT_ENTITY } from '@/lib/mmcp/audit'
 import { getKey } from '@/lib/mmcp/keys'
 import type { OEPComparison, ModelOutput } from '@/types/mmcp'
 
+// ── Design tokens ──────────────────────────────────────────────
+const S = {
+  bg:      '#060D1A',
+  text:    '#E6EDF7',
+  accent:  '#C5A26F',
+  muted:   'rgba(230,237,247,0.45)',
+  faint:   'rgba(230,237,247,0.18)',
+  border:  'rgba(230,237,247,0.07)',
+  panel:   'rgba(230,237,247,0.03)',
+} as const
+
 type ComparisonFormFields = {
-  convergence_notes: string
-  divergence_notes: string
-  blind_spots: string
-  contradictions: string
-  risk_notes: string
+  convergence_notes:   string
+  divergence_notes:    string
+  blind_spots:         string
+  contradictions:      string
+  risk_notes:          string
   missing_assumptions: string
 }
 
 const COMPARISON_FIELDS: {
-  key: keyof ComparisonFormFields
+  key:   keyof ComparisonFormFields
   label: string
-  hint: string
-  rows: number
+  hint:  string
 }[] = [
-  { key: 'convergence_notes',   label: 'Convergence',          hint: 'What did all models agree on?',                rows: 3 },
-  { key: 'divergence_notes',    label: 'Divergence',           hint: 'Where did models differ significantly?',        rows: 3 },
-  { key: 'blind_spots',         label: 'Blind Spots',          hint: 'What did no model cover or raise?',             rows: 3 },
-  { key: 'contradictions',      label: 'Contradictions',       hint: 'Direct conflicts between model outputs',        rows: 2 },
-  { key: 'risk_notes',          label: 'Risk Notes',           hint: 'Risks surfaced by the comparison itself',       rows: 2 },
-  { key: 'missing_assumptions', label: 'Missing Assumptions',  hint: 'Assumptions no model named explicitly',         rows: 2 },
+  { key: 'convergence_notes',   label: 'Convergence',         hint: 'What did all models agree on?'                      },
+  { key: 'divergence_notes',    label: 'Divergence',          hint: 'Where did models differ significantly?'              },
+  { key: 'blind_spots',         label: 'Blind Spots',         hint: 'What did no model cover or raise?'                  },
+  { key: 'contradictions',      label: 'Contradictions',      hint: 'Direct conflicts between model outputs'              },
+  { key: 'risk_notes',          label: 'Risk Notes',          hint: 'Risks surfaced by the comparison itself'             },
+  { key: 'missing_assumptions', label: 'Missing Assumptions', hint: 'Assumptions no model named explicitly'               },
 ]
 
 export default function ComparisonPage() {
   const { id: sessionId } = useParams<{ id: string }>()
-  const router = useRouter()
+  const router  = useRouter()
   const supabase = createClient()
 
-  const [missionId, setMissionId] = useState<string | null>(null)
-  const [outputs, setOutputs] = useState<ModelOutput[]>([])
-  const [existing, setExisting] = useState<OEPComparison | null>(null)
-  const [saving, setSaving] = useState(false)
-  const [autofilling, setAutofilling] = useState(false)
+  const [missionId,     setMissionId]     = useState<string | null>(null)
+  const [outputs,       setOutputs]       = useState<ModelOutput[]>([])
+  const [existing,      setExisting]      = useState<OEPComparison | null>(null)
+  const [saving,        setSaving]        = useState(false)
+  const [autofilling,   setAutofilling]   = useState(false)
   const [autofillError, setAutofillError] = useState<string | null>(null)
+  const [openField,     setOpenField]     = useState<keyof ComparisonFormFields | null>('convergence_notes')
+  const [modalOutput,   setModalOutput]   = useState<ModelOutput | null>(null)
   const [form, setForm] = useState<ComparisonFormFields>({
     convergence_notes:   '',
     divergence_notes:    '',
@@ -133,12 +142,11 @@ MODEL OUTPUTS:
 ${outputSection}`
 
     try {
-      const res = await fetch('/api/mmcp/run/claude', {
+      const res  = await fetch('/api/mmcp/run/claude', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ key, prompt }),
       })
-
       const json = await res.json() as { output?: string; error?: string }
 
       if (!res.ok || json.error) {
@@ -147,8 +155,7 @@ ${outputSection}`
         return
       }
 
-      // Parse the JSON from Claude's output
-      const raw = json.output ?? ''
+      const raw       = json.output ?? ''
       const jsonMatch = raw.match(/\{[\s\S]*\}/)
       if (!jsonMatch) {
         setAutofillError('Claude returned an unexpected format. Try again.')
@@ -157,7 +164,6 @@ ${outputSection}`
       }
 
       const parsed = JSON.parse(jsonMatch[0]) as Partial<ComparisonFormFields>
-
       setForm(f => ({
         convergence_notes:   parsed.convergence_notes   ?? f.convergence_notes,
         divergence_notes:    parsed.divergence_notes    ?? f.divergence_notes,
@@ -169,7 +175,6 @@ ${outputSection}`
     } catch (err) {
       setAutofillError(err instanceof Error ? err.message : 'Unexpected error')
     }
-
     setAutofilling(false)
   }
 
@@ -188,15 +193,10 @@ ${outputSection}`
     }
 
     let compId = existing?.id
-
     if (existing) {
       await supabase.from('oep_comparisons').update(payload).eq('id', existing.id)
     } else {
-      const { data } = await supabase
-        .from('oep_comparisons')
-        .insert(payload)
-        .select()
-        .single()
+      const { data } = await supabase.from('oep_comparisons').insert(payload).select().single()
       compId = data?.id
     }
 
@@ -210,93 +210,307 @@ ${outputSection}`
     })
 
     setSaving(false)
-
     if (markComplete) router.push(`/sessions/${sessionId}/synthesis`)
   }
 
-  // ── Render ─────────────────────────────────────────────────
+  const allFilled = COMPARISON_FIELDS.every(f => form[f.key].trim().length > 0)
+
   return (
-    <div className="p-6 max-w-5xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-lg font-semibold text-white">Comparison Panel</h1>
-        <p className="text-sm text-white/40 mt-0.5">
-          Record what the outputs reveal in aggregate. Preserve disagreement.
-        </p>
-      </div>
+    <>
+      <style>{`
+        .cmp-output-card:hover { border-color: rgba(197,162,111,0.3) !important; background: rgba(197,162,111,0.04) !important; cursor: pointer; }
+        .cmp-field-header:hover { background: rgba(230,237,247,0.03) !important; }
+        .cmp-btn-draft:hover:not(:disabled) { border-color: rgba(230,237,247,0.25) !important; color: #E6EDF7 !important; }
+      `}</style>
 
-      {/* Output reference strip */}
-      {outputs.length > 0 && (
-        <div className="mb-6 grid grid-cols-3 gap-3">
-          {outputs.map(o => (
-            <div key={o.id} className="p-3 bg-white/3 border border-white/8 rounded">
-              <p className="text-[10px] font-medium text-[#c9a96e] uppercase tracking-wider mb-1">
-                {o.model_name}
-              </p>
-              <p className="text-xs text-white/50 line-clamp-3">{o.raw_output}</p>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Auto-fill */}
-      <div className="mb-5 flex items-center gap-3">
-        <button
-          onClick={() => void autoFill()}
-          disabled={autofilling || outputs.length < 2}
-          className="px-4 py-2 text-sm border border-[#c9a96e]/30 text-[#c9a96e] rounded hover:bg-[#c9a96e]/8 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+      {/* ── Model output preview modal ────────────────────────── */}
+      {modalOutput && (
+        <div
+          style={{
+            position:       'fixed',
+            inset:          0,
+            background:     'rgba(6,13,26,0.95)',
+            zIndex:         200,
+            display:        'flex',
+            flexDirection:  'column',
+            padding:        '20px 0 0',
+          }}
+          onClick={() => setModalOutput(null)}
         >
-          {autofilling ? 'Analyzing…' : '⚡ Auto-fill with Claude'}
-        </button>
-        <span className="text-xs text-white/25">
-          Requires Claude key. Populates all fields — review before completing.
-        </span>
-      </div>
-      {autofillError && (
-        <div className="mb-4 px-3 py-2 bg-red-950/40 border border-red-800/40 rounded text-xs text-red-300">
-          {autofillError}
+          <div
+            style={{ flex: 1, overflow: 'auto', padding: '0 24px 100px' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, paddingTop: 4 }}>
+              <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em', color: S.accent, margin: 0 }}>
+                {modalOutput.model_name.toUpperCase()}
+              </p>
+              <button
+                onClick={() => setModalOutput(null)}
+                style={{ fontSize: 22, color: S.faint, background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px', lineHeight: 1 }}
+              >
+                ×
+              </button>
+            </div>
+            <pre style={{ fontSize: 15, color: S.text, lineHeight: 1.7, whiteSpace: 'pre-wrap', wordBreak: 'break-word', margin: 0, fontFamily: 'inherit' }}>
+              {modalOutput.raw_output}
+            </pre>
+          </div>
         </div>
       )}
 
-      {/* Comparison form */}
-      <div className="space-y-4">
-        {COMPARISON_FIELDS.map(field => (
-          <div key={field.key}>
-            <div className="flex items-baseline gap-2 mb-1.5">
-              <label className="text-xs font-medium text-white/60 uppercase tracking-wider">
-                {field.label}
-              </label>
-              <span className="text-xs text-white/25">{field.hint}</span>
+      <div style={{
+        padding:    '28px 24px 120px',
+        maxWidth:   860,
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+      }}>
+
+        {/* ── Header ───────────────────────────────────────────── */}
+        <div style={{ marginBottom: 28 }}>
+          <h1 style={{ fontSize: 20, fontWeight: 600, color: S.text, margin: 0 }}>Comparison Panel</h1>
+          <p style={{ fontSize: 15, color: S.faint, marginTop: 4 }}>
+            Record what the outputs reveal in aggregate. Preserve disagreement.
+          </p>
+        </div>
+
+        {/* ── Model output preview strip ────────────────────────── */}
+        {outputs.length > 0 && (
+          <div style={{ marginBottom: 28 }}>
+            <p style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', color: S.faint, marginBottom: 10 }}>
+              Model Outputs — tap to read
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(outputs.length, 3)}, 1fr)`, gap: 10 }}>
+              {outputs.map(o => (
+                <div
+                  key={o.id}
+                  className="cmp-output-card"
+                  onClick={() => setModalOutput(o)}
+                  style={{
+                    padding:      '12px 14px',
+                    background:   S.panel,
+                    border:       `1px solid ${S.border}`,
+                    borderRadius: 8,
+                    transition:   'all 0.15s ease',
+                  }}
+                >
+                  <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: S.accent, margin: '0 0 6px' }}>
+                    {o.model_name}
+                  </p>
+                  <p style={{
+                    fontSize:   14,
+                    color:      S.faint,
+                    lineHeight: 1.5,
+                    overflow:   'hidden',
+                    display:    '-webkit-box',
+                    WebkitLineClamp: 3,
+                    WebkitBoxOrient: 'vertical',
+                    margin:     0,
+                  }}>
+                    {o.raw_output}
+                  </p>
+                </div>
+              ))}
             </div>
-            <textarea
-              value={form[field.key]}
-              onChange={e =>
-                setForm(f => ({ ...f, [field.key]: e.target.value }))
-              }
-              rows={field.rows}
-              placeholder={field.hint}
-              className="w-full bg-white/3 border border-white/8 rounded px-3 py-2.5 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-[#c9a96e]/30 resize-none transition-colors"
-            />
           </div>
-        ))}
+        )}
+
+        {/* ── Auto-fill ─────────────────────────────────────────── */}
+        <div style={{ marginBottom: 24 }}>
+          <button
+            onClick={() => void autoFill()}
+            disabled={autofilling || outputs.length < 2}
+            style={{
+              width:        '100%',
+              height:       52,
+              background:   autofilling ? 'rgba(197,162,111,0.08)' : S.accent,
+              color:        autofilling ? S.accent : '#05070B',
+              border:       `1px solid ${autofilling ? 'rgba(197,162,111,0.3)' : 'transparent'}`,
+              borderRadius: 10,
+              fontSize:     16,
+              fontWeight:   700,
+              cursor:       autofilling || outputs.length < 2 ? 'not-allowed' : 'pointer',
+              opacity:      outputs.length < 2 ? 0.4 : 1,
+              transition:   'all 0.15s ease',
+              letterSpacing: '0.01em',
+            }}
+          >
+            {autofilling ? 'Analyzing with Claude…' : '⚡ Auto-fill Comparison with Claude'}
+          </button>
+          <p style={{ fontSize: 13, color: 'rgba(230,237,247,0.25)', marginTop: 8, textAlign: 'center' }}>
+            Requires Claude key in Key Management. Populates all fields — review before completing.
+          </p>
+        </div>
+
+        {autofillError && (
+          <div style={{
+            marginBottom: 20,
+            padding:      '10px 14px',
+            background:   'rgba(180,30,30,0.15)',
+            border:       '1px solid rgba(180,30,30,0.3)',
+            borderRadius: 8,
+            fontSize:     14,
+            color:        '#f87171',
+          }}>
+            {autofillError}
+          </div>
+        )}
+
+        {/* ── Accordion fields ─────────────────────────────────── */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {COMPARISON_FIELDS.map(field => {
+            const isOpen  = openField === field.key
+            const isEmpty = !form[field.key].trim()
+
+            return (
+              <div
+                key={field.key}
+                style={{
+                  border:       `1px solid ${isOpen ? 'rgba(197,162,111,0.2)' : S.border}`,
+                  borderRadius: 8,
+                  overflow:     'hidden',
+                  background:   isOpen ? 'rgba(197,162,111,0.03)' : S.panel,
+                  transition:   'all 0.15s ease',
+                }}
+              >
+                {/* Field header — tappable */}
+                <button
+                  className="cmp-field-header"
+                  onClick={() => setOpenField(isOpen ? null : field.key)}
+                  style={{
+                    width:          '100%',
+                    display:        'flex',
+                    alignItems:     'center',
+                    justifyContent: 'space-between',
+                    padding:        '14px 16px',
+                    background:     'transparent',
+                    border:         'none',
+                    cursor:         'pointer',
+                    textAlign:      'left',
+                    minHeight:      52,
+                    transition:     'background 0.12s ease',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    {!isEmpty && (
+                      <span style={{ fontSize: 11, color: S.accent, flexShrink: 0 }}>✓</span>
+                    )}
+                    <div>
+                      <span style={{ fontSize: 15, fontWeight: isOpen ? 600 : 400, color: isOpen ? S.text : S.muted }}>
+                        {field.label}
+                      </span>
+                      {!isOpen && !isEmpty && (
+                        <span style={{ fontSize: 13, color: S.faint, marginLeft: 10 }}>
+                          {form[field.key].substring(0, 60)}{form[field.key].length > 60 ? '…' : ''}
+                        </span>
+                      )}
+                      {!isOpen && isEmpty && (
+                        <span style={{ fontSize: 13, color: 'rgba(230,237,247,0.2)', marginLeft: 10 }}>
+                          {field.hint}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <span style={{ fontSize: 16, color: S.faint, transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease', flexShrink: 0 }}>
+                    ↓
+                  </span>
+                </button>
+
+                {/* Expanded textarea */}
+                {isOpen && (
+                  <div style={{ padding: '0 16px 16px' }}>
+                    <p style={{ fontSize: 13, color: 'rgba(230,237,247,0.3)', marginBottom: 8 }}>
+                      {field.hint}
+                    </p>
+                    <textarea
+                      value={form[field.key]}
+                      onChange={e => setForm(f => ({ ...f, [field.key]: e.target.value }))}
+                      placeholder={field.hint}
+                      autoFocus
+                      rows={5}
+                      style={{
+                        width:        '100%',
+                        background:   'rgba(230,237,247,0.03)',
+                        border:       `1px solid ${S.border}`,
+                        borderRadius: 6,
+                        padding:      '10px 12px',
+                        fontSize:     15,
+                        color:        S.text,
+                        lineHeight:   1.6,
+                        resize:       'vertical',
+                        outline:      'none',
+                        boxSizing:    'border-box',
+                        minHeight:    96,
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+
+        {/* ── Completion status ─────────────────────────────────── */}
+        <p style={{ marginTop: 20, fontSize: 14, color: 'rgba(230,237,247,0.25)', textAlign: 'center' }}>
+          {COMPARISON_FIELDS.filter(f => form[f.key].trim()).length} of {COMPARISON_FIELDS.length} fields completed
+          {allFilled && <span style={{ color: S.accent, marginLeft: 8 }}>— ready to synthesise</span>}
+        </p>
+
       </div>
 
-      {/* Actions */}
-      <div className="flex gap-3 mt-6">
+      {/* ── Fixed save bar ────────────────────────────────────── */}
+      <div style={{
+        position:   'fixed',
+        bottom:     0,
+        left:       0,
+        right:      0,
+        zIndex:     100,
+        background: 'rgba(6,13,26,0.97)',
+        borderTop:  `1px solid ${S.border}`,
+        padding:    '14px 24px',
+        display:    'flex',
+        gap:        12,
+        alignItems: 'center',
+        justifyContent: 'flex-end',
+      }}>
         <button
           onClick={() => handleSave(false)}
           disabled={saving}
-          className="px-4 py-2 text-sm border border-white/15 text-white/60 rounded hover:border-white/30 hover:text-white disabled:opacity-40 transition-colors"
+          className="cmp-btn-draft"
+          style={{
+            padding:      '0 20px',
+            height:       44,
+            background:   'transparent',
+            border:       `1px solid ${S.border}`,
+            borderRadius: 8,
+            fontSize:     15,
+            color:        S.faint,
+            cursor:       saving ? 'not-allowed' : 'pointer',
+            opacity:      saving ? 0.5 : 1,
+            transition:   'all 0.15s ease',
+          }}
         >
           Save Draft
         </button>
         <button
           onClick={() => handleSave(true)}
           disabled={saving}
-          className="px-5 py-2 text-sm bg-[#c9a96e] text-black rounded font-medium hover:bg-[#b8934d] disabled:opacity-40 transition-colors"
+          style={{
+            padding:      '0 24px',
+            height:       44,
+            background:   S.accent,
+            color:        '#05070B',
+            border:       'none',
+            borderRadius: 8,
+            fontSize:     15,
+            fontWeight:   600,
+            cursor:       saving ? 'not-allowed' : 'pointer',
+            opacity:      saving ? 0.5 : 1,
+            transition:   'opacity 0.15s ease',
+          }}
         >
           {saving ? 'Saving…' : 'Mark Complete & Synthesise →'}
         </button>
       </div>
-    </div>
+    </>
   )
 }
