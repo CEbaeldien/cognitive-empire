@@ -20,6 +20,7 @@ import {
   type ConfidenceLevel,
   type MemoryClassification,
 } from '@/types/mmcp'
+import { MemoryCapture } from '@/components/mmcp/MemoryCapture'
 
 export default function SynthesisPage() {
   const { id: sessionId } = useParams<{ id: string }>()
@@ -403,6 +404,12 @@ export default function SynthesisPage() {
         </section>
       )}
       {memoryCreated && <p className="text-xs text-[#c9a96e]">✓ Memory item saved.</p>}
+
+      <MemoryCapture
+        sessionId={sessionId}
+        synthesisId={synthesis?.id ?? null}
+        defaultContent={synthForm.synthesis_text}
+      />
     </div>
   )
 }

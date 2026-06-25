@@ -120,8 +120,8 @@ export interface Action {
 export interface MemoryItem {
   id: string
   session_id: string
-  synthesis_id: string
-  approval_id: string              // FK — no memory write without an approval
+  synthesis_id: string | null      // null for pre-synthesis captures
+  approval_id: string | null       // null for pre-approval captures
   title: string
   content: string
   tags: string[]
@@ -267,8 +267,8 @@ export interface CreateActionInput {
 
 export interface CreateMemoryItemInput {
   session_id: string
-  synthesis_id: string
-  approval_id: string
+  synthesis_id: string | null
+  approval_id: string | null
   title: string
   content: string
   tags?: string[]

@@ -13,6 +13,7 @@ import {
   fileToAttachment, saveAttachments, loadAttachments, ACCEPTED_MIME, formatBytes,
   type Attachment,
 } from '@/lib/mmcp/attachments'
+import { MemoryCapture } from '@/components/mmcp/MemoryCapture'
 
 const ALL_MODELS = Object.entries(MODEL_META) as [ModelName, { label: string; role: string }][]
 
@@ -287,6 +288,11 @@ export default function MissionPage() {
           </button>
         </div>
       </form>
+
+      <MemoryCapture
+        sessionId={sessionId}
+        defaultContent={form.objective}
+      />
     </div>
   )
 }

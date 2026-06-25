@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/client'
 import { logEvent, AUDIT_EVENT, AUDIT_ENTITY } from '@/lib/mmcp/audit'
 import { getKey } from '@/lib/mmcp/keys'
 import type { OEPComparison, ModelOutput } from '@/types/mmcp'
+import { MemoryCapture } from '@/components/mmcp/MemoryCapture'
 
 // ── Design tokens ──────────────────────────────────────────────
 const S = {
@@ -454,6 +455,11 @@ ${outputSection}`
           {COMPARISON_FIELDS.filter(f => form[f.key].trim()).length} of {COMPARISON_FIELDS.length} fields completed
           {allFilled && <span style={{ color: S.accent, marginLeft: 8 }}>— ready to synthesise</span>}
         </p>
+
+        <MemoryCapture
+          sessionId={sessionId}
+          defaultContent={form.convergence_notes || form.divergence_notes || ''}
+        />
 
       </div>
 

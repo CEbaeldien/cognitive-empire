@@ -12,6 +12,7 @@ import { logEvent, AUDIT_EVENT, AUDIT_ENTITY } from '@/lib/mmcp/audit'
 import { setKey, getKey, hasKey, clearKey } from '@/lib/mmcp/keys'
 import { loadAttachments, formatBytes, type Attachment } from '@/lib/mmcp/attachments'
 import { MODEL_META, type ModelName, type ModelOutput, type MissionBrief } from '@/types/mmcp'
+import { MemoryCapture } from '@/components/mmcp/MemoryCapture'
 
 const API_MODELS = new Set<ModelName>(['claude', 'chatgpt'])
 
@@ -667,6 +668,11 @@ export default function OEPPage() {
             Save at least 2 outputs to enable comparison.
           </p>
         )}
+
+        <MemoryCapture
+          sessionId={sessionId}
+          defaultContent={mission.objective}
+        />
 
       </div>
     </>
