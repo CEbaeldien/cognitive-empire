@@ -12,7 +12,7 @@ import { logEvent, AUDIT_EVENT, AUDIT_ENTITY } from '@/lib/mmcp/audit'
 import { setKey, getKey, hasKey, clearKey } from '@/lib/mmcp/keys'
 import { loadAttachments, formatBytes, type Attachment } from '@/lib/mmcp/attachments'
 import { MODEL_META, type ModelName, type ModelOutput, type MissionBrief } from '@/types/mmcp'
-import { MemoryCapture } from '@/components/mmcp/MemoryCapture'
+import { MemoryCapture, extractKeywords } from '@/components/mmcp/MemoryCapture'
 
 const API_MODELS = new Set<ModelName>(['claude', 'chatgpt'])
 
@@ -658,6 +658,19 @@ export default function OEPPage() {
                     {draft.saving ? 'Saving…' : draft.saved ? '↺ Update' : 'Save Output'}
                   </button>
                 </div>
+
+                {/* Per-model memory capture — only once output is saved to DB */}
+                {draft.savedId && (
+                  <div style={{ padding: '0 16px 16px', borderTop: `1px solid ${S.border}` }}>
+                    <MemoryCapture
+                      sessionId={sessionId}
+                      content={draft.raw_output}
+                      defaultClassification="general"
+                      defaultTags={[model, ...extractKeywords(mission.objective, 2).split(', ')].join(', ')}
+                      buttonLabel="Update Memory"
+                    />
+                  </div>
+                )}
               </div>
             )
           })}
@@ -668,11 +681,6 @@ export default function OEPPage() {
             Save at least 2 outputs to enable comparison.
           </p>
         )}
-
-        <MemoryCapture
-          sessionId={sessionId}
-          defaultContent={mission.objective}
-        />
 
       </div>
     </>

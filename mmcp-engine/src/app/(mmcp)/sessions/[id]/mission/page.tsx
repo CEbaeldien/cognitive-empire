@@ -13,7 +13,7 @@ import {
   fileToAttachment, saveAttachments, loadAttachments, ACCEPTED_MIME, formatBytes,
   type Attachment,
 } from '@/lib/mmcp/attachments'
-import { MemoryCapture } from '@/components/mmcp/MemoryCapture'
+import { MemoryCapture, extractKeywords } from '@/components/mmcp/MemoryCapture'
 
 const ALL_MODELS = Object.entries(MODEL_META) as [ModelName, { label: string; role: string }][]
 
@@ -291,7 +291,9 @@ export default function MissionPage() {
 
       <MemoryCapture
         sessionId={sessionId}
-        defaultContent={form.objective}
+        content={[form.title, form.objective, form.constraints].filter(Boolean).join('\n\n')}
+        defaultClassification="decision"
+        defaultTags={extractKeywords(form.objective)}
       />
     </div>
   )

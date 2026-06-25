@@ -20,7 +20,7 @@ import {
   type ConfidenceLevel,
   type MemoryClassification,
 } from '@/types/mmcp'
-import { MemoryCapture } from '@/components/mmcp/MemoryCapture'
+import { MemoryCapture, extractKeywords } from '@/components/mmcp/MemoryCapture'
 
 export default function SynthesisPage() {
   const { id: sessionId } = useParams<{ id: string }>()
@@ -408,7 +408,9 @@ export default function SynthesisPage() {
       <MemoryCapture
         sessionId={sessionId}
         synthesisId={synthesis?.id ?? null}
-        defaultContent={synthForm.synthesis_text}
+        content={synthForm.synthesis_text}
+        defaultClassification={isApproved ? 'canon' : 'general'}
+        defaultTags={extractKeywords(synthForm.recommended_action || synthForm.synthesis_text, 4)}
       />
     </div>
   )

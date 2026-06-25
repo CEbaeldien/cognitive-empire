@@ -1,12 +1,34 @@
 'use client'
-// Inline "Save insight to memory" widget — added to each pipeline stage.
-// synthesis_id and approval_id are nullable for pre-synthesis captures.
+// Memory capture — content is system-proposed (read-only).
+// Principal can edit classification and tags only, then confirms with "Write to Memory".
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { logEvent, AUDIT_EVENT, AUDIT_ENTITY } from '@/lib/mmcp/audit'
 import type { MemoryClassification } from '@/types/mmcp'
 
+// ── Keyword extractor (exported for use in stage pages) ────────
+const STOP = new Set([
+  'the','a','an','in','on','at','to','for','of','and','or','but','with',
+  'by','from','is','are','was','were','be','been','have','has','had',
+  'do','does','did','will','would','could','should','may','can','must',
+  'that','this','it','its','we','our','they','their','what','how','when',
+  'which','who','not','no','any','all','some','as','than','then','also',
+  'into','about','more','over','after','before','between','need','want',
+])
+
+export function extractKeywords(text: string, limit = 5): string {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter(w => w.length > 3 && !STOP.has(w))
+    .filter((w, i, arr) => arr.indexOf(w) === i)
+    .slice(0, limit)
+    .join(', ')
+}
+
+// ── Classification options ─────────────────────────────────────
 const CLASSIFICATIONS: { value: MemoryClassification; label: string }[] = [
   { value: 'general',  label: 'Insight'  },
   { value: 'pattern',  label: 'Pattern'  },
@@ -15,28 +37,41 @@ const CLASSIFICATIONS: { value: MemoryClassification; label: string }[] = [
   { value: 'canon',    label: 'Canon'    },
 ]
 
+// ── Props ──────────────────────────────────────────────────────
 interface Props {
-  sessionId:      string
-  synthesisId?:   string | null
-  defaultContent?: string
+  sessionId:             string
+  synthesisId?:          string | null
+  content:               string               // system-proposed, READ-ONLY
+  defaultClassification: MemoryClassification
+  defaultTags?:          string               // comma-separated, pre-populated
+  buttonLabel?:          string               // defaults to "Update Memory"
 }
 
-export function MemoryCapture({ sessionId, synthesisId = null, defaultContent = '' }: Props) {
+export function MemoryCapture({
+  sessionId,
+  synthesisId      = null,
+  content,
+  defaultClassification,
+  defaultTags      = '',
+  buttonLabel      = 'Update Memory',
+}: Props) {
   const supabase = createClient()
 
   const [open,    setOpen]    = useState(false)
-  const [content, setContent] = useState('')
-  const [classif, setClassif] = useState<MemoryClassification>('general')
-  const [tagsRaw, setTagsRaw] = useState('')
+  const [classif, setClassif] = useState<MemoryClassification>(defaultClassification)
+  const [tagsRaw, setTagsRaw] = useState(defaultTags)
   const [saving,  setSaving]  = useState(false)
   const [saved,   setSaved]   = useState(false)
 
-  // Pre-populate from parent state each time the form opens
+  // Re-sync from props each time the form opens (parent state may have changed)
   useEffect(() => {
-    if (open) setContent(defaultContent)
+    if (open) {
+      setClassif(defaultClassification)
+      setTagsRaw(defaultTags)
+    }
   }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-clear confirmation after 2.5 s
+  // Auto-clear confirmation toast
   useEffect(() => {
     if (!saved) return
     const t = setTimeout(() => setSaved(false), 2500)
@@ -77,26 +112,23 @@ export function MemoryCapture({ sessionId, synthesisId = null, defaultContent = 
 
     setSaving(false)
     setOpen(false)
-    setContent('')
-    setTagsRaw('')
-    setClassif('general')
     setSaved(true)
   }
 
   return (
     <>
       <style>{`
-        @keyframes mem-fade { 0%,60% { opacity:1; } 100% { opacity:0; } }
-        .mem-save-btn:hover:not(:disabled) { opacity: 0.85; }
-        .mem-cancel-btn:hover { border-color: rgba(230,237,247,0.18) !important; color: rgba(230,237,247,0.6) !important; }
-        .mem-trigger:hover { background: rgba(197,162,111,0.06) !important; border-color: rgba(197,162,111,0.5) !important; }
+        @keyframes mem-fade { 0%,65% { opacity:1; } 100% { opacity:0; } }
+        .mem-trigger:hover  { background: rgba(197,162,111,0.07) !important; border-color: rgba(197,162,111,0.5) !important; }
+        .mem-write:hover:not(:disabled) { opacity: 0.85; }
+        .mem-cancel:hover   { border-color: rgba(230,237,247,0.2) !important; color: rgba(230,237,247,0.6) !important; }
       `}</style>
 
-      <div style={{ marginTop: 28, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+      <div style={{ marginTop: 20, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
 
-        {/* ── Trigger ──────────────────────────────────────────── */}
+        {/* ── Trigger + confirmation ──────────────────────────── */}
         {!open && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <button
               onClick={() => setOpen(true)}
               className="mem-trigger"
@@ -115,79 +147,74 @@ export function MemoryCapture({ sessionId, synthesisId = null, defaultContent = 
                 transition:   'all 0.15s ease',
               }}
             >
-              <span style={{ fontSize: 17, lineHeight: 1 }}>⊕</span>
-              Save insight to memory
+              <span style={{ fontSize: 16, lineHeight: 1 }}>⊕</span>
+              {buttonLabel}
             </button>
 
             {saved && (
-              <span style={{
-                fontSize:  13,
-                color:     '#C5A26F',
-                animation: 'mem-fade 2.5s forwards',
-              }}>
-                ✓ Saved to memory
+              <span style={{ fontSize: 13, color: '#C5A26F', animation: 'mem-fade 2.5s forwards' }}>
+                ✓ Memory updated
               </span>
             )}
           </div>
         )}
 
-        {/* ── Inline form ──────────────────────────────────────── */}
+        {/* ── Inline form ─────────────────────────────────────── */}
         {open && (
           <div style={{
-            padding:      16,
-            background:   'rgba(197,162,111,0.04)',
             border:       '1px solid rgba(197,162,111,0.18)',
             borderRadius: 10,
+            overflow:     'hidden',
           }}>
+
             {/* Form header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: '#C5A26F', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ fontSize: 15 }}>⊕</span> Save insight to memory
+            <div style={{
+              display:        'flex',
+              alignItems:     'center',
+              justifyContent: 'space-between',
+              padding:        '11px 14px',
+              background:     'rgba(197,162,111,0.05)',
+              borderBottom:   '1px solid rgba(197,162,111,0.1)',
+            }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#C5A26F' }}>
+                ⊕ Update Memory
               </span>
               <button
                 onClick={() => setOpen(false)}
-                style={{
-                  fontSize:   20,
-                  lineHeight: 1,
-                  color:      'rgba(230,237,247,0.3)',
-                  background: 'none',
-                  border:     'none',
-                  cursor:     'pointer',
-                  padding:    '2px 6px',
-                }}
+                style={{ fontSize: 20, lineHeight: 1, color: 'rgba(230,237,247,0.3)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px' }}
               >
                 ×
               </button>
             </div>
 
-            {/* Content */}
-            <textarea
-              value={content}
-              onChange={e => setContent(e.target.value)}
-              placeholder="What insight should be preserved?"
-              rows={4}
-              autoFocus
-              style={{
-                width:        '100%',
-                background:   'rgba(230,237,247,0.03)',
-                border:       '1px solid rgba(230,237,247,0.07)',
-                borderRadius: 6,
-                padding:      '10px 12px',
-                fontSize:     15,
-                color:        '#E6EDF7',
-                lineHeight:   1.6,
-                resize:       'vertical',
-                outline:      'none',
-                boxSizing:    'border-box',
-                marginBottom: 10,
-              }}
-            />
+            {/* Read-only content preview */}
+            <div style={{
+              padding:      '11px 14px',
+              background:   'rgba(230,237,247,0.015)',
+              borderBottom: '1px solid rgba(230,237,247,0.05)',
+              maxHeight:    180,
+              overflowY:    'auto',
+            }}>
+              <p style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'rgba(230,237,247,0.25)', margin: '0 0 7px' }}>
+                Content — system-generated
+              </p>
+              {content.trim() ? (
+                <p style={{ fontSize: 14, color: 'rgba(230,237,247,0.5)', lineHeight: 1.65, margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                  {content}
+                </p>
+              ) : (
+                <p style={{ fontSize: 14, color: 'rgba(230,237,247,0.2)', margin: 0, fontStyle: 'italic' }}>
+                  No content available yet
+                </p>
+              )}
+            </div>
 
-            {/* Classification + tags row */}
-            <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+            {/* Editable: classification + tags */}
+            <div style={{ padding: '11px 14px', display: 'flex', gap: 8, borderBottom: '1px solid rgba(230,237,247,0.05)' }}>
               <select
                 value={classif}
                 onChange={e => setClassif(e.target.value as MemoryClassification)}
+                autoFocus
                 style={{
                   background:   'rgba(230,237,247,0.04)',
                   border:       '1px solid rgba(230,237,247,0.07)',
@@ -225,11 +252,11 @@ export function MemoryCapture({ sessionId, synthesisId = null, defaultContent = 
             </div>
 
             {/* Actions */}
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ padding: '11px 14px', display: 'flex', gap: 8 }}>
               <button
                 onClick={() => void handleSave()}
                 disabled={saving || !content.trim()}
-                className="mem-save-btn"
+                className="mem-write"
                 style={{
                   height:       44,
                   padding:      '0 22px',
@@ -244,11 +271,11 @@ export function MemoryCapture({ sessionId, synthesisId = null, defaultContent = 
                   transition:   'opacity 0.15s ease',
                 }}
               >
-                {saving ? 'Saving…' : 'Save'}
+                {saving ? 'Writing…' : 'Write to Memory'}
               </button>
               <button
                 onClick={() => setOpen(false)}
-                className="mem-cancel-btn"
+                className="mem-cancel"
                 style={{
                   height:       44,
                   padding:      '0 16px',
@@ -264,6 +291,7 @@ export function MemoryCapture({ sessionId, synthesisId = null, defaultContent = 
                 Cancel
               </button>
             </div>
+
           </div>
         )}
 

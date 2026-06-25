@@ -9,7 +9,7 @@ import { createClient } from '@/lib/supabase/client'
 import { logEvent, AUDIT_EVENT, AUDIT_ENTITY } from '@/lib/mmcp/audit'
 import { getKey } from '@/lib/mmcp/keys'
 import type { OEPComparison, ModelOutput } from '@/types/mmcp'
-import { MemoryCapture } from '@/components/mmcp/MemoryCapture'
+import { MemoryCapture, extractKeywords } from '@/components/mmcp/MemoryCapture'
 
 // ── Design tokens ──────────────────────────────────────────────
 const S = {
@@ -458,7 +458,9 @@ ${outputSection}`
 
         <MemoryCapture
           sessionId={sessionId}
-          defaultContent={form.convergence_notes || form.divergence_notes || ''}
+          content={[form.convergence_notes, form.divergence_notes].filter(Boolean).join('\n\n')}
+          defaultClassification="pattern"
+          defaultTags={extractKeywords(form.convergence_notes || form.divergence_notes || '')}
         />
 
       </div>
