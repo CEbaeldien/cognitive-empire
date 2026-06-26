@@ -97,6 +97,35 @@ const REVISION_COMMANDS = [
 const API_MODELS = new Set<ModelName>(['claude', 'chatgpt'])
 const PROXY: Partial<Record<ModelName, string>> = { claude: '/api/mmcp/run/claude', chatgpt: '/api/mmcp/run/chatgpt' }
 
+// Action status display mapping — maps DB status to display labels
+const ACTION_DISPLAY: Record<string, { label: string; color: string }> = {
+  pending:     { label: 'Proposed',  color: 'rgba(230,237,247,0.35)' },
+  in_progress: { label: 'Accepted',  color: T.accent },
+  complete:    { label: 'Exported',  color: '#86efac' },
+  cancelled:   { label: 'Rejected',  color: '#f87171' },
+}
+
+// Lock reasons for layer pills
+const LOCK_REASON: Record<string, string> = {
+  reasoning:  'Define a mission brief first',
+  challenge:  'Save at least one reasoning output first',
+  comparison: 'Save at least two model outputs first',
+  synthesis:  'Complete the comparison first',
+  approval:   'Write a synthesis first',
+}
+
+// Helper: extract risk sentences from output text
+function extractRisks(text: string): string[] {
+  const sentences = text.match(/[^.!?\n]+[.!?]/g) ?? []
+  return sentences.filter(s => /risk|concern|warning|caution|danger|threat|vulnerab|problem|issue|challenge|fail|break/i.test(s)).slice(0, 6).map(s => s.trim())
+}
+
+// Helper: extract action sentences from output text
+function extractActionItems(text: string): string[] {
+  const sentences = text.match(/[^.!?\n]+[.!?]/g) ?? []
+  return sentences.filter(s => /should|must|need to|recommend|require|implement|deploy|consider|ensure|make sure|prioritise|prioritize/i.test(s)).slice(0, 6).map(s => s.trim())
+}
+
 const STAGE_LABELS: Record<Stage, string> = {
   input: 'Principal Input', reasoning: 'Reasoning', challenge: 'Challenge',
   comparison: 'Comparison', synthesis: 'Synthesis', approval: 'Approval', complete: 'Complete',
@@ -173,7 +202,11 @@ export default function SessionWorkspace() {
 
   // Sheet state
   const [openSheet, setOpenSheet] = useState<SheetId | null>(null)
+  const [sheetTab,  setSheetTab]  = useState<string>('edit')
   const closeSheet = () => setOpenSheet(null)
+
+  // Reset tab when a different sheet opens
+  useEffect(() => { setSheetTab('edit') }, [openSheet])
 
   // ── Load data ────────────────────────────────────────────────────
   useEffect(() => {
@@ -436,7 +469,31 @@ export default function SessionWorkspace() {
   const singleModel  = claudeKey && !chatgptKey ? 'claude' : !claudeKey && chatgptKey ? 'chatgpt' : null
   const missionModels = (mission?.models_selected ?? []) as ModelName[]
 
-  const stage: Stage = !mission ? 'input' : savedCount < 1 ? 'reasoning' : savedCount < 2 ? 'challenge' : !compComplete ? 'comparison' : !synthesis ? 'synthesis' : !approval ? 'approval' : 'complete'
+  // COMPLETE only when explicitly approved — revise/reject/escalate/missing all stay at approval
+  const stage: Stage = !mission ? 'input' :
+    savedCount < 1    ? 'reasoning'  :
+    savedCount < 2    ? 'challenge'  :
+    !compComplete     ? 'comparison' :
+    !synthesis        ? 'synthesis'  :
+    !isApproved       ? 'approval'   :
+    'complete'
+
+  // Human-readable session status (separate from workflow stage)
+  const sessionStatus =
+    !mission                              ? 'Draft'              :
+    !synthesis                            ? 'Active'             :
+    !approval                             ? 'Pending Approval'   :
+    approval.decision === 'approve'       ? (memoryCount > 0 ? 'Memory Written' : 'Approved') :
+    approval.decision === 'revise'        ? 'Revision Requested' :
+    approval.decision === 'reject'        ? 'Rejected'           :
+    approval.decision === 'escalate'      ? 'Escalated'          :
+    'Pending Approval'
+
+  const statusColor =
+    sessionStatus === 'Memory Written' || sessionStatus === 'Approved' ? T.accent :
+    sessionStatus === 'Rejected'        ? '#f87171' :
+    sessionStatus === 'Revision Requested' || sessionStatus === 'Escalated' ? '#fbbf24' :
+    T.faint
 
   if (loading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: T.faint, fontSize: 15 }}>
@@ -657,6 +714,14 @@ export default function SessionWorkspace() {
       // APPROVAL
       case 'approval': return (
         <div style={{ padding: '24px', height: '100%', display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 560, alignSelf: 'center', width: '100%' }}>
+          {/* Prior decision banner — shown when revise/reject was already recorded */}
+          {approval && approval.decision !== 'approve' && (
+            <div style={{ padding: '10px 14px', borderRadius: 8, border: `1px solid ${approval.decision === 'reject' ? 'rgba(248,113,113,0.35)' : 'rgba(251,191,36,0.35)'}`, background: approval.decision === 'reject' ? 'rgba(248,113,113,0.06)' : 'rgba(251,191,36,0.06)', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: approval.decision === 'reject' ? '#f87171' : '#fbbf24', flexShrink: 0, textTransform: 'capitalize' }}>{approval.decision === 'revise' ? 'Revision Requested' : approval.decision === 'reject' ? 'Rejected' : 'Escalated'}</span>
+              {approval.notes && <span style={{ fontSize: 13, color: T.faint }}>{approval.notes}</span>}
+              <span style={{ fontSize: 12, color: T.faint, marginLeft: 'auto', flexShrink: 0 }}>Re-record below →</span>
+            </div>
+          )}
           {synthesis && (
             <div style={{ padding: '14px 16px', background: T.card, border: `1px solid ${T.border}`, borderRadius: 10 }}>
               <p style={{ fontSize: 11, color: T.faint, margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Synthesis — {synthesis.confidence_level} confidence</p>
@@ -690,32 +755,46 @@ export default function SessionWorkspace() {
       // COMPLETE
       case 'complete': return (
         <div style={{ padding: '24px', height: '100%', display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 560, alignSelf: 'center', width: '100%' }}>
+          {/* Approval badge */}
           {approval && (
             <div style={{ padding: '12px 16px', background: 'rgba(197,162,111,0.08)', border: '1px solid rgba(197,162,111,0.28)', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ fontSize: 16 }}>✓</span>
               <div>
-                <p style={{ fontSize: 14, fontWeight: 600, color: T.accent, margin: 0 }}>{AUTHORITY_LEVELS[approval.authority_level].label}</p>
+                <p style={{ fontSize: 14, fontWeight: 600, color: T.accent, margin: 0 }}>Approved — {AUTHORITY_LEVELS[approval.authority_level].label}</p>
                 {approval.notes && <p style={{ fontSize: 12, color: T.faint, margin: '3px 0 0' }}>{approval.notes}</p>}
               </div>
             </div>
           )}
-          {/* Actions list */}
+          {/* Actions */}
           <div style={{ flex: 1, overflow: 'hidden' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-              <p style={{ fontSize: 12, color: T.faint, margin: 0, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Actions ({actions.length})</p>
+              <p style={{ fontSize: 12, color: T.faint, margin: 0, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                Actions{actions.length > 0 ? ` (${actions.length})` : ''}
+              </p>
               <button onClick={() => setOpenSheet('actions')} style={{ ...BTN_OUTLINE_GOLD, height: 34, fontSize: 12 }}>+ Add Action</button>
             </div>
-            {actions.slice(0, 4).map(a => (
-              <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', border: `1px solid ${T.border}`, borderRadius: 8, marginBottom: 6 }}>
-                <span style={{ fontSize: 13, color: T.text, flex: 1 }}>{a.title}</span>
-                <span style={{ fontSize: 10, color: T.faint, padding: '2px 7px', background: T.ghost, borderRadius: 10 }}>{AUTHORITY_LEVELS[a.authority_level].short}</span>
-                <span style={{ fontSize: 10, color: a.status === 'complete' ? T.accent : T.faint, padding: '2px 7px', background: T.ghost, borderRadius: 10 }}>{a.status}</span>
-              </div>
-            ))}
-            {actions.length > 4 && <p style={{ fontSize: 12, color: T.faint, margin: '6px 0 0' }}>+{actions.length - 4} more — open Actions</p>}
+            {actions.length === 0
+              ? <p style={{ fontSize: 13, color: T.faint }}>No actions yet. Create actions from approved synthesis.</p>
+              : actions.slice(0, 4).map(a => {
+                  const disp = ACTION_DISPLAY[a.status] ?? { label: a.status, color: T.faint }
+                  return (
+                    <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', border: `1px solid ${T.border}`, borderRadius: 8, marginBottom: 6 }}>
+                      <span style={{ fontSize: 13, color: T.text, flex: 1 }}>{a.title}</span>
+                      <span style={{ fontSize: 10, color: T.faint, padding: '2px 7px', background: T.ghost, borderRadius: 10 }}>{AUTHORITY_LEVELS[a.authority_level].short}</span>
+                      <span style={{ fontSize: 10, color: disp.color, padding: '2px 7px', background: T.ghost, borderRadius: 10 }}>{disp.label}</span>
+                    </div>
+                  )
+                })
+            }
+            {actions.length > 4 && <p style={{ fontSize: 12, color: T.faint, margin: '6px 0 0' }}>+{actions.length - 4} more → open Actions panel</p>}
           </div>
-          {/* Memory */}
-          <MemoryCapture sessionId={sessionId} synthesisId={synthesis?.id ?? null} content={synthesis?.synthesis_text ?? ''} defaultClassification="canon" defaultTags={extractKeywords(synthesis?.recommended_action || synthesis?.synthesis_text || '', 4)} buttonLabel="Write to Memory" />
+          {/* Memory — gated behind approval */}
+          <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 14 }}>
+            <p style={{ fontSize: 10, color: T.faint, textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 10px' }}>
+              Memory {memoryCount > 0 ? `· ${memoryCount} item${memoryCount > 1 ? 's' : ''} written` : ''}
+            </p>
+            <MemoryCapture sessionId={sessionId} synthesisId={synthesis?.id ?? null} content={synthesis?.synthesis_text ?? ''} defaultClassification="canon" defaultTags={extractKeywords(synthesis?.recommended_action || synthesis?.synthesis_text || '', 4)} buttonLabel={memoryCount > 0 ? 'Write Another' : 'Write to Memory'} />
+          </div>
         </div>
       )
 
@@ -878,51 +957,102 @@ export default function SessionWorkspace() {
       const isApi  = API_MODELS.has(model)
       const keyOk  = isApi && hasKey(model)
       const genPr  = stage === 'reasoning' ? genReasoning : genChallenge
+      const risks  = draft.output.trim() ? extractRisks(draft.output) : []
+      const actionSignals = draft.output.trim() ? extractActionItems(draft.output) : []
       return {
         title: MODEL_META[model].label,
         subtitle: stage === 'reasoning' ? 'Reasoning' : 'Challenge',
         content: (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {/* Key entry */}
-            {isApi && !keyOk && (
-              <div style={{ padding: '12px 14px', background: T.card, border: '1px solid rgba(197,162,111,0.2)', borderRadius: 8 }}>
-                <label style={LBL}>API Key for {MODEL_META[model].label}</label>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <input type="password" value={keyInputs[model] ?? ''} onChange={e => setKeyInputs(p => ({ ...p, [model]: e.target.value }))} onKeyDown={e => e.key === 'Enter' && loadModelKey(model)} placeholder={model === 'claude' ? 'sk-ant-…' : 'sk-…'} style={{ ...INP, fontFamily: 'monospace', fontSize: 13, flex: 1, marginBottom: 0 }} />
-                  <button onClick={() => loadModelKey(model)} style={{ ...BTN_OUTLINE_GOLD }}>Load</button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+            {/* Tabs */}
+            <div style={{ display: 'flex', gap: 0, borderBottom: `1px solid ${T.border}`, marginBottom: 16 }}>
+              {(['edit', 'sections', 'memory'] as const).map(tab => (
+                <button key={tab} onClick={() => setSheetTab(tab)} style={{ padding: '8px 16px', fontSize: 12, fontWeight: sheetTab === tab ? 600 : 400, color: sheetTab === tab ? T.accent : T.faint, background: 'none', border: 'none', borderBottom: `2px solid ${sheetTab === tab ? T.accent : 'transparent'}`, cursor: 'pointer', marginBottom: -1 }}>
+                  {tab === 'edit' ? 'Edit' : tab === 'sections' ? 'Analysis' : 'Memory'}
+                </button>
+              ))}
+            </div>
+            {/* Edit tab */}
+            {sheetTab === 'edit' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {isApi && !keyOk && (
+                  <div style={{ padding: '12px 14px', background: T.card, border: '1px solid rgba(197,162,111,0.2)', borderRadius: 8 }}>
+                    <label style={LBL}>API Key for {MODEL_META[model].label}</label>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <input type="password" value={keyInputs[model] ?? ''} onChange={e => setKeyInputs(p => ({ ...p, [model]: e.target.value }))} onKeyDown={e => e.key === 'Enter' && loadModelKey(model)} placeholder={model === 'claude' ? 'sk-ant-…' : 'sk-…'} style={{ ...INP, fontFamily: 'monospace', fontSize: 13, flex: 1, marginBottom: 0 }} />
+                      <button onClick={() => loadModelKey(model)} style={{ ...BTN_OUTLINE_GOLD }}>Load</button>
+                    </div>
+                  </div>
+                )}
+                {genPr && (
+                  <div style={{ padding: '10px 12px', background: T.ghost, borderRadius: 8, border: `1px solid ${T.border}` }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                      <span style={{ fontSize: 11, color: T.faint, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Generated {stage} prompt</span>
+                      <button onClick={() => setOutputDrafts(p => ({ ...p, [model]: { ...(p[model] ?? { prompt: '', output: '', running: false, saving: false, saved: false, error: null }), prompt: genPr } }))} style={{ fontSize: 12, color: T.accent, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>↓ Use this</button>
+                    </div>
+                    <p style={{ fontSize: 13, color: T.muted, margin: 0, lineHeight: 1.5 }}>{genPr.slice(0, 200)}{genPr.length > 200 ? '…' : ''}</p>
+                  </div>
+                )}
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <label style={{ ...LBL, marginBottom: 0 }}>Prompt</label>
+                    {claudeKey && <button onClick={() => void generatePrompt(stage === 'reasoning' ? 'reasoning' : 'challenge')} disabled={generatingPrompt !== null} style={{ fontSize: 12, color: T.accent, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>✦ {generatingPrompt ? 'Generating…' : 'Regenerate'}</button>}
+                  </div>
+                  <textarea value={draft.prompt} onChange={e => setOutputDrafts(p => ({ ...p, [model]: { ...p[model]!, prompt: e.target.value } }))} placeholder="Paste or write the prompt to send…" rows={5} style={{ ...INP }} />
+                </div>
+                {isApi && keyOk && (
+                  <button onClick={() => void runModel(model)} disabled={draft.running || !draft.prompt.trim()} style={{ ...BTN_GOLD, opacity: draft.running || !draft.prompt.trim() ? 0.4 : 1, cursor: draft.running || !draft.prompt.trim() ? 'not-allowed' : 'pointer' }}>
+                    {draft.running ? `Running ${MODEL_META[model].label}…` : `▶ Run ${MODEL_META[model].label}`}
+                  </button>
+                )}
+                {draft.error && <p style={{ fontSize: 13, color: '#f87171' }}>{draft.error}</p>}
+                <div>
+                  <label style={LBL}>Output {draft.tokenCount ? `· ${draft.tokenCount} tokens` : ''}</label>
+                  <textarea value={draft.output} onChange={e => setOutputDrafts(p => ({ ...p, [model]: { ...p[model]!, output: e.target.value, saved: false } }))} placeholder={draft.running ? 'Running…' : isApi ? 'Output appears here after running, or paste manually' : 'Paste output here'} rows={10} style={{ ...INP }} />
                 </div>
               </div>
             )}
-            {/* Generated prompt quick-use */}
-            {genPr && (
-              <div style={{ padding: '10px 12px', background: T.ghost, borderRadius: 8, border: `1px solid ${T.border}` }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span style={{ fontSize: 11, color: T.faint, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Generated {stage} prompt</span>
-                  <button onClick={() => setOutputDrafts(p => ({ ...p, [model]: { ...(p[model] ?? { prompt: '', output: '', running: false, saving: false, saved: false, error: null }), prompt: genPr } }))} style={{ fontSize: 12, color: T.accent, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>↓ Use this</button>
+            {/* Analysis tab */}
+            {sheetTab === 'sections' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                <div>
+                  <label style={LBL}>Summary</label>
+                  {draft.output.trim()
+                    ? <p style={{ fontSize: 14, color: T.muted, lineHeight: 1.6, margin: 0 }}>{draft.output.trim().slice(0, 400)}{draft.output.length > 400 ? '…' : ''}</p>
+                    : <p style={{ fontSize: 13, color: T.faint, margin: 0 }}>No output yet — run or paste on the Edit tab first.</p>}
                 </div>
-                <p style={{ fontSize: 13, color: T.muted, margin: 0, lineHeight: 1.5 }}>{genPr.slice(0, 200)}{genPr.length > 200 ? '…' : ''}</p>
+                {risks.length > 0 && (
+                  <div>
+                    <label style={LBL}>Key Risks</label>
+                    {risks.map((r, i) => (
+                      <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'flex-start' }}>
+                        <span style={{ color: '#f87171', flexShrink: 0, fontSize: 13 }}>⚠</span>
+                        <p style={{ fontSize: 13, color: T.muted, margin: 0, lineHeight: 1.5 }}>{r}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {actionSignals.length > 0 && (
+                  <div>
+                    <label style={LBL}>Action Signals</label>
+                    {actionSignals.map((a, i) => (
+                      <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'flex-start' }}>
+                        <span style={{ color: T.accent, flexShrink: 0, fontSize: 13 }}>→</span>
+                        <p style={{ fontSize: 13, color: T.muted, margin: 0, lineHeight: 1.5 }}>{a}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
-            {/* Prompt */}
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                <label style={{ ...LBL, marginBottom: 0 }}>Prompt</label>
-                {claudeKey && <button onClick={() => void generatePrompt(stage === 'reasoning' ? 'reasoning' : 'challenge')} disabled={generatingPrompt !== null} style={{ fontSize: 12, color: T.accent, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>✦ {generatingPrompt ? 'Generating…' : 'Regenerate'}</button>}
+            {/* Memory tab */}
+            {sheetTab === 'memory' && (
+              <div>
+                {isApproved
+                  ? <MemoryCapture sessionId={sessionId} synthesisId={synthesis?.id ?? null} content={draft.output.trim() || (synthesis?.synthesis_text ?? '')} defaultClassification="pattern" defaultTags={extractKeywords(draft.output, 4)} buttonLabel="Write Output to Memory" />
+                  : <p style={{ fontSize: 14, color: T.faint }}>Memory locked until approval. Record a decision in the Approval stage first.</p>}
               </div>
-              <textarea value={draft.prompt} onChange={e => setOutputDrafts(p => ({ ...p, [model]: { ...p[model]!, prompt: e.target.value } }))} placeholder="Paste or write the prompt to send…" rows={5} style={{ ...INP }} />
-            </div>
-            {/* Run button */}
-            {isApi && keyOk && (
-              <button onClick={() => void runModel(model)} disabled={draft.running || !draft.prompt.trim()} style={{ ...BTN_GOLD, opacity: draft.running || !draft.prompt.trim() ? 0.4 : 1, cursor: draft.running || !draft.prompt.trim() ? 'not-allowed' : 'pointer' }}>
-                {draft.running ? `Running ${MODEL_META[model].label}…` : `▶ Run ${MODEL_META[model].label}`}
-              </button>
             )}
-            {draft.error && <p style={{ fontSize: 13, color: '#f87171' }}>{draft.error}</p>}
-            {/* Output */}
-            <div>
-              <label style={LBL}>Output {draft.tokenCount ? `· ${draft.tokenCount} tokens` : ''}</label>
-              <textarea value={draft.output} onChange={e => setOutputDrafts(p => ({ ...p, [model]: { ...p[model]!, output: e.target.value, saved: false } }))} placeholder={draft.running ? 'Running…' : isApi ? 'Output appears here after running, or paste manually' : 'Paste output here'} rows={10} style={{ ...INP }} />
-            </div>
           </div>
         ),
         footer: (
@@ -1042,7 +1172,7 @@ export default function SessionWorkspace() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: a.description ? 4 : 0 }}>
                 <span style={{ fontSize: 14, fontWeight: 500, color: T.text, flex: 1 }}>{a.title}</span>
                 <span style={{ fontSize: 11, color: T.faint, padding: '2px 7px', background: T.ghost, borderRadius: 10 }}>{AUTHORITY_LEVELS[a.authority_level].short}</span>
-                <span style={{ fontSize: 11, color: a.status === 'complete' ? T.accent : T.faint, padding: '2px 7px', background: T.ghost, borderRadius: 10 }}>{a.status}</span>
+                <span style={{ fontSize: 11, color: ACTION_DISPLAY[a.status]?.color ?? T.faint, padding: '2px 7px', background: T.ghost, borderRadius: 10 }}>{ACTION_DISPLAY[a.status]?.label ?? a.status}</span>
               </div>
               {a.description && <p style={{ fontSize: 13, color: T.faint, margin: 0 }}>{a.description}</p>}
             </div>
@@ -1201,6 +1331,10 @@ export default function SessionWorkspace() {
           <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: T.accent, flexShrink: 0 }}>
             {STAGE_LABELS[stage]}
           </span>
+          {/* Session status badge */}
+          <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: statusColor, background: sessionStatus === 'Memory Written' || sessionStatus === 'Approved' ? 'rgba(197,162,111,0.1)' : sessionStatus === 'Rejected' ? 'rgba(248,113,113,0.06)' : sessionStatus === 'Revision Requested' || sessionStatus === 'Escalated' ? 'rgba(251,191,36,0.06)' : T.ghost, border: `1px solid ${sessionStatus === 'Memory Written' || sessionStatus === 'Approved' ? 'rgba(197,162,111,0.35)' : sessionStatus === 'Rejected' ? 'rgba(248,113,113,0.3)' : sessionStatus === 'Revision Requested' || sessionStatus === 'Escalated' ? 'rgba(251,191,36,0.3)' : T.border}`, borderRadius: 10, padding: '2px 9px', flexShrink: 0 }}>
+            {sessionStatus}
+          </span>
           {/* Layer pills — compact */}
           <div style={{ display: 'flex', gap: 4, overflowX: 'auto', flex: 1, scrollbarWidth: 'none' }}>
             {RIGHT_LAYERS.map(l => {
@@ -1208,7 +1342,7 @@ export default function SessionWorkspace() {
               const isLocked = s === 'locked'
               const isCurrent = l.id === stage || (stage === 'complete' && l.id === 'actions')
               return isLocked ? (
-                <span key={l.id} style={{ fontSize: 11, padding: '3px 9px', borderRadius: 10, border: `1px solid rgba(230,237,247,0.04)`, color: 'rgba(230,237,247,0.12)', whiteSpace: 'nowrap', flexShrink: 0 }}>{l.label}</span>
+                <span key={l.id} title={LOCK_REASON[l.id] ?? ''} style={{ fontSize: 11, padding: '3px 9px', borderRadius: 10, border: `1px solid rgba(230,237,247,0.04)`, color: 'rgba(230,237,247,0.12)', whiteSpace: 'nowrap', flexShrink: 0, cursor: 'help' }}>{l.label}</span>
               ) : (
                 <button key={l.id} onClick={() => setOpenSheet(`layer:${l.id}`)} style={{ fontSize: 11, padding: '3px 9px', borderRadius: 10, border: `1px solid ${isCurrent ? 'rgba(197,162,111,0.4)' : s === 'complete' ? 'rgba(230,237,247,0.12)' : T.border}`, background: isCurrent ? 'rgba(197,162,111,0.12)' : 'transparent', color: isCurrent ? T.accent : s === 'complete' ? T.muted : T.faint, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>{l.label}</button>
               )
@@ -1255,7 +1389,8 @@ export default function SessionWorkspace() {
                   key={l.id}
                   className={isLocked ? '' : 'ws-layer'}
                   onClick={isLocked ? undefined : () => setOpenSheet(`layer:${l.id}`)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px', borderRadius: 7, margin: '0 6px 1px', border: '1px solid transparent', transition: 'all 0.1s ease', opacity: isLocked ? 0.3 : 1 }}
+                  title={isLocked ? (LOCK_REASON[l.id] ?? 'Not available yet') : undefined}
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px', borderRadius: 7, margin: '0 6px 1px', border: '1px solid transparent', transition: 'all 0.1s ease', opacity: isLocked ? 0.3 : 1, cursor: isLocked ? 'not-allowed' : undefined }}
                 >
                   <div style={{ width: 6, height: 6, borderRadius: '50%', background: dotColor(s), flexShrink: 0 }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
