@@ -183,12 +183,12 @@ export type AuditEntityType = typeof AUDIT_ENTITY[keyof typeof AUDIT_ENTITY]
 
 // ── Authority Level Metadata ─────────────────────────────────
 
-export const AUTHORITY_LEVELS: Record<AuthorityLevel, { label: string; description: string; requiresApproval: boolean }> = {
-  R0: { label: 'Observe',    description: 'Read / monitor only',                                      requiresApproval: false },
-  R1: { label: 'Recommend',  description: 'Surface insights, no action',                              requiresApproval: false },
-  R2: { label: 'Draft',      description: 'Prepare outputs for review',                               requiresApproval: false },
-  R3: { label: 'Execute',    description: 'Reversible internal action',                               requiresApproval: false },
-  R4: { label: 'Escalate',   description: 'External, irreversible, financial, legal, or publishing',  requiresApproval: true  },
+export const AUTHORITY_LEVELS: Record<AuthorityLevel, { label: string; short: string; description: string; requiresApproval: boolean }> = {
+  R0: { label: 'Observe — no action',       short: 'Observe',  description: 'Read / monitor only',                                      requiresApproval: false },
+  R1: { label: 'Suggest — needs review',    short: 'Suggest',  description: 'Surface insights, no action',                              requiresApproval: false },
+  R2: { label: 'Execute — with oversight',  short: 'Execute',  description: 'Prepare outputs for review',                               requiresApproval: false },
+  R3: { label: 'Execute — independently',   short: 'Delegate', description: 'Reversible internal action',                               requiresApproval: false },
+  R4: { label: 'Founder — final authority', short: 'Founder',  description: 'External, irreversible, financial, legal, or publishing',  requiresApproval: true  },
 }
 
 // ── Model Metadata ───────────────────────────────────────────

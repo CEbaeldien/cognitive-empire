@@ -199,15 +199,18 @@ export default function DashboardPage() {
               value={form.priority}
               onChange={e => setForm(f => ({ ...f, priority: e.target.value as SessionPriority }))}
               style={{
-                background:   'rgba(230,237,247,0.04)',
-                border:       `1px solid ${S.border}`,
-                borderRadius: 8,
-                padding:      '11px 14px',
-                fontSize:     15,
-                color:        S.text,
-                outline:      'none',
-                minHeight:    44,
-                width:        '100%',
+                background:       '#0D1117',
+                color:            '#E6EDF7',
+                border:           '1px solid rgba(230,237,247,0.15)',
+                borderRadius:     '6px',
+                padding:          '10px 14px',
+                fontSize:         '15px',
+                width:            '100%',
+                cursor:           'pointer',
+                appearance:       'none',
+                WebkitAppearance: 'none',
+                minHeight:        44,
+                outline:          'none',
               }}
             >
               <option value="low">Low</option>

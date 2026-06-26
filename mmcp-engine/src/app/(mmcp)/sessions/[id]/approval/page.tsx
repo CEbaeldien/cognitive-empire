@@ -18,7 +18,7 @@ import {
 
 // ── Design tokens ──────────────────────────────────────────────
 const S = {
-  bg:     '#060D1A',
+  bg:     '#05070B',
   text:   '#E6EDF7',
   accent: '#C5A26F',
   muted:  'rgba(230,237,247,0.45)',
@@ -35,7 +35,7 @@ const CONFIDENCE_STYLE: Record<string, { color: string; bg: string }> = {
 
 export default function ApprovalPage() {
   const { id: sessionId } = useParams<{ id: string }>()
-  const router  = useRouter()
+  const router   = useRouter()
   const supabase = createClient()
 
   const [synthesis, setSynthesis] = useState<Synthesis | null>(null)
@@ -181,7 +181,8 @@ export default function ApprovalPage() {
 
   // ── Decision already recorded ─────────────────────────────
   if (approval) {
-    const isApproved   = approval.decision === 'approve'
+    const isApproved    = approval.decision === 'approve'
+    const shortLabel    = AUTHORITY_LEVELS[approval.authority_level].short
     const decisionLabel =
       approval.decision === 'approve' ? 'Approved'           :
       approval.decision === 'revise'  ? 'Revision Requested' :
@@ -208,7 +209,7 @@ export default function ApprovalPage() {
             {decisionLabel}
           </p>
           <p style={{ fontSize: 15, color: S.faint, margin: '0 0 10px' }}>
-            {approval.authority_level} · {new Date(approval.decided_at).toLocaleString()}
+            {shortLabel} · {new Date(approval.decided_at).toLocaleString()}
           </p>
           {approval.notes && (
             <p style={{ fontSize: 15, color: S.muted, margin: 0, borderTop: `1px solid ${S.border}`, paddingTop: 12 }}>
@@ -248,7 +249,7 @@ export default function ApprovalPage() {
                 borderRadius:   8,
                 fontSize:       15,
                 fontWeight:     600,
-                color:          '#060D1A',
+                color:          '#05070B',
                 textDecoration: 'none',
               }}
             >
@@ -266,7 +267,7 @@ export default function ApprovalPage() {
   return (
     <>
       <style>{`
-        .apv-level:hover  { border-color: rgba(197,162,111,0.4) !important; color: #E6EDF7 !important; }
+        .apv-pill:hover   { border-color: rgba(197,162,111,0.6) !important; color: #E6EDF7 !important; }
         .apv-approve:hover:not(:disabled) { opacity: 0.88; }
         .apv-revise:hover:not(:disabled)  { background: rgba(197,162,111,0.07) !important; }
         .apv-reject:hover:not(:disabled)  { background: rgba(248,113,113,0.07) !important; }
@@ -365,7 +366,7 @@ export default function ApprovalPage() {
           )}
         </div>
 
-        {/* ── Authority level ───────────────────────────────── */}
+        {/* ── Authority level — pill row ─────────────────────── */}
         <div style={{ marginBottom: 28 }}>
           <label style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', color: S.faint, display: 'block', marginBottom: 14 }}>
             Authority Level
@@ -373,44 +374,33 @@ export default function ApprovalPage() {
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {(Object.entries(AUTHORITY_LEVELS) as [AuthorityLevel, typeof AUTHORITY_LEVELS[AuthorityLevel]][]).map(([level, meta]) => {
               const isSelected = authorityLevel === level
-              const isR4       = level === 'R4'
               return (
                 <button
                   key={level}
                   onClick={() => setAuthorityLevel(level)}
-                  className="apv-level"
+                  className="apv-pill"
                   style={{
-                    display:        'flex',
-                    flexDirection:  'column',
-                    alignItems:     'center',
-                    justifyContent: 'center',
-                    padding:        '10px 16px',
-                    minWidth:       80,
-                    minHeight:      60,
-                    border:         `1px solid ${isSelected ? S.accent : isR4 && !isSelected ? 'rgba(197,162,111,0.25)' : S.border}`,
-                    borderRadius:   8,
-                    background:     isSelected ? 'rgba(197,162,111,0.1)' : 'transparent',
-                    cursor:         'pointer',
-                    transition:     'all 0.12s ease',
+                    height:       44,
+                    padding:      '0 18px',
+                    border:       `1px solid ${isSelected ? S.accent : 'rgba(197,162,111,0.35)'}`,
+                    borderRadius: 22,
+                    background:   isSelected ? S.accent : '#0D1117',
+                    cursor:       'pointer',
+                    fontSize:     14,
+                    fontWeight:   isSelected ? 700 : 500,
+                    color:        isSelected ? '#05070B' : S.accent,
+                    transition:   'all 0.12s ease',
+                    whiteSpace:   'nowrap',
                   }}
                 >
-                  <span style={{
-                    fontSize:   15,
-                    fontWeight: 700,
-                    color:      isSelected ? S.accent : isR4 ? 'rgba(197,162,111,0.55)' : S.faint,
-                  }}>
-                    {level}
-                  </span>
-                  <span style={{ fontSize: 11, color: isSelected ? S.muted : S.faint, marginTop: 3 }}>
-                    {meta.label}
-                  </span>
+                  {meta.short}
                 </button>
               )
             })}
           </div>
           {authorityLevel === 'R4' && (
             <p style={{ fontSize: 13, color: 'rgba(248,113,113,0.8)', marginTop: 12 }}>
-              ⚠ R4 — external, irreversible, or financial. Tapping a decision button is your explicit authorisation.
+              ⚠ Founder — external, irreversible, or financial. Tapping a decision button is your explicit authorisation.
             </p>
           )}
         </div>
@@ -424,8 +414,8 @@ export default function ApprovalPage() {
             className="apv-approve"
             style={{
               height:        56,
-              background:    S.accent,
-              color:         '#060D1A',
+              background:    '#C5A26F',
+              color:         '#05070B',
               border:        'none',
               borderRadius:  10,
               fontSize:      16,
@@ -445,9 +435,9 @@ export default function ApprovalPage() {
             className="apv-revise"
             style={{
               height:        56,
-              background:    'transparent',
-              color:         S.accent,
-              border:        `1px solid rgba(197,162,111,0.45)`,
+              background:    '#05070B',
+              color:         '#C5A26F',
+              border:        '1px solid #C5A26F',
               borderRadius:  10,
               fontSize:      16,
               fontWeight:    600,
@@ -466,9 +456,9 @@ export default function ApprovalPage() {
             className="apv-reject"
             style={{
               height:        56,
-              background:    'transparent',
-              color:         'rgba(248,113,113,0.85)',
-              border:        `1px solid rgba(248,113,113,0.35)`,
+              background:    '#05070B',
+              color:         '#ef4444',
+              border:        '1px solid #ef4444',
               borderRadius:  10,
               fontSize:      16,
               fontWeight:    600,
@@ -493,17 +483,17 @@ export default function ApprovalPage() {
             placeholder="Reasoning, conditions, or caveats"
             rows={3}
             style={{
-              width:        '100%',
-              background:   S.panel,
-              border:       `1px solid ${S.border}`,
-              borderRadius: 8,
-              padding:      '12px 14px',
-              fontSize:     15,
-              color:        S.text,
-              lineHeight:   1.6,
-              resize:       'vertical',
-              outline:      'none',
-              boxSizing:    'border-box',
+              width:             '100%',
+              background:        '#0D1117',
+              border:            '1px solid rgba(230,237,247,0.15)',
+              borderRadius:      '6px',
+              padding:           '10px 14px',
+              fontSize:          '15px',
+              color:             '#E6EDF7',
+              lineHeight:        1.6,
+              resize:            'vertical',
+              outline:           'none',
+              boxSizing:         'border-box',
             }}
           />
         </div>

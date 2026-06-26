@@ -216,15 +216,18 @@ export function MemoryCapture({
                 onChange={e => setClassif(e.target.value as MemoryClassification)}
                 autoFocus
                 style={{
-                  background:   'rgba(230,237,247,0.04)',
-                  border:       '1px solid rgba(230,237,247,0.07)',
-                  borderRadius: 6,
-                  padding:      '0 12px',
-                  fontSize:     14,
-                  color:        '#E6EDF7',
-                  outline:      'none',
-                  height:       44,
-                  minWidth:     130,
+                  background:       '#0D1117',
+                  color:            '#E6EDF7',
+                  border:           '1px solid rgba(230,237,247,0.15)',
+                  borderRadius:     '6px',
+                  padding:          '10px 14px',
+                  fontSize:         '15px',
+                  cursor:           'pointer',
+                  appearance:       'none',
+                  WebkitAppearance: 'none',
+                  height:           44,
+                  minWidth:         130,
+                  outline:          'none',
                 }}
               >
                 {CLASSIFICATIONS.map(c => (

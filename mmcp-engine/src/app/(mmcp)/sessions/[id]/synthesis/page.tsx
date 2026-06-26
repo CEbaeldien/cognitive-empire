@@ -6,7 +6,7 @@
 // R4 authority level always requires explicit Principal approval.
 // Writes: syntheses → approvals → actions/memory_items + audit logs.
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import { useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { logEvent, assertR4HasApproval, AUDIT_EVENT, AUDIT_ENTITY } from '@/lib/mmcp/audit'
@@ -284,7 +284,7 @@ export default function SynthesisPage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={LABEL}>Confidence</label>
-              <select value={synthForm.confidence_level} onChange={e => setSynthForm(f => ({ ...f, confidence_level: e.target.value as ConfidenceLevel }))} className={INPUT}>
+              <select value={synthForm.confidence_level} onChange={e => setSynthForm(f => ({ ...f, confidence_level: e.target.value as ConfidenceLevel }))} style={SELECT_STYLE}>
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
                 <option value="high">High</option>
@@ -339,13 +339,13 @@ export default function SynthesisPage() {
             </div>
             <div>
               <label className={LABEL}>Authority Level</label>
-              <select value={approvalForm.authority_level} onChange={e => setApprovalForm(f => ({ ...f, authority_level: e.target.value as AuthorityLevel }))} className={INPUT}>
+              <select value={approvalForm.authority_level} onChange={e => setApprovalForm(f => ({ ...f, authority_level: e.target.value as AuthorityLevel }))} style={SELECT_STYLE}>
                 {(Object.entries(AUTHORITY_LEVELS) as [AuthorityLevel, typeof AUTHORITY_LEVELS[AuthorityLevel]][]).map(([level, meta]) => (
-                  <option key={level} value={level}>{level} — {meta.label}</option>
+                  <option key={level} value={level}>{meta.label}</option>
                 ))}
               </select>
               {approvalForm.authority_level === 'R4' && (
-                <p className="text-xs text-red-400 mt-1">⚠ R4 — external/irreversible. This approval is your explicit authorisation.</p>
+                <p className="text-xs text-red-400 mt-1">⚠ Founder — external, irreversible, or financial. This decision is your explicit authorisation.</p>
               )}
             </div>
           </div>
@@ -365,7 +365,7 @@ export default function SynthesisPage() {
       {approval && (
         <div className={`p-4 rounded-lg border ${isApproved ? 'border-[#c9a96e]/40 bg-[#c9a96e]/5' : 'border-white/10 bg-white/3'}`}>
           <p className="text-xs font-medium text-[#c9a96e] mb-1">Decision Recorded</p>
-          <p className="text-sm text-white capitalize">{approval.decision} · {approval.authority_level}</p>
+          <p className="text-sm text-white capitalize">{approval.decision} · {AUTHORITY_LEVELS[approval.authority_level].short}</p>
           {approval.notes && <p className="text-xs text-white/50 mt-1">{approval.notes}</p>}
         </div>
       )}
@@ -376,8 +376,8 @@ export default function SynthesisPage() {
           <h2 className="text-sm font-medium text-white/70">Create Action</h2>
           <input type="text" value={actionForm.title} onChange={e => setActionForm(f => ({ ...f, title: e.target.value }))} placeholder="Action title" className={INPUT} />
           <textarea value={actionForm.description} onChange={e => setActionForm(f => ({ ...f, description: e.target.value }))} placeholder="What needs to happen?" rows={3} className={INPUT} />
-          <select value={actionForm.authority_level} onChange={e => setActionForm(f => ({ ...f, authority_level: e.target.value as AuthorityLevel }))} className={INPUT}>
-            {(Object.keys(AUTHORITY_LEVELS) as AuthorityLevel[]).map(l => <option key={l} value={l}>{l}</option>)}
+          <select value={actionForm.authority_level} onChange={e => setActionForm(f => ({ ...f, authority_level: e.target.value as AuthorityLevel }))} style={SELECT_STYLE}>
+            {(Object.keys(AUTHORITY_LEVELS) as AuthorityLevel[]).map(l => <option key={l} value={l}>{AUTHORITY_LEVELS[l].label}</option>)}
           </select>
           <button onClick={createAction} disabled={creatingAction || !actionForm.title.trim()} className={BTN_GHOST}>
             {creatingAction ? 'Creating…' : 'Create Action'}
@@ -393,7 +393,7 @@ export default function SynthesisPage() {
           <input type="text" value={memoryForm.title} onChange={e => setMemoryForm(f => ({ ...f, title: e.target.value }))} placeholder="Memory title" className={INPUT} />
           <textarea value={memoryForm.content} onChange={e => setMemoryForm(f => ({ ...f, content: e.target.value }))} placeholder="What should be remembered?" rows={4} className={INPUT} />
           <div className="flex gap-3">
-            <select value={memoryForm.classification} onChange={e => setMemoryForm(f => ({ ...f, classification: e.target.value as MemoryClassification }))} className={INPUT}>
+            <select value={memoryForm.classification} onChange={e => setMemoryForm(f => ({ ...f, classification: e.target.value as MemoryClassification }))} style={SELECT_STYLE}>
               {(['general', 'doctrine', 'pattern', 'decision', 'canon'] as MemoryClassification[]).map(c => <option key={c} value={c}>{c}</option>)}
             </select>
             <input type="text" value={memoryForm.tags} onChange={e => setMemoryForm(f => ({ ...f, tags: e.target.value }))} placeholder="Tags (comma-separated)" className={INPUT} />
@@ -420,3 +420,16 @@ const LABEL = 'block text-[10px] text-white/40 uppercase tracking-wider mb-1'
 const INPUT  = 'w-full bg-white/3 border border-white/8 rounded px-3 py-2 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-[#c9a96e]/30 resize-none transition-colors'
 const BTN_GOLD  = 'px-5 py-2 text-sm bg-[#c9a96e] text-black rounded font-medium hover:bg-[#b8934d] disabled:opacity-40 transition-colors'
 const BTN_GHOST = 'px-4 py-2 text-sm border border-white/15 text-white/60 rounded hover:border-white/30 hover:text-white disabled:opacity-40 transition-colors'
+
+const SELECT_STYLE: CSSProperties = {
+  background:        '#0D1117',
+  color:             '#E6EDF7',
+  border:            '1px solid rgba(230,237,247,0.15)',
+  borderRadius:      '6px',
+  padding:           '10px 14px',
+  fontSize:          '15px',
+  width:             '100%',
+  cursor:            'pointer',
+  appearance:        'none',
+  WebkitAppearance:  'none',
+}
