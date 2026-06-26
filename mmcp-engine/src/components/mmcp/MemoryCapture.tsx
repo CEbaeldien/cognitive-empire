@@ -45,6 +45,7 @@ interface Props {
   defaultClassification: MemoryClassification
   defaultTags?:          string               // comma-separated, pre-populated
   buttonLabel?:          string               // defaults to "Update Memory"
+  locked?:               boolean              // true = approval not yet granted; blocks all writes
 }
 
 export function MemoryCapture({
@@ -54,6 +55,7 @@ export function MemoryCapture({
   defaultClassification,
   defaultTags      = '',
   buttonLabel      = 'Update Memory',
+  locked           = false,
 }: Props) {
   const supabase = createClient()
 
@@ -79,6 +81,7 @@ export function MemoryCapture({
   }, [saved])
 
   async function handleSave() {
+    if (locked) return  // hard gate — approval required
     const trimmed = content.trim()
     if (!trimmed) return
     setSaving(true)
@@ -126,8 +129,16 @@ export function MemoryCapture({
 
       <div style={{ marginTop: 20, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
 
+        {/* ── Locked state ────────────────────────────────────── */}
+        {locked && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'rgba(230,237,247,0.03)', border: '1px solid rgba(230,237,247,0.07)', borderRadius: 8 }}>
+            <span style={{ fontSize: 14, color: 'rgba(230,237,247,0.2)' }}>🔒</span>
+            <span style={{ fontSize: 13, color: 'rgba(230,237,247,0.28)' }}>Memory locked until approval.</span>
+          </div>
+        )}
+
         {/* ── Trigger + confirmation ──────────────────────────── */}
-        {!open && (
+        {!locked && !open && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <button
               onClick={() => setOpen(true)}
@@ -160,7 +171,7 @@ export function MemoryCapture({
         )}
 
         {/* ── Inline form ─────────────────────────────────────── */}
-        {open && (
+        {!locked && open && (
           <div style={{
             border:       '1px solid rgba(197,162,111,0.18)',
             borderRadius: 10,

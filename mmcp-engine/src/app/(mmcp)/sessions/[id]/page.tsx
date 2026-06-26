@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { logEvent, assertR4HasApproval, AUDIT_EVENT, AUDIT_ENTITY } from '@/lib/mmcp/audit'
 import { getKey, setKey, hasKey } from '@/lib/mmcp/keys'
@@ -204,9 +204,34 @@ export default function SessionWorkspace() {
   const [openSheet, setOpenSheet] = useState<SheetId | null>(null)
   const [sheetTab,  setSheetTab]  = useState<string>('edit')
   const closeSheet = () => setOpenSheet(null)
+  const searchParams = useSearchParams()
 
   // Reset tab when a different sheet opens
   useEffect(() => { setSheetTab('edit') }, [openSheet])
+
+  // Open layer sheet from ?layer= query param (used by old route redirects)
+  const [layerHandled, setLayerHandled] = useState(false)
+  useEffect(() => {
+    if (loading || layerHandled) return
+    const layerParam = searchParams.get('layer')
+    if (layerParam) {
+      const LAYER_SHEET: Record<string, SheetId> = {
+        mission: 'layer:mission', reasoning: 'layer:reasoning', oep: 'layer:reasoning',
+        comparison: 'layer:comparison', synthesis: 'layer:synthesis',
+        memory: 'memory', timeline: 'timeline',
+      }
+      const sid = LAYER_SHEET[layerParam]
+      if (sid) setOpenSheet(sid)
+    }
+    setLayerHandled(true)
+  }, [loading, layerHandled, searchParams])
+
+  // Lock flash — brief message when user clicks a locked layer pill
+  const [lockFlash, setLockFlash] = useState<string | null>(null)
+  function showLockReason(reason: string) {
+    setLockFlash(reason)
+    setTimeout(() => setLockFlash(null), 2200)
+  }
 
   // ── Load data ────────────────────────────────────────────────────
   useEffect(() => {
@@ -478,21 +503,26 @@ export default function SessionWorkspace() {
     !isApproved       ? 'approval'   :
     'complete'
 
-  // Human-readable session status (separate from workflow stage)
+  // Human-readable session status — granular truth per workflow position
   const sessionStatus =
-    !mission                              ? 'Draft'              :
-    !synthesis                            ? 'Active'             :
-    !approval                             ? 'Pending Approval'   :
-    approval.decision === 'approve'       ? (memoryCount > 0 ? 'Memory Written' : 'Approved') :
-    approval.decision === 'revise'        ? 'Revision Requested' :
-    approval.decision === 'reject'        ? 'Rejected'           :
-    approval.decision === 'escalate'      ? 'Escalated'          :
+    !mission                                      ? 'Draft'              :
+    savedCount < 1                                ? 'Active'             :
+    !compComplete                                 ? 'Comparing'          :
+    !synthesis                                    ? 'Synthesis Ready'    :
+    !approval                                     ? 'Pending Approval'   :
+    approval.decision === 'approve' && memoryCount > 0 ? 'Memory Written'     :
+    approval.decision === 'approve'               ? 'Approved'           :
+    approval.decision === 'revise'                ? 'Revision Requested' :
+    approval.decision === 'reject'                ? 'Rejected'           :
+    approval.decision === 'escalate'              ? 'Escalated'          :
     'Pending Approval'
 
   const statusColor =
     sessionStatus === 'Memory Written' || sessionStatus === 'Approved' ? T.accent :
-    sessionStatus === 'Rejected'        ? '#f87171' :
+    sessionStatus === 'Rejected'                                        ? '#f87171' :
     sessionStatus === 'Revision Requested' || sessionStatus === 'Escalated' ? '#fbbf24' :
+    sessionStatus === 'Synthesis Ready'                                 ? '#93c5fd' :
+    sessionStatus === 'Comparing'                                       ? '#a78bfa' :
     T.faint
 
   if (loading) return (
@@ -793,7 +823,7 @@ export default function SessionWorkspace() {
             <p style={{ fontSize: 10, color: T.faint, textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 10px' }}>
               Memory {memoryCount > 0 ? `· ${memoryCount} item${memoryCount > 1 ? 's' : ''} written` : ''}
             </p>
-            <MemoryCapture sessionId={sessionId} synthesisId={synthesis?.id ?? null} content={synthesis?.synthesis_text ?? ''} defaultClassification="canon" defaultTags={extractKeywords(synthesis?.recommended_action || synthesis?.synthesis_text || '', 4)} buttonLabel={memoryCount > 0 ? 'Write Another' : 'Write to Memory'} />
+            <MemoryCapture sessionId={sessionId} synthesisId={synthesis?.id ?? null} content={synthesis?.synthesis_text ?? ''} defaultClassification="canon" defaultTags={extractKeywords(synthesis?.recommended_action || synthesis?.synthesis_text || '', 4)} buttonLabel={memoryCount > 0 ? 'Write Another' : 'Write to Memory'} locked={!isApproved} />
           </div>
         </div>
       )
@@ -1048,9 +1078,7 @@ export default function SessionWorkspace() {
             {/* Memory tab */}
             {sheetTab === 'memory' && (
               <div>
-                {isApproved
-                  ? <MemoryCapture sessionId={sessionId} synthesisId={synthesis?.id ?? null} content={draft.output.trim() || (synthesis?.synthesis_text ?? '')} defaultClassification="pattern" defaultTags={extractKeywords(draft.output, 4)} buttonLabel="Write Output to Memory" />
-                  : <p style={{ fontSize: 14, color: T.faint }}>Memory locked until approval. Record a decision in the Approval stage first.</p>}
+                <MemoryCapture sessionId={sessionId} synthesisId={synthesis?.id ?? null} content={draft.output.trim() || (synthesis?.synthesis_text ?? '')} defaultClassification="pattern" defaultTags={extractKeywords(draft.output, 4)} buttonLabel="Write Output to Memory" locked={!isApproved} />
               </div>
             )}
           </div>
@@ -1074,9 +1102,33 @@ export default function SessionWorkspace() {
         title: meta.label,
         subtitle: 'Comparison Analysis',
         content: (
-          <div>
-            <p style={{ fontSize: 13, color: T.faint, margin: '0 0 16px', lineHeight: 1.6 }}>{meta.hint}</p>
-            <textarea value={compForm[field]} onChange={e => setCompForm(f => ({ ...f, [field]: e.target.value }))} placeholder={meta.hint} autoFocus rows={16} style={{ ...INP }} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+            {/* Tabs */}
+            <div style={{ display: 'flex', gap: 0, borderBottom: `1px solid ${T.border}`, marginBottom: 16 }}>
+              {(['edit', 'outputs'] as const).map(tab => (
+                <button key={tab} onClick={() => setSheetTab(tab)} style={{ padding: '8px 16px', fontSize: 12, fontWeight: sheetTab === tab ? 600 : 400, color: sheetTab === tab ? T.accent : T.faint, background: 'none', border: 'none', borderBottom: `2px solid ${sheetTab === tab ? T.accent : 'transparent'}`, cursor: 'pointer', marginBottom: -1 }}>
+                  {tab === 'edit' ? 'Edit' : 'Model Outputs'}
+                </button>
+              ))}
+            </div>
+            {sheetTab === 'edit' && (
+              <div>
+                <p style={{ fontSize: 13, color: T.faint, margin: '0 0 16px', lineHeight: 1.6 }}>{meta.hint}</p>
+                <textarea value={compForm[field]} onChange={e => setCompForm(f => ({ ...f, [field]: e.target.value }))} placeholder={meta.hint} autoFocus rows={14} style={{ ...INP }} />
+              </div>
+            )}
+            {sheetTab === 'outputs' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                <p style={{ fontSize: 12, color: T.faint, margin: 0 }}>Reference outputs to inform your {meta.label.toLowerCase()} analysis.</p>
+                {outputs.length === 0 && <p style={{ fontSize: 13, color: T.faint }}>No model outputs saved yet.</p>}
+                {outputs.map(o => (
+                  <div key={o.id}>
+                    <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: T.accent, margin: '0 0 8px' }}>{MODEL_META[o.model_name as ModelName]?.label ?? o.model_name}</p>
+                    <p style={{ fontSize: 13, color: T.muted, lineHeight: 1.6, margin: 0, whiteSpace: 'pre-wrap' }}>{o.raw_output.slice(0, 600)}{o.raw_output.length > 600 ? '…' : ''}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         ),
         footer: (
@@ -1187,11 +1239,7 @@ export default function SessionWorkspace() {
       subtitle: isApproved ? `${memoryCount} item${memoryCount !== 1 ? 's' : ''}` : 'Approval required',
       content: (
         <div>
-          {isApproved ? (
-            <MemoryCapture sessionId={sessionId} synthesisId={synthesis?.id ?? null} content={synthesis?.synthesis_text ?? ''} defaultClassification="canon" defaultTags={extractKeywords(synthesis?.recommended_action || synthesis?.synthesis_text || '', 4)} buttonLabel="Write to Memory" />
-          ) : (
-            <p style={{ fontSize: 14, color: T.faint }}>Approval is required before canonical memory can be written. Record a decision in the Approval stage first.</p>
-          )}
+          <MemoryCapture sessionId={sessionId} synthesisId={synthesis?.id ?? null} content={synthesis?.synthesis_text ?? ''} defaultClassification="canon" defaultTags={extractKeywords(synthesis?.recommended_action || synthesis?.synthesis_text || '', 4)} buttonLabel="Write to Memory" locked={!isApproved} />
         </div>
       ),
     }
@@ -1342,7 +1390,7 @@ export default function SessionWorkspace() {
               const isLocked = s === 'locked'
               const isCurrent = l.id === stage || (stage === 'complete' && l.id === 'actions')
               return isLocked ? (
-                <span key={l.id} title={LOCK_REASON[l.id] ?? ''} style={{ fontSize: 11, padding: '3px 9px', borderRadius: 10, border: `1px solid rgba(230,237,247,0.04)`, color: 'rgba(230,237,247,0.12)', whiteSpace: 'nowrap', flexShrink: 0, cursor: 'help' }}>{l.label}</span>
+                <span key={l.id} onClick={() => showLockReason(LOCK_REASON[l.id] ?? 'Not available yet')} title={LOCK_REASON[l.id] ?? ''} style={{ fontSize: 11, padding: '3px 9px', borderRadius: 10, border: `1px solid rgba(230,237,247,0.04)`, color: 'rgba(230,237,247,0.12)', whiteSpace: 'nowrap', flexShrink: 0, cursor: 'help' }}>{l.label}</span>
               ) : (
                 <button key={l.id} onClick={() => setOpenSheet(`layer:${l.id}`)} style={{ fontSize: 11, padding: '3px 9px', borderRadius: 10, border: `1px solid ${isCurrent ? 'rgba(197,162,111,0.4)' : s === 'complete' ? 'rgba(230,237,247,0.12)' : T.border}`, background: isCurrent ? 'rgba(197,162,111,0.12)' : 'transparent', color: isCurrent ? T.accent : s === 'complete' ? T.muted : T.faint, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>{l.label}</button>
               )
@@ -1388,7 +1436,7 @@ export default function SessionWorkspace() {
                 <div
                   key={l.id}
                   className={isLocked ? '' : 'ws-layer'}
-                  onClick={isLocked ? undefined : () => setOpenSheet(`layer:${l.id}`)}
+                  onClick={isLocked ? () => showLockReason(LOCK_REASON[l.id] ?? 'Not available yet') : () => setOpenSheet(`layer:${l.id}`)}
                   title={isLocked ? (LOCK_REASON[l.id] ?? 'Not available yet') : undefined}
                   style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px', borderRadius: 7, margin: '0 6px 1px', border: '1px solid transparent', transition: 'all 0.1s ease', opacity: isLocked ? 0.3 : 1, cursor: isLocked ? 'not-allowed' : undefined }}
                 >
@@ -1409,9 +1457,15 @@ export default function SessionWorkspace() {
         {/* ── BOTTOM ACTION BAR ───────────────────────────────────── */}
         <div style={{
           height: 60, flexShrink: 0, borderTop: `1px solid ${T.border}`,
-          display: 'flex', alignItems: 'center', padding: '0 20px', gap: 10,
+          display: 'flex', alignItems: 'center', padding: '0 20px', gap: 10, position: 'relative',
         }}>
           {renderActionBar()}
+          {/* Lock flash — appears when locked layer pill is clicked */}
+          {lockFlash && (
+            <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', bottom: 72, background: '#111827', border: `1px solid ${T.border}`, borderRadius: 8, padding: '8px 14px', fontSize: 13, color: T.muted, whiteSpace: 'nowrap', boxShadow: '0 4px 20px rgba(0,0,0,0.5)', pointerEvents: 'none', zIndex: 600 }}>
+              🔒 {lockFlash}
+            </div>
+          )}
         </div>
       </div>
 
