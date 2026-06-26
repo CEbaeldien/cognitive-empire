@@ -113,7 +113,7 @@ export default function DashboardPage() {
       payload:        { title: session.title, priority: session.priority },
     })
 
-    router.push(`/sessions/${session.id}/mission`)
+    router.push(`/sessions/${session.id}`)
   }
 
   // ── Render ─────────────────────────────────────────────────
@@ -336,7 +336,7 @@ export default function DashboardPage() {
               return (
                 <a
                   key={session.id}
-                  href={`/sessions/${session.id}/mission`}
+                  href={`/sessions/${session.id}`}
                   className="dash-card"
                   style={{
                     display:        'flex',
