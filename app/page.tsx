@@ -225,20 +225,6 @@ export default function HomePage() {
           .ce-pillars-wrap    { padding: 36px 20px !important; }
         }
 
-        /* ── Hero video ── */
-        .ce-hero-video {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          object-position: center center;
-          display: block;
-          opacity: 1;
-        }
-        @media (max-width: 768px) {
-          .ce-hero-video {
-            object-fit: contain;
-          }
-        }
       `}</style>
 
       <div style={{
@@ -248,30 +234,6 @@ export default function HomePage() {
       }}>
         <SiteHoldBanner />
         <CENav />
-
-        {/* ══════════ HERO — full-bleed animation ══════════ */}
-        <section
-          aria-label="Cognitive Empire — Structuring Intelligence."
-          style={{
-            width: "100%",
-            height: "calc(100vh - 68px)",
-            background: "#020713",
-            overflow: "hidden",
-            display: "block",
-            position: "relative",
-          }}
-        >
-          {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-          <video
-            src="/media/ce-structuring-intelligence.mp4"
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="metadata"
-            className="ce-hero-video"
-          />
-        </section>
 
         {/* ══════════ DOCTRINE STATEMENT ══════════ */}
         <section style={{
