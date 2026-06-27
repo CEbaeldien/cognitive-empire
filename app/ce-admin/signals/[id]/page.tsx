@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import type { SignalRow, SignalScoreRow, SignalStatus, SignalCategory } from "@/types/signals";
+import type { SignalRow, SignalScoreRow, SignalStatus, SignalCategory, SignalState } from "@/types/signals";
 
 // ── Palette ───────────────────────────────────────────────────────────────────
 
@@ -34,6 +34,17 @@ const SUBCATEGORIES: Record<SignalCategory, string[]> = {
   governance_stability: ["Markets & Human Prosperity"],
   infrastructure:       ["Physical Systems", "Energy", "Resources & Continuity"],
 };
+
+const SIGNAL_STATES: { value: SignalState; label: string }[] = [
+  { value: "raw",          label: "Raw" },
+  { value: "potential",    label: "Potential" },
+  { value: "growing",      label: "Growing" },
+  { value: "directional",  label: "Directional" },
+  { value: "act_now",      label: "ACT NOW" },
+  { value: "watch",        label: "Watch" },
+  { value: "contradicted", label: "Contradicted" },
+  { value: "retire",       label: "Retire" },
+];
 
 const IMPACT_LAYER_OPTIONS = [
   "Founder", "Operator", "Creator", "Builder", "Investor",
@@ -87,7 +98,7 @@ function scoreFromRow(row: SignalScoreRow): ScoreState {
     weight:                row.weight,
     longevity:             row.longevity,
     convergence_potential: row.convergence_potential,
-    decay_factor:          row.decay_factor,
+    decay_factor:          row.decay_factor,   // signal_scores stores 1–10
     governance_impact:     row.governance_impact,
     continuity_pressure:   row.continuity_pressure,
     prosperity_relevance:  row.prosperity_relevance,
@@ -97,17 +108,88 @@ function scoreFromRow(row: SignalScoreRow): ScoreState {
   };
 }
 
+// Fix 3: derive suggested scores from seeded base signal data
+function deriveBaseSignalScores(s: SignalRow): ScoreState {
+  const gate = (s.act_now_gate ?? {}) as Record<string, boolean>;
+  const conditionsMet = Object.values(gate).filter(Boolean).length;
+  const strength = Math.min(conditionsMet * 2, 10);
+
+  const weightMap: Record<string, number> = { act_now: 9, directional: 7, growing: 6, watch: 5 };
+  const weight = weightMap[s.signal_state ?? ""] ?? 5;
+
+  const longevity = 9;
+
+  const convergenceConf = (s.convergence_record as Record<string, unknown> | null)?.confidence as string | undefined;
+  const convergenceMap: Record<string, number> = { maximum: 10, high: 8, medium: 6 };
+  const convergence_potential = convergenceConf ? (convergenceMap[convergenceConf] ?? 6) : 5;
+
+  const govMap: Record<string, number> = { governance_stability: 9, infrastructure: 7, intelligence: 8 };
+  const governance_impact = govMap[s.v2_category ?? ""] ?? 7;
+
+  const continuityMap: Record<string, number> = { infrastructure: 8, governance_stability: 8, intelligence: 7 };
+  const continuity_pressure = continuityMap[s.v2_category ?? ""] ?? 7;
+
+  const prosperityHigh = ["labor_markets", "access_inequality"];
+  const prosperity_relevance = prosperityHigh.includes(s.v2_subcategory ?? "") ? 9 : 7;
+
+  const structural_relevance = 9;
+
+  const confidence = s.confidence ?? 0.7;
+
+  // Fix 2: signals.decay_factor is 0.0–1.0; scoring form uses 1–10 display scale
+  const decay_factor = Math.max(1, Math.round((s.decay_factor ?? 0.05) * 10));
+
+  return {
+    strength, weight, longevity, convergence_potential,
+    governance_impact, continuity_pressure, prosperity_relevance,
+    structural_relevance, confidence, decay_factor,
+    scoring_notes: "Derived from V2 base signal seeded data.",
+  };
+}
+
+// Fix 4: derive metadata fields from base signal seeded data
+function deriveBaseSignalMeta(s: SignalRow) {
+  const implication = s.dominant_path ?? "";
+
+  const thesis = s.directional_thesis ?? "";
+  const what_changed = thesis.split(". ")[0] ?? "";
+
+  const conf = (s.convergence_record as Record<string, unknown> | null)?.confidence ?? "high";
+  const models = (s.convergence_record as Record<string, unknown> | null)?.models as string[] | undefined;
+  const modelCount = models?.length ?? 3;
+  const why_it_matters = `${modelCount}-model MMCP convergence confirmed ${conf} confidence. ${s.summary}`;
+
+  const cat = (s.v2_category ?? "").replace(/_/g, " & ");
+  const sub = (s.v2_subcategory ?? "").replace(/_/g, " ");
+  const structural_relevance = `${cat} force. 2026–2031 structural horizon. ${sub}.`;
+
+  const paths = (s.competing_paths ?? []) as Array<{ path: string; signal_strength: string }>;
+  const highProb = paths.find(p => p.signal_strength === "high_probability") ?? paths[paths.length - 1];
+  const second = paths[1];
+  const second_order_effect = highProb && second
+    ? `If ${highProb.path} accelerates: ${second.path} becomes the next binding constraint.`
+    : "";
+
+  return { implication, what_changed, why_it_matters, structural_relevance, second_order_effect };
+}
+
+// Fix 5: simple average formula with 1-decimal precision
 function computeFinalScore(s: ScoreState): number {
-  const weighted =
-    s.strength              * 1.5 +
-    s.weight                * 1.2 +
-    s.longevity             * 1.0 +
-    s.convergence_potential * 1.3 +
-    s.governance_impact     * 1.0 +
-    s.continuity_pressure   * 1.1 +
-    s.prosperity_relevance  * 1.0 +
-    s.structural_relevance  * 1.4;
-  return Math.round((weighted / 9.5) * s.confidence * 10 * 10) / 10;
+  const dims = [
+    s.strength, s.weight, s.longevity, s.convergence_potential,
+    s.governance_impact, s.continuity_pressure, s.prosperity_relevance, s.structural_relevance,
+  ];
+  const avg = dims.reduce((a, b) => a + b, 0) / dims.length;
+  return Math.round(avg * s.confidence * 10 * 10) / 10;
+}
+
+function scoreBreakdown(s: ScoreState): string {
+  const dims = [
+    s.strength, s.weight, s.longevity, s.convergence_potential,
+    s.governance_impact, s.continuity_pressure, s.prosperity_relevance, s.structural_relevance,
+  ];
+  const avg = dims.reduce((a, b) => a + b, 0) / dims.length;
+  return `Dimension avg: ${avg.toFixed(2)} × Confidence: ${s.confidence.toFixed(2)} × 10 = ${computeFinalScore(s).toFixed(1)}`;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -254,6 +336,7 @@ export default function SignalDetailPage() {
   const [editStructuralRelevance, setEditStructuralRelevance] = useState("");
   const [editSecondOrderEffect,   setEditSecondOrderEffect]   = useState("");
   const [editImpactLayer,         setEditImpactLayer]         = useState<Set<string>>(new Set());
+  const [editSignalState,         setEditSignalState]         = useState<SignalState | "">("");
 
   // Tag vectors
   const [pressureVectors,   setPressureVectors]   = useState<Vector[]>([]);
@@ -290,17 +373,44 @@ export default function SignalDetailPage() {
         setEditCategory(s.category);
         setEditSubcategory(s.subcategory ?? "");
         setEditSummary(s.summary);
-        setEditImplication(s.implication);
-        setEditWhatChanged(s.what_changed ?? "");
-        setEditWhyItMatters(s.why_it_matters ?? "");
-        setEditStructuralRelevance(s.structural_relevance ?? "");
-        setEditSecondOrderEffect(s.second_order_effect ?? "");
+        setEditSignalState(s.signal_state ?? "");
+
+        // Fix 4: auto-fill metadata from seeded base signal data (only when field is empty)
+        const meta = s.is_base_signal ? deriveBaseSignalMeta(s) : null;
+        setEditImplication(
+          s.implication?.trim() ? s.implication :
+          meta?.implication ?? ""
+        );
+        setEditWhatChanged(
+          s.what_changed?.trim() ? s.what_changed :
+          meta?.what_changed ?? ""
+        );
+        setEditWhyItMatters(
+          s.why_it_matters?.trim() ? s.why_it_matters :
+          meta?.why_it_matters ?? ""
+        );
+        setEditStructuralRelevance(
+          s.structural_relevance?.trim() ? s.structural_relevance :
+          meta?.structural_relevance ?? ""
+        );
+        setEditSecondOrderEffect(
+          s.second_order_effect?.trim() ? s.second_order_effect :
+          meta?.second_order_effect ?? ""
+        );
+
         setEditImpactLayer(new Set(
           typeof s.impact_layer === "string" && s.impact_layer
             ? s.impact_layer.split(", ").filter(Boolean)
             : []
         ));
-        if (sc) setScore(scoreFromRow(sc));
+
+        // Fix 1 + 3: load score from DB if present; derive from base signal data if not
+        if (sc) {
+          setScore(scoreFromRow(sc));
+        } else if (s.is_base_signal) {
+          setScore(deriveBaseSignalScores(s));
+        }
+
         setPvSelected(new Set(pressure_vector_ids ?? []));
         setDvSelected(new Set(doctrine_vector_ids ?? []));
         setPressureVectors(pvData.vectors ?? []);
@@ -315,8 +425,8 @@ export default function SignalDetailPage() {
   // ── Handlers ──────────────────────────────────────────────────────────────
 
   async function handleSaveMeta() {
-    if (!editCategory || !editTitle.trim() || !editSummary.trim() || !editImplication.trim()) {
-      showToast("Category, title, summary, and implication are required.", "err");
+    if (!editCategory || !editTitle.trim() || !editSummary.trim()) {
+      showToast("Category, title, and summary are required.", "err");
       return;
     }
     setSavingMeta(true);
@@ -328,12 +438,13 @@ export default function SignalDetailPage() {
         category:             editCategory,
         subcategory:          editSubcategory.trim() || null,
         summary:              editSummary.trim(),
-        implication:          editImplication.trim(),
+        implication:          editImplication.trim() || null,
         what_changed:         editWhatChanged.trim() || null,
         why_it_matters:       editWhyItMatters.trim() || null,
         structural_relevance: editStructuralRelevance.trim() || null,
         second_order_effect:  editSecondOrderEffect.trim() || null,
         impact_layer:         editImpactLayer.size > 0 ? [...editImpactLayer].join(", ") : null,
+        signal_state:         editSignalState || null,
         pressure_vector_ids:  [...pvSelected],
         doctrine_vector_ids:  [...dvSelected],
       }),
@@ -481,8 +592,8 @@ export default function SignalDetailPage() {
 
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
-          {/* Category + Subcategory */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+          {/* Category + Subcategory + Signal State */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 }}>
             <div>
               <Label text="Category" />
               <select
@@ -507,6 +618,19 @@ export default function SignalDetailPage() {
                 <option value="">— none —</option>
                 {editCategory && SUBCATEGORIES[editCategory].map((sub) => (
                   <option key={sub} value={sub}>{sub}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <Label text="Signal State" hint="V2 structural state." />
+              <select
+                value={editSignalState}
+                onChange={(e) => setEditSignalState(e.target.value as SignalState | "")}
+                style={{ ...inputStyle, cursor: "pointer" }}
+              >
+                <option value="">— unset —</option>
+                {SIGNAL_STATES.map((s) => (
+                  <option key={s.value} value={s.value}>{s.label}</option>
                 ))}
               </select>
             </div>
@@ -663,6 +787,7 @@ export default function SignalDetailPage() {
             <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: C.faint, margin: "0 0 2px" }}>Final Score</p>
             <p style={{ fontSize: 28, fontWeight: 800, color: scoreColor, margin: 0, lineHeight: 1 }}>{finalScore.toFixed(1)}</p>
             <p style={{ fontSize: 9, color: C.faint, margin: "2px 0 0" }}>/ 100</p>
+            <p style={{ fontSize: 9, color: C.faint, margin: "6px 0 0", fontFamily: "monospace" }}>{scoreBreakdown(score)}</p>
           </div>
         </div>
       </section>

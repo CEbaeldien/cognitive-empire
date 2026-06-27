@@ -21,15 +21,29 @@ const EXTRACTION_SYSTEM_PROMPT =
   "structural relevance, second-order effects, or impact. Do not recommend " +
   "categories with certainty — only guess. Return JSON only.";
 
+// V2 three-category taxonomy (maps to signal_category enum)
 const VALID_CATEGORIES = [
-  "ai_infrastructure",
-  "labor_displacement",
-  "capital_allocation",
-  "regulatory_posture",
-  "institutional_adaptation",
-  "human_differentiation",
-  "knowledge_compression",
-  "systemic_fragility",
+  "intelligence",
+  "governance_stability",
+  "infrastructure",
+] as const;
+
+// V2 subcategory hints per top-level category
+const CATEGORY_SUBCATEGORY_MAP: Record<string, string[]> = {
+  intelligence:         ["science_frontier", "ai", "robotics", "advanced_technology", "verification_infrastructure", "ai_infrastructure"],
+  governance_stability: ["markets_human_prosperity", "labor_markets", "policy", "institutional_fragility", "ai_governance", "regulatory_divergence"],
+  infrastructure:       ["physical_systems", "energy_compute", "resources_continuity", "access_inequality"],
+};
+
+// Base force title → signal title mapping for routing raw items to base forces
+const BASE_FORCE_TITLES = [
+  "Infrastructure Concentration",
+  "Epistemic Collapse",
+  "Accountability Diffusion",
+  "Labor Identity Displacement",
+  "Sovereignty Fragmentation",
+  "Physical Compute Ceiling",
+  "Access Stratification",
 ] as const;
 
 // ── Clients ───────────────────────────────────────────────────────────────────
@@ -208,6 +222,21 @@ async function runExtraction(
   return parsed;
 }
 
+// ── Base force category routing ───────────────────────────────────────────────
+// Maps possible_category → likely base force title for downstream Growth Center routing.
+// Stored in extracted_fields.possible_base_force (no schema change needed).
+
+const CATEGORY_TO_BASE_FORCE: Record<string, string> = {
+  intelligence:         "Infrastructure Concentration",
+  governance_stability: "Accountability Diffusion",
+  infrastructure:       "Physical Compute Ceiling",
+};
+
+function resolvePossibleBaseForce(possibleCategory: string | undefined): string | null {
+  if (!possibleCategory) return null;
+  return CATEGORY_TO_BASE_FORCE[possibleCategory] ?? null;
+}
+
 // ── Write one raw_item row ────────────────────────────────────────────────────
 
 async function writeRawItem(
@@ -216,6 +245,10 @@ async function writeRawItem(
   item: RawRssItem,
   extraction: ExtractionResult
 ): Promise<void> {
+  const annotated = {
+    ...extraction,
+    possible_base_force: resolvePossibleBaseForce(extraction.possible_category),
+  };
   const { error } = await supabase.from("raw_items").upsert({
     source_id:        sourceId,
     external_id:      item.external_id,
@@ -226,7 +259,7 @@ async function writeRawItem(
     published_at:     item.published_at,
     status:           "extracted",
     extraction_model: EXTRACTION_MODEL,
-    extracted_fields: extraction,
+    extracted_fields: annotated,
     error_message:    null,
   }, { onConflict: "source_id,external_id" });
 

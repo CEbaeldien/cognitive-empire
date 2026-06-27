@@ -11,6 +11,21 @@ export type SignalCategory =
   | "governance_stability"
   | "infrastructure";
 
+export type SignalState =
+  | "raw"
+  | "potential"
+  | "growing"
+  | "directional"
+  | "act_now"
+  | "watch"
+  | "contradicted"
+  | "retire";
+
+export type V2Category =
+  | "intelligence"
+  | "governance_stability"
+  | "infrastructure";
+
 export type SourceType = "rss" | "api" | "scrape" | "manual";
 
 export type RawItemStatus = "pending" | "extracted" | "skipped" | "error";
@@ -142,6 +157,37 @@ export type SignalLawRow = {
 // signal_laws is a static seed table — no insert/update types exposed.
 
 // ============================================================
+// V2 INTERFACES — Base Signal Set
+// ============================================================
+
+export type CompetingPath = {
+  path: string;
+  weight_pct: number;
+  signal_strength: string;
+};
+
+export type ActNowGate = {
+  c1_evidence_repeated: boolean;
+  c2_deployment_visible: boolean;
+  c2_5_early_movers_advantage: boolean;
+  c3_demand_rising: boolean;
+  c4_waiting_costs: boolean;
+};
+
+export type SignalEvidence = {
+  id: string;
+  signal_id: string;
+  source_url: string;
+  institution_class: string | null;
+  publication_date: string | null;
+  claim_extracted: string | null;
+  confidence_score: number | null;
+  contradiction_flag: boolean;
+  last_upgrade: string | null;
+  created_at: string;
+};
+
+// ============================================================
 // TABLE: signals
 // ============================================================
 
@@ -152,7 +198,7 @@ export type SignalRow = {
   subcategory: string | null;
   title: string;
   summary: string;
-  implication: string;
+  implication: string | null;
   what_changed: string | null;
   why_it_matters: string | null;
   structural_relevance: string | null;
@@ -183,6 +229,17 @@ export type SignalRow = {
   lifecycle_status: "active" | "decaying" | "archived" | null;
   legacy_signal: boolean;
   created_by_run_id: number | null;
+  // V2 Base Signal columns
+  signal_state: SignalState | null;
+  is_base_signal: boolean;
+  directional_thesis: string | null;
+  competing_paths: CompetingPath[] | null;
+  dominant_path: string | null;
+  act_now_gate: ActNowGate | null;
+  convergence_record: Record<string, unknown> | null;
+  v2_category: V2Category | null;
+  v2_subcategory: string | null;
+  confidence: number | null;
   created_at: string;
   updated_at: string;
 };
@@ -691,9 +748,15 @@ export type SignalsDatabase = {
         Insert: Omit<HumanGovernanceActionRow, "id" | "created_at"> & { id?: number; created_at?: string };
         Update: never;
       };
+      signal_evidence: {
+        Row: SignalEvidence;
+        Insert: Omit<SignalEvidence, "id" | "created_at"> & { id?: string; created_at?: string };
+        Update: Partial<Omit<SignalEvidence, "id" | "created_at">>;
+      };
     };
     Enums: {
       signal_category: SignalCategory;
+      signal_state: SignalState;
       source_type: SourceType;
       raw_item_status: RawItemStatus;
       signal_status: SignalStatus;

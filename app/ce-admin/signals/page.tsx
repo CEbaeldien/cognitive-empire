@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import type { SignalRow, SignalStatus, SignalCategory } from "@/types/signals";
+import type { SignalRow, SignalStatus, SignalCategory, SignalState } from "@/types/signals";
 
 const C = {
   bg:           "#09091c",
@@ -62,14 +62,36 @@ function StatusBadge({ status }: { status: SignalStatus }) {
   );
 }
 
+const SIGNAL_STATE_COLORS: Record<SignalState, [string, string]> = {
+  act_now:      ["rgba(251,191,36,0.15)",  "#fbbf24"],
+  directional:  ["rgba(241,245,249,0.12)", "#f1f5f9"],
+  growing:      ["rgba(74,222,128,0.12)",  "#86efac"],
+  watch:        ["rgba(96,165,250,0.12)",  "#93c5fd"],
+  contradicted: ["rgba(239,68,68,0.12)",   "#f87171"],
+  raw:          ["rgba(100,116,139,0.10)", "#64748b"],
+  potential:    ["rgba(100,116,139,0.10)", "#64748b"],
+  retire:       ["rgba(51,65,85,0.15)",    "#475569"],
+};
+
+function SignalStateBadge({ state }: { state: SignalState }) {
+  const [bg, color] = SIGNAL_STATE_COLORS[state] ?? ["rgba(100,116,139,0.10)", "#64748b"];
+  const label = state === "act_now" ? "ACT NOW" : state.replace("_", " ");
+  return (
+    <span style={{ padding: "2px 8px", borderRadius: 5, background: bg, color, fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+      {label}
+    </span>
+  );
+}
+
 export default function SignalsListPage() {
   const [signals,  setSignals]  = useState<SignalRow[]>([]);
   const [total,    setTotal]    = useState(0);
   const [loading,  setLoading]  = useState(true);
   const [fetchErr, setFetchErr] = useState<string | null>(null);
 
-  const [statusFilter,   setStatusFilter]   = useState<string>("");
-  const [categoryFilter, setCategoryFilter] = useState<string>("");
+  const [statusFilter,    setStatusFilter]    = useState<string>("");
+  const [categoryFilter,  setCategoryFilter]  = useState<string>("");
+  const [baseOnlyFilter,  setBaseOnlyFilter]  = useState<boolean>(false);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -81,9 +103,15 @@ export default function SignalsListPage() {
 
     fetch(`/api/signals?${p}`)
       .then((r) => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
-      .then((d) => { setSignals(d.signals ?? []); setTotal(d.total ?? 0); setLoading(false); })
+      .then((d) => {
+        let list: SignalRow[] = d.signals ?? [];
+        if (baseOnlyFilter) list = list.filter((s) => s.is_base_signal);
+        setSignals(list);
+        setTotal(baseOnlyFilter ? list.length : (d.total ?? 0));
+        setLoading(false);
+      })
       .catch((e) => { setFetchErr(String(e)); setLoading(false); });
-  }, [statusFilter, categoryFilter]);
+  }, [statusFilter, categoryFilter, baseOnlyFilter]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -131,8 +159,8 @@ export default function SignalsListPage() {
         })}
       </div>
 
-      {/* Category filter */}
-      <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
+      {/* Category + Base filter */}
+      <div style={{ display: "flex", gap: 10, marginBottom: 20, alignItems: "center" }}>
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
@@ -150,6 +178,18 @@ export default function SignalsListPage() {
             Clear
           </button>
         )}
+
+        <label style={{ display: "flex", alignItems: "center", gap: 7, cursor: "pointer", marginLeft: 8 }}>
+          <input
+            type="checkbox"
+            checked={baseOnlyFilter}
+            onChange={(e) => setBaseOnlyFilter(e.target.checked)}
+            style={{ accentColor: C.accent, width: 14, height: 14, cursor: "pointer" }}
+          />
+          <span style={{ fontSize: 12, color: baseOnlyFilter ? C.accent : C.faint, fontWeight: baseOnlyFilter ? 700 : 400 }}>
+            Base signals only
+          </span>
+        </label>
       </div>
 
       {/* Table */}
@@ -162,7 +202,7 @@ export default function SignalsListPage() {
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
             <thead style={{ background: "#0c0b1e", borderBottom: `1px solid ${C.border}` }}>
               <tr>
-                {["Title", "Category", "Status", "Featured", "Created", "Updated", ""].map((h) => (
+                {["Title", "Category", "Status", "State", "Featured", "Created", "Updated", ""].map((h) => (
                   <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 10, fontWeight: 700, letterSpacing: "0.35em", textTransform: "uppercase", color: C.faint, whiteSpace: "nowrap" }}>
                     {h}
                   </th>
@@ -172,16 +212,21 @@ export default function SignalsListPage() {
             <tbody>
               {signals.length === 0 ? (
                 <tr>
-                  <td colSpan={7} style={{ padding: "40px 20px", textAlign: "center", color: C.faint, fontSize: 13 }}>
+                  <td colSpan={8} style={{ padding: "40px 20px", textAlign: "center", color: C.faint, fontSize: 13 }}>
                     No signals found{statusFilter || categoryFilter ? " for the selected filters" : ". Create your first signal."}.
                   </td>
                 </tr>
               ) : signals.map((s) => (
-                <tr key={s.id} style={{ borderBottom: `1px solid ${C.border}`, background: C.panel }}>
+                <tr key={s.id} style={{ borderBottom: `1px solid ${C.border}`, background: s.is_base_signal ? "rgba(251,191,36,0.03)" : C.panel }}>
                   <td style={{ padding: "12px 14px", verticalAlign: "middle", maxWidth: 320 }}>
-                    <Link href={`/ce-admin/signals/${s.id}`} style={{ textDecoration: "none", color: C.text, fontWeight: 600, fontSize: 13, display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {s.title}
-                    </Link>
+                    <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                      <Link href={`/ce-admin/signals/${s.id}`} style={{ textDecoration: "none", color: C.text, fontWeight: 600, fontSize: 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {s.title}
+                      </Link>
+                      {s.is_base_signal && (
+                        <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: "0.12em", color: "#fbbf24", background: "rgba(251,191,36,0.12)", padding: "1px 6px", borderRadius: 4, flexShrink: 0 }}>BASE</span>
+                      )}
+                    </div>
                     <p style={{ margin: "2px 0 0", fontSize: 11, color: C.faint, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {s.summary.slice(0, 80)}{s.summary.length > 80 ? "…" : ""}
                     </p>
@@ -191,6 +236,11 @@ export default function SignalsListPage() {
                   </td>
                   <td style={{ padding: "12px 14px", verticalAlign: "middle" }}>
                     <StatusBadge status={s.status} />
+                  </td>
+                  <td style={{ padding: "12px 14px", verticalAlign: "middle" }}>
+                    {s.signal_state
+                      ? <SignalStateBadge state={s.signal_state} />
+                      : <span style={{ fontSize: 11, color: C.faint }}>—</span>}
                   </td>
                   <td style={{ padding: "12px 14px", verticalAlign: "middle", textAlign: "center" }}>
                     {s.is_featured
