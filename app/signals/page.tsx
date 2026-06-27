@@ -61,6 +61,13 @@ type V2Signal = {
   category: SignalCategory;
   subcategory: string | null;
   published_at: string | null;
+  signal_state: string | null;
+  is_base_signal: boolean | null;
+  directional_thesis: string | null;
+  dominant_path: string | null;
+  v2_category: string | null;
+  v2_subcategory: string | null;
+  confidence: number | null;
   signal_scores: { final_score: number } | null;
   signal_pressure_vectors: Array<{ pressure_vectors: VectorRef | null }>;
   signal_doctrine_vectors: Array<{ doctrine_vectors: VectorRef | null }>;
@@ -166,11 +173,14 @@ async function fetchV2Signals(): Promise<V2Signal[]> {
     .from("signals")
     .select(`
       id, title, summary, implication, category, subcategory, published_at,
+      signal_state, is_base_signal, directional_thesis, dominant_path,
+      v2_category, v2_subcategory, confidence,
       signal_scores ( final_score ),
       signal_pressure_vectors ( pressure_vectors ( id, name ) ),
       signal_doctrine_vectors ( doctrine_vectors ( id, name ) )
     `)
     .eq("status", "published")
+    .order("is_base_signal", { ascending: false })
     .order("published_at", { ascending: false });
 
   if (error) throw new Error(`V2 signals fetch: ${error.message}`);
@@ -474,8 +484,15 @@ function V2Nav() {
   );
 }
 
+function getV2Score(signal: V2Signal): number {
+  const scored = getFinalScore(signal);
+  if (scored > 0) return Math.round(scored);
+  if (signal.confidence) return Math.round(signal.confidence * 100);
+  return 0;
+}
+
 function PrimarySignalCard({ signal }: { signal: V2Signal }) {
-  const score  = Math.round(getFinalScore(signal));
+  const score  = getV2Score(signal);
   const tags   = getSignalTags(signal);
 
   return (
@@ -560,9 +577,9 @@ function PrimarySignalCard({ signal }: { signal: V2Signal }) {
 }
 
 function SignalListRow({ signal }: { signal: V2Signal }) {
-  const score = Math.round(getFinalScore(signal));
+  const score = getV2Score(signal);
   const tags  = getSignalTags(signal).slice(0, 2);
-  const blurb = signal.implication ?? truncateSentences(signal.summary, 1);
+  const blurb = signal.implication ?? signal.directional_thesis ?? truncateSentences(signal.summary, 1);
 
   return (
     <Link href={`/signals/${signal.id}`} style={{ textDecoration: "none", display: "block" }}>
@@ -621,9 +638,17 @@ function SignalListRow({ signal }: { signal: V2Signal }) {
 }
 
 function SignalIntelligenceLayout({ signals }: { signals: V2Signal[] }) {
-  // Guard: exclude zero-score signals from the public view
-  const eligible  = signals.filter((s) => getFinalScore(s) > 0);
-  const sorted    = [...eligible].sort((a, b) => getFinalScore(b) - getFinalScore(a));
+  // Base signals are always eligible; non-base require a score > 0
+  const eligible = signals.filter((s) => s.is_base_signal || getFinalScore(s) > 0);
+  // Base signals first (ordered by confidence desc), then others by score desc
+  const sorted = [...eligible].sort((a, b) => {
+    if (a.is_base_signal && !b.is_base_signal) return -1;
+    if (!a.is_base_signal && b.is_base_signal) return 1;
+    if (a.is_base_signal && b.is_base_signal) {
+      return (b.confidence ?? 0) - (a.confidence ?? 0);
+    }
+    return getFinalScore(b) - getFinalScore(a);
+  });
   const primary   = sorted[0] ?? null;
   const remaining = sorted.slice(1);
   const isEmpty   = eligible.length === 0;
@@ -1024,7 +1049,7 @@ function SignalIntelligenceLayout({ signals }: { signals: V2Signal[] }) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default async function SignalsPage() {
-  const v2Mode = process.env.SIGNALS_V2 === "true";
+  const v2Mode = process.env.NEXT_PUBLIC_SIGNALS_V2 === "true";
 
   // V2 path
   if (v2Mode) {
