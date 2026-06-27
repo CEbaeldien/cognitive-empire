@@ -241,7 +241,7 @@ function SignalCard({ signal }: { signal: SignalResult }) {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex flex-wrap items-center gap-2">
           {signal.subcategory && <Tag>{signal.subcategory}</Tag>}
-          <ScoreBadge score={score} />
+          {score > 0 && <ScoreBadge score={score} />}
         </div>
         {sourceUrl && (
           <a href={sourceUrl} target="_blank" rel="noreferrer"
@@ -270,7 +270,9 @@ function SignalCard({ signal }: { signal: SignalResult }) {
           {impacts.map((layer) => <Tag key={layer}>{layer}</Tag>)}
         </div>
       )}
-      <p className="text-xs" style={{ color: "#334155" }}>Published {fmtDate(signal.published_at)}</p>
+      {signal.published_at && (
+        <p className="text-xs" style={{ color: "#334155" }}>Published {fmtDate(signal.published_at)}</p>
+      )}
     </article>
   );
 }
@@ -305,7 +307,9 @@ function ConvergenceCard({ c }: { c: ConvergenceResult }) {
           {doctrines.map((v) => <Tag key={v.id} accent>{v.name}</Tag>)}
         </div>
       )}
-      <p className="text-xs" style={{ color: "#334155" }}>Published {fmtDate(c.published_at)}</p>
+      {c.published_at
+        ? <p className="text-xs" style={{ color: "#334155" }}>Published {fmtDate(c.published_at)}</p>
+        : <p className="text-xs" style={{ color: "#334155" }}>Research state: Base Set</p>}
     </article>
   );
 }
@@ -385,6 +389,102 @@ function getSignalTags(signal: V2Signal): V2Tag[] {
   return tags;
 }
 
+// ── V2 operational intelligence constants ─────────────────────────────────────
+// TODO: migrate operator_move, directional_weight, urgency to DB columns on signals table
+
+type ForceUrgency = "Critical" | "High" | "Medium";
+
+type ForceMeta = {
+  title: string;
+  dominant_path: string;
+  operator_move: string;
+  directional_weight: number;
+  urgency: ForceUrgency;
+  featured: boolean;
+};
+
+const BASE_FORCE_METADATA: ForceMeta[] = [
+  {
+    title: "Infrastructure Concentration",
+    dominant_path: "Hyperscaler + frontier platform concentration",
+    operator_move: "Build provider-portable AI architecture now.",
+    directional_weight: 45,
+    urgency: "High",
+    featured: true,
+  },
+  {
+    title: "Epistemic Collapse",
+    dominant_path: "Provenance-backed verification",
+    operator_move: "Add evidence ledgers to all signals.",
+    directional_weight: 35,
+    urgency: "High",
+    featured: false,
+  },
+  {
+    title: "Accountability Diffusion",
+    dominant_path: "Audit + incident infrastructure",
+    operator_move: "Add approval matrix and incident logs.",
+    directional_weight: 30,
+    urgency: "High",
+    featured: false,
+  },
+  {
+    title: "Labor Identity Displacement",
+    dominant_path: "Uneven task restructuring",
+    operator_move: "Build operator proof artifacts weekly.",
+    directional_weight: 35,
+    urgency: "High",
+    featured: false,
+  },
+  {
+    title: "Sovereignty Fragmentation",
+    dominant_path: "Layered regulatory fragmentation",
+    operator_move: "Create CE Jurisdiction Register.",
+    directional_weight: 30,
+    urgency: "High",
+    featured: false,
+  },
+  {
+    title: "Physical Compute Ceiling",
+    dominant_path: "Power/grid constraint + solar/storage/flexibility",
+    operator_move: "Track energy geography as AI geography.",
+    directional_weight: 35,
+    urgency: "Critical",
+    featured: true,
+  },
+  {
+    title: "Access Stratification",
+    dominant_path: "Stratified abundance",
+    operator_move: "Build low-bandwidth, PWA-first, provider-flexible systems.",
+    directional_weight: 35,
+    urgency: "Critical",
+    featured: true,
+  },
+];
+
+const SEEDED_CONVERGENCE: ConvergenceResult = {
+  id: "seeded-compute-sovereignty",
+  title: "Compute Sovereignty Convergence",
+  summary:
+    "AI leverage is concentrating around actors with compute, energy, jurisdictional access, and deployment infrastructure.",
+  convergence_score: null,
+  subcategories: [
+    "Infrastructure Concentration",
+    "Physical Compute Ceiling",
+    "Access Stratification",
+    "Sovereignty Fragmentation",
+  ],
+  second_order_implications:
+    "The next competitive moat is not software — it is physical control over the layers that run software.",
+  impact_layer: null,
+  published_at: null,
+  convergence_doctrine_vectors: [],
+};
+
+function getMeta(title: string): ForceMeta | null {
+  return BASE_FORCE_METADATA.find((m) => m.title === title) ?? null;
+}
+
 // ── Inline SVG icons ──────────────────────────────────────────────────────────
 
 function ShieldIcon() {
@@ -451,6 +551,34 @@ function V2TagChip({ tag }: { tag: V2Tag }) {
   );
 }
 
+function UrgencyBadge({ urgency }: { urgency: ForceUrgency }) {
+  const s = urgency === "Critical"
+    ? { bg: "rgba(239,68,68,0.12)",  color: "#f87171"  }
+    : urgency === "High"
+      ? { bg: "rgba(251,191,36,0.10)", color: "#fbbf24" }
+      : { bg: "rgba(0,224,255,0.08)", color: "#67e8f9"  };
+  return (
+    <span style={{
+      fontSize: 9, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase",
+      background: s.bg, color: s.color, padding: "2px 8px", borderRadius: 4,
+    }}>
+      {urgency}
+    </span>
+  );
+}
+
+function ActNowStateBadge() {
+  return (
+    <span style={{
+      fontSize: 9, fontWeight: 800, letterSpacing: "0.14em", textTransform: "uppercase",
+      background: "rgba(251,191,36,0.15)", color: "#fbbf24",
+      padding: "2px 9px", borderRadius: 4,
+    }}>
+      ACT NOW
+    </span>
+  );
+}
+
 function V2Nav() {
   return (
     <nav className="ce-v2-nav" style={{
@@ -459,7 +587,6 @@ function V2Nav() {
       display: "flex", alignItems: "center", justifyContent: "space-between",
       padding: "0 40px", height: 52,
     }}>
-      {/* Wordmark */}
       <Link href="/signals" style={{ textDecoration: "none" }}>
         <span style={{
           fontFamily: playfair.style.fontFamily,
@@ -470,7 +597,6 @@ function V2Nav() {
         </span>
       </Link>
 
-      {/* Active nav item — SIGNALS only */}
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
         <Link href="/signals" style={{
           fontSize: 11, fontWeight: 600, letterSpacing: "0.18em",
@@ -491,9 +617,204 @@ function getV2Score(signal: V2Signal): number {
   return 0;
 }
 
+// ── Directional Command Layer ─────────────────────────────────────────────────
+
+type ActNowCardData = {
+  title: string;
+  dominant_path: string;
+  operator_move: string;
+  urgency: ForceUrgency;
+  directional_weight: number;
+};
+
+function ActNowCard({ data }: { data: ActNowCardData }) {
+  return (
+    <div style={{
+      padding: "22px 24px",
+      borderRadius: 8,
+      background: "rgba(5, 9, 18, 0.80)",
+      border: data.urgency === "Critical"
+        ? "1px solid rgba(239,68,68,0.22)"
+        : "1px solid rgba(201,169,97,0.20)",
+      display: "flex", flexDirection: "column", gap: 14,
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <ActNowStateBadge />
+        <UrgencyBadge urgency={data.urgency} />
+        <span style={{ fontSize: 10, color: CE_MUTED, marginLeft: "auto" }}>
+          {data.directional_weight}% weight
+        </span>
+      </div>
+
+      <p style={{
+        fontFamily: playfair.style.fontFamily,
+        fontSize: 16, fontWeight: 600, color: CE_WHITE,
+        margin: 0, lineHeight: 1.3,
+      }}>
+        {data.title}
+      </p>
+
+      <div>
+        <p style={{
+          fontSize: 9, fontWeight: 700, letterSpacing: "0.35em", textTransform: "uppercase",
+          color: CE_MUTED, margin: "0 0 5px",
+        }}>
+          Dominant Path
+        </p>
+        <p style={{ fontSize: 12, color: CE_WHITE, margin: 0, lineHeight: 1.55, opacity: 0.82 }}>
+          {data.dominant_path}
+        </p>
+      </div>
+
+      <div style={{
+        borderTop: "1px solid rgba(201,169,97,0.09)", paddingTop: 12,
+        display: "flex", alignItems: "flex-start", gap: 8,
+      }}>
+        <span style={{
+          fontSize: 9, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase",
+          color: GOLD, flexShrink: 0, paddingTop: 2,
+        }}>
+          MOVE →
+        </span>
+        <p style={{ fontSize: 12, color: CE_WHITE, margin: 0, lineHeight: 1.55, opacity: 0.88 }}>
+          {data.operator_move}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function DirectionalCommandLayer({ signals }: { signals: V2Signal[] }) {
+  const featured = BASE_FORCE_METADATA
+    .filter((m) => m.featured)
+    .map((meta) => {
+      const db = signals.find((s) => s.title === meta.title);
+      return {
+        title: meta.title,
+        dominant_path: db?.dominant_path ?? meta.dominant_path,
+        operator_move: meta.operator_move,
+        urgency: meta.urgency,
+        directional_weight: meta.directional_weight,
+      } as ActNowCardData;
+    });
+
+  return (
+    <section style={{ marginBottom: 52 }}>
+      <div style={{ marginBottom: 20 }}>
+        <p style={{
+          fontSize: 9, fontWeight: 700, letterSpacing: "0.45em", textTransform: "uppercase",
+          color: CE_MUTED, margin: "0 0 7px",
+        }}>
+          Directional Intelligence
+        </p>
+        <p style={{
+          fontFamily: playfair.style.fontFamily,
+          fontSize: 18, fontWeight: 600, color: CE_WHITE,
+          margin: "0 0 14px",
+        }}>
+          Dominant Signals — 2026–2031
+        </p>
+        <div style={{ height: 1, background: "rgba(239,68,68,0.18)" }} />
+      </div>
+
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+        gap: 14,
+      }}>
+        {featured.map((d) => <ActNowCard key={d.title} data={d} />)}
+      </div>
+    </section>
+  );
+}
+
+// ── Force Matrix ──────────────────────────────────────────────────────────────
+
+function ForceMatrixTable({ signals }: { signals: V2Signal[] }) {
+  return (
+    <section style={{ marginBottom: 52 }}>
+      <div style={{ marginBottom: 16 }}>
+        <p style={{
+          fontSize: 9, fontWeight: 700, letterSpacing: "0.45em", textTransform: "uppercase",
+          color: CE_MUTED, margin: "0 0 7px",
+        }}>
+          Force Register
+        </p>
+        <p style={{
+          fontFamily: playfair.style.fontFamily,
+          fontSize: 18, fontWeight: 600, color: CE_WHITE,
+          margin: "0 0 14px",
+        }}>
+          Seven Base Forces
+        </p>
+        <div style={{ height: 1, background: CE_FAINT }} />
+      </div>
+
+      <div style={{ borderRadius: 8, border: `1px solid ${CE_FAINT}`, overflow: "hidden", overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, minWidth: 700 }}>
+          <thead>
+            <tr style={{ background: "rgba(3,5,10,0.85)", borderBottom: `1px solid ${CE_FAINT}` }}>
+              {["Force", "State", "Dominant Path", "Weight", "Urgency", "Operator Move"].map((h) => (
+                <th key={h} style={{
+                  padding: "10px 14px", textAlign: "left",
+                  fontSize: 9, fontWeight: 700, letterSpacing: "0.3em", textTransform: "uppercase",
+                  color: CE_MUTED, whiteSpace: "nowrap",
+                }}>
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {BASE_FORCE_METADATA.map((meta, i) => {
+              const db = signals.find((s) => s.title === meta.title);
+              const dominantPath = db?.dominant_path ?? meta.dominant_path;
+              return (
+                <tr key={meta.title} style={{
+                  borderBottom: i < BASE_FORCE_METADATA.length - 1 ? `1px solid ${CE_FAINT}` : "none",
+                  background: "rgba(3,5,10,0.45)",
+                }}>
+                  <td style={{
+                    padding: "11px 14px", color: CE_WHITE,
+                    fontWeight: 600, whiteSpace: "nowrap", fontSize: 12,
+                  }}>
+                    {meta.title}
+                  </td>
+                  <td style={{ padding: "11px 14px" }}>
+                    <ActNowStateBadge />
+                  </td>
+                  <td style={{ padding: "11px 14px", color: CE_MUTED, maxWidth: 220, fontSize: 11 }}>
+                    {dominantPath}
+                  </td>
+                  <td style={{ padding: "11px 14px", color: CE_WHITE, fontWeight: 700, whiteSpace: "nowrap" }}>
+                    {meta.directional_weight}%
+                  </td>
+                  <td style={{ padding: "11px 14px" }}>
+                    <UrgencyBadge urgency={meta.urgency} />
+                  </td>
+                  <td style={{ padding: "11px 14px", color: CE_MUTED, fontSize: 11 }}>
+                    {meta.operator_move}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
+// ── V2 signal cards ───────────────────────────────────────────────────────────
+
 function PrimarySignalCard({ signal }: { signal: V2Signal }) {
   const score  = getV2Score(signal);
   const tags   = getSignalTags(signal);
+  const meta   = getMeta(signal.title);
+  const dominantPath   = signal.dominant_path ?? meta?.dominant_path ?? null;
+  const operatorMove   = meta?.operator_move ?? null;
+  const directionalW   = meta?.directional_weight ?? null;
+  const isActNow       = signal.signal_state === "act_now";
 
   return (
     <div className="ce-primary-card ce-primary-card-grid" style={{
@@ -503,7 +824,22 @@ function PrimarySignalCard({ signal }: { signal: V2Signal }) {
       overflow: "hidden",
     }}>
       {/* Left: content */}
-      <div style={{ padding: "28px 30px", display: "flex", flexDirection: "column", gap: 18 }}>
+      <div style={{ padding: "28px 30px", display: "flex", flexDirection: "column", gap: 16 }}>
+        {/* State badges row */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {isActNow && <ActNowStateBadge />}
+          {meta && <UrgencyBadge urgency={meta.urgency} />}
+          {!isActNow && signal.signal_state && (
+            <span style={{
+              fontSize: 9, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase",
+              background: "rgba(96,165,250,0.12)", color: "#93c5fd",
+              padding: "2px 8px", borderRadius: 4,
+            }}>
+              {signal.signal_state.replace("_", " ")}
+            </span>
+          )}
+        </div>
+
         <p style={{
           fontSize: 9, fontWeight: 700, letterSpacing: "0.45em",
           textTransform: "uppercase", color: CE_MUTED, margin: 0,
@@ -519,6 +855,37 @@ function PrimarySignalCard({ signal }: { signal: V2Signal }) {
           {signal.title}
         </h2>
 
+        {dominantPath && (
+          <div>
+            <p style={{
+              fontSize: 9, fontWeight: 700, letterSpacing: "0.35em", textTransform: "uppercase",
+              color: CE_MUTED, margin: "0 0 5px",
+            }}>
+              Dominant Path
+            </p>
+            <p style={{ fontSize: 12, lineHeight: 1.65, color: CE_MUTED, margin: 0 }}>
+              {dominantPath}
+            </p>
+          </div>
+        )}
+
+        {operatorMove && (
+          <div style={{
+            display: "flex", alignItems: "flex-start", gap: 8,
+            borderTop: `1px solid ${CE_FAINT}`, paddingTop: 12,
+          }}>
+            <span style={{
+              fontSize: 9, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase",
+              color: GOLD, flexShrink: 0, paddingTop: 2,
+            }}>
+              MOVE →
+            </span>
+            <p style={{ fontSize: 12, color: CE_WHITE, margin: 0, lineHeight: 1.55, opacity: 0.9 }}>
+              {operatorMove}
+            </p>
+          </div>
+        )}
+
         <p style={{ fontSize: 13, lineHeight: 1.75, color: CE_MUTED, margin: 0 }}>
           {signal.summary}
         </p>
@@ -530,44 +897,69 @@ function PrimarySignalCard({ signal }: { signal: V2Signal }) {
         )}
       </div>
 
-      {/* Divider */}
+      {/* Right: score / weight */}
       <div className="ce-primary-card-right" style={{ borderLeft: "1px solid rgba(201,169,97,0.12)", display: "flex" }}>
-        {/* Right: confidence */}
         <div style={{
           flex: 1, padding: "28px 26px",
-          display: "flex", flexDirection: "column", justifyContent: "center", gap: 14,
+          display: "flex", flexDirection: "column", justifyContent: "center", gap: 16,
         }}>
           <p style={{
             fontSize: 9, fontWeight: 700, letterSpacing: "0.45em",
             textTransform: "uppercase", color: CE_MUTED, margin: 0,
           }}>
-            Confidence
+            {score > 0 ? "Confidence" : "Status"}
           </p>
 
-          <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-            <span style={{
-              fontFamily: playfair.style.fontFamily,
-              fontSize: 54, fontWeight: 700, lineHeight: 1,
-              color: CE_WHITE,
-            }}>
-              {score}
-            </span>
-            <span style={{ fontSize: 16, color: CE_MUTED, fontWeight: 400 }}>/100</span>
-          </div>
+          {score > 0 ? (
+            <>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+                <span style={{
+                  fontFamily: playfair.style.fontFamily,
+                  fontSize: 54, fontWeight: 700, lineHeight: 1,
+                  color: CE_WHITE,
+                }}>
+                  {score}
+                </span>
+                <span style={{ fontSize: 16, color: CE_MUTED, fontWeight: 400 }}>/100</span>
+              </div>
 
-          {/* Progress bar — fills from 0 via CSS animation */}
-          <div style={{ height: 3, background: GOLD_FAINT, borderRadius: 2, overflow: "hidden" }}>
-            <div
-              className="ce-bar-fill"
-              style={{ "--target-width": `${Math.min(score, 100)}%` } as React.CSSProperties}
-            />
-          </div>
+              <div style={{ height: 3, background: GOLD_FAINT, borderRadius: 2, overflow: "hidden" }}>
+                <div
+                  className="ce-bar-fill"
+                  style={{ "--target-width": `${Math.min(score, 100)}%` } as React.CSSProperties}
+                />
+              </div>
+            </>
+          ) : (
+            <span style={{
+              fontSize: 11, color: CE_MUTED, fontWeight: 500,
+              background: "rgba(100,116,139,0.08)",
+              border: "1px solid rgba(100,116,139,0.15)",
+              padding: "6px 12px", borderRadius: 6, alignSelf: "flex-start",
+            }}>
+              Score pending
+            </span>
+          )}
+
+          {directionalW && (
+            <div>
+              <p style={{
+                fontSize: 9, fontWeight: 700, letterSpacing: "0.35em", textTransform: "uppercase",
+                color: CE_MUTED, margin: "0 0 4px",
+              }}>
+                Directional Weight
+              </p>
+              <p style={{ fontSize: 24, fontWeight: 700, color: CE_WHITE, margin: 0 }}>
+                {directionalW}%
+              </p>
+            </div>
+          )}
 
           <p style={{
             fontSize: 10, color: CE_MUTED, margin: 0,
             display: "flex", alignItems: "center", gap: 5,
           }}>
-            <span style={{ color: CE_MUTED }}>✓</span>
+            <span>✓</span>
             human-reviewed · doctrine-governed
           </p>
         </div>
@@ -577,9 +969,12 @@ function PrimarySignalCard({ signal }: { signal: V2Signal }) {
 }
 
 function SignalListRow({ signal }: { signal: V2Signal }) {
-  const score = getV2Score(signal);
-  const tags  = getSignalTags(signal).slice(0, 2);
-  const blurb = signal.implication ?? signal.directional_thesis ?? truncateSentences(signal.summary, 1);
+  const score      = getV2Score(signal);
+  const tags       = getSignalTags(signal).slice(0, 2);
+  const meta       = getMeta(signal.title);
+  const blurb      = signal.implication ?? signal.directional_thesis ?? truncateSentences(signal.summary, 1);
+  const operatorMove = meta?.operator_move ?? null;
+  const isActNow   = signal.signal_state === "act_now";
 
   return (
     <Link href={`/signals/${signal.id}`} style={{ textDecoration: "none", display: "block" }}>
@@ -591,28 +986,49 @@ function SignalListRow({ signal }: { signal: V2Signal }) {
         padding: "16px 4px",
         cursor: "pointer",
       }}>
-        {/* Status dot */}
+        {/* Status dot — gold for act_now */}
         <div style={{
           width: 7, height: 7, borderRadius: "50%",
-          background: CE_FAINT, flexShrink: 0, justifySelf: "center",
+          background: isActNow ? GOLD : CE_FAINT,
+          flexShrink: 0, justifySelf: "center",
         }} />
 
-        {/* Title + blurb */}
+        {/* Title + context */}
         <div style={{ minWidth: 0 }}>
-          <p style={{
-            fontFamily: playfair.style.fontFamily,
-            fontSize: 14, fontWeight: 600, color: CE_WHITE,
-            margin: "0 0 4px", lineHeight: 1.35,
-            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-          }}>
-            {signal.title}
-          </p>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+            <p style={{
+              fontFamily: playfair.style.fontFamily,
+              fontSize: 14, fontWeight: 600, color: CE_WHITE,
+              margin: 0, lineHeight: 1.35,
+              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+            }}>
+              {signal.title}
+            </p>
+            {isActNow && (
+              <span style={{
+                fontSize: 8, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase",
+                background: "rgba(251,191,36,0.12)", color: "#fbbf24",
+                padding: "1px 6px", borderRadius: 3, flexShrink: 0,
+              }}>
+                ACT NOW
+              </span>
+            )}
+          </div>
           {blurb && (
             <p style={{
               fontSize: 12, color: CE_MUTED, margin: 0, lineHeight: 1.5,
               overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
             }}>
               {blurb}
+            </p>
+          )}
+          {operatorMove && (
+            <p style={{ fontSize: 11, margin: "4px 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <span style={{
+                color: GOLD, fontWeight: 700, fontSize: 9,
+                letterSpacing: "0.2em", textTransform: "uppercase", marginRight: 6,
+              }}>MOVE</span>
+              <span style={{ color: CE_MUTED }}>{operatorMove}</span>
             </p>
           )}
         </div>
@@ -622,36 +1038,47 @@ function SignalListRow({ signal }: { signal: V2Signal }) {
           {tags.map((t) => <V2TagChip key={t.label} tag={t} />)}
         </div>
 
-        {/* Score */}
-        <span style={{
-          fontSize: 13, fontWeight: 600, color: CE_WHITE,
-          letterSpacing: "0.02em", flexShrink: 0,
-        }}>
-          {score}<span style={{ fontSize: 11, fontWeight: 400, color: CE_MUTED, opacity: 0.55 }}>/100</span>
-        </span>
+        {/* Score or pending */}
+        {score > 0 ? (
+          <span style={{
+            fontSize: 13, fontWeight: 600, color: CE_WHITE,
+            letterSpacing: "0.02em", flexShrink: 0,
+          }}>
+            {score}<span style={{ fontSize: 11, fontWeight: 400, color: CE_MUTED, opacity: 0.55 }}>/100</span>
+          </span>
+        ) : (
+          <span style={{ fontSize: 10, color: CE_MUTED, opacity: 0.6, flexShrink: 0 }}>pending</span>
+        )}
 
-        {/* Arrow — gold: directional accent, one of 5 permitted gold uses */}
+        {/* Arrow */}
         <span style={{ fontSize: 14, color: GOLD, flexShrink: 0 }}>→</span>
       </div>
     </Link>
   );
 }
 
-function SignalIntelligenceLayout({ signals }: { signals: V2Signal[] }) {
-  // Base signals are always eligible; non-base require a score > 0
+// ── V2 layout ─────────────────────────────────────────────────────────────────
+
+function SignalIntelligenceLayout({
+  signals,
+  convergences,
+}: {
+  signals: V2Signal[];
+  convergences: ConvergenceResult[];
+}) {
   const eligible = signals.filter((s) => s.is_base_signal || getFinalScore(s) > 0);
-  // Base signals first (ordered by confidence desc), then others by score desc
-  const sorted = [...eligible].sort((a, b) => {
+  const sorted   = [...eligible].sort((a, b) => {
     if (a.is_base_signal && !b.is_base_signal) return -1;
     if (!a.is_base_signal && b.is_base_signal) return 1;
-    if (a.is_base_signal && b.is_base_signal) {
-      return (b.confidence ?? 0) - (a.confidence ?? 0);
-    }
+    if (a.is_base_signal && b.is_base_signal) return (b.confidence ?? 0) - (a.confidence ?? 0);
     return getFinalScore(b) - getFinalScore(a);
   });
   const primary   = sorted[0] ?? null;
   const remaining = sorted.slice(1);
   const isEmpty   = eligible.length === 0;
+
+  // Fall back to seeded convergence if nothing published yet
+  const displayConvergences = convergences.length > 0 ? convergences : [SEEDED_CONVERGENCE];
 
   return (
     <div style={{
@@ -660,58 +1087,46 @@ function SignalIntelligenceLayout({ signals }: { signals: V2Signal[] }) {
       color: CE_WHITE,
     }}>
 
-      {/* ── Animation layer ─────────────────────────────────────────────────── */}
       <style>{`
-        /* CE Signals V2 — command-surface motion */
-
         @keyframes ceEaseUp {
           from { opacity: 0; transform: translateY(6px); }
           to   { opacity: 1; transform: translateY(0);   }
         }
-
         @keyframes ceBorderPulse {
           0%, 100% { border-color: rgba(201,169,97,0.38); }
           50%       { border-color: rgba(201,169,97,0.70); }
         }
-
         @keyframes ceFillBar {
           from { width: 0; }
           to   { width: var(--target-width, 0%); }
         }
-
         @keyframes ceBgDrift {
           0%,100% { transform: translate(0px,   0px);  opacity: 0.52; }
           33%      { transform: translate(10px, -6px);  opacity: 0.44; }
           66%      { transform: translate(-8px,  5px);  opacity: 0.48; }
         }
-
-        /* Ambient layer — imperceptible whole-layer slow drift */
         @keyframes ceAmbientDrift {
           0%,100% { transform: translate(0px,  0px); }
           35%     { transform: translate(5px, -4px); }
           70%     { transform: translate(-4px, 3px); }
         }
-
-        /* Light traces — opacity oscillation, very slow */
         @keyframes ceTraceDrift {
           0%,100% { opacity: 0.60; }
           50%     { opacity: 1.00; }
         }
-
-        /* Scattered points — sparse, async twinkle */
         @keyframes ceTwinkle {
           0%,100% { opacity: 0.30; }
           25%     { opacity: 0.90; }
           65%     { opacity: 0.50; }
         }
 
-        /* Load stagger — elements start at opacity:0 */
         .ce-el-1 { opacity: 0; animation: ceEaseUp 320ms ease-out   0ms forwards; }
         .ce-el-2 { opacity: 0; animation: ceEaseUp 320ms ease-out  80ms forwards; }
         .ce-el-3 { opacity: 0; animation: ceEaseUp 320ms ease-out 160ms forwards; }
         .ce-el-4 { opacity: 0; animation: ceEaseUp 320ms ease-out 240ms forwards; }
+        .ce-el-5 { opacity: 0; animation: ceEaseUp 320ms ease-out 320ms forwards; }
+        .ce-el-6 { opacity: 0; animation: ceEaseUp 320ms ease-out 400ms forwards; }
 
-        /* Primary card — telemetry border pulse + hover lift */
         .ce-primary-card {
           animation: ceBorderPulse 4s ease-in-out infinite;
           transition: transform 200ms ease-out;
@@ -722,7 +1137,6 @@ function SignalIntelligenceLayout({ signals }: { signals: V2Signal[] }) {
           border-color: rgba(201,169,97,0.75) !important;
         }
 
-        /* Confidence bar fill */
         .ce-bar-fill {
           height: 100%;
           width: var(--target-width, 0%);
@@ -731,17 +1145,9 @@ function SignalIntelligenceLayout({ signals }: { signals: V2Signal[] }) {
           animation: ceFillBar 900ms ease-out forwards;
         }
 
-        /* Background drift layer */
-        .ce-bg-drift {
-          animation: ceBgDrift 22s ease-in-out infinite;
-        }
+        .ce-bg-drift       { animation: ceBgDrift 22s ease-in-out infinite; }
+        .ce-ambient-layer  { animation: ceAmbientDrift 30s ease-in-out infinite; }
 
-        /* Ambient SVG layer — slow whole-layer drift */
-        .ce-ambient-layer {
-          animation: ceAmbientDrift 30s ease-in-out infinite;
-        }
-
-        /* Light traces — individual fade cycles, staggered */
         .ce-trace-1 { animation: ceTraceDrift 28s ease-in-out  0s infinite; }
         .ce-trace-2 { animation: ceTraceDrift 24s ease-in-out  7s infinite; }
         .ce-trace-3 { animation: ceTraceDrift 32s ease-in-out 14s infinite; }
@@ -749,7 +1155,6 @@ function SignalIntelligenceLayout({ signals }: { signals: V2Signal[] }) {
         .ce-trace-5 { animation: ceTraceDrift 30s ease-in-out 19s infinite; }
         .ce-trace-6 { animation: ceTraceDrift 27s ease-in-out 11s infinite; }
 
-        /* Light points — async twinkle delays */
         .ce-dot-1  { animation: ceTwinkle 18s ease-in-out  0s  infinite; }
         .ce-dot-2  { animation: ceTwinkle 22s ease-in-out  8s  infinite; }
         .ce-dot-3  { animation: ceTwinkle 16s ease-in-out  4s  infinite; }
@@ -761,13 +1166,8 @@ function SignalIntelligenceLayout({ signals }: { signals: V2Signal[] }) {
         .ce-dot-9  { animation: ceTwinkle 20s ease-in-out 15s  infinite; }
         .ce-dot-10 { animation: ceTwinkle 24s ease-in-out  1s  infinite; }
 
-        /* Under-review row hover */
-        .ce-under-review {
-          transition: opacity 200ms ease-out;
-        }
+        .ce-under-review { transition: opacity 200ms ease-out; }
         .ce-under-review:hover { opacity: 0.75; }
-
-        /* ── Judgment process strip + context panels ──────────────────── */
 
         .ce-judgment-eyebrow {
           font-family: ui-monospace, monospace;
@@ -842,31 +1242,21 @@ function SignalIntelligenceLayout({ signals }: { signals: V2Signal[] }) {
 
         .ce-primary-slot { background: #03050A; }
 
-        /* ── Mobile responsive ── */
         @media (max-width: 768px) {
           .ce-v2-nav  { padding: 0 20px !important; }
           .ce-v2-main { padding: 36px 20px 60px !important; }
-
-          /* Primary card: stack left/right panels */
-          .ce-primary-card-grid { grid-template-columns: 1fr !important; }
+          .ce-primary-card-grid  { grid-template-columns: 1fr !important; }
           .ce-primary-card-right { border-left: none !important; border-top: 1px solid rgba(201,169,97,0.12) !important; }
-
-          /* List row: hide tags column on small screens */
           .ce-list-row-tags { display: none !important; }
-
-          /* Judgment strip: 2-col on mobile */
           .ce-judgment-strip { grid-template-columns: 1fr 1fr !important; }
           .ce-judgment-stage:nth-child(odd)  { border-right: 1px solid rgba(201,169,97,0.12); }
           .ce-judgment-stage:nth-child(even) { border-right: none !important; }
           .ce-judgment-stage { border-bottom: 1px solid rgba(201,169,97,0.08); }
         }
 
-        /* prefers-reduced-motion — fall back to static final states */
         @media (prefers-reduced-motion: reduce) {
-          .ce-el-1, .ce-el-2, .ce-el-3, .ce-el-4 {
-            opacity: 1;
-            animation: none;
-            transform: none;
+          .ce-el-1, .ce-el-2, .ce-el-3, .ce-el-4, .ce-el-5, .ce-el-6 {
+            opacity: 1; animation: none; transform: none;
           }
           .ce-primary-card { animation: none; }
           .ce-bar-fill     { animation: none; }
@@ -876,84 +1266,47 @@ function SignalIntelligenceLayout({ signals }: { signals: V2Signal[] }) {
           .ce-trace-4, .ce-trace-5, .ce-trace-6,
           .ce-dot-1, .ce-dot-2, .ce-dot-3, .ce-dot-4, .ce-dot-5,
           .ce-dot-6, .ce-dot-7, .ce-dot-8, .ce-dot-9, .ce-dot-10 {
-            animation: none;
-            opacity: 1;
+            animation: none; opacity: 1;
           }
           .ce-context-panel { transition: none; }
           .ce-context-panel:hover { transform: none; }
         }
       `}</style>
 
-      {/* Ambient gold light traces + scattered points — edge-only, never over text */}
+      {/* Ambient gold light traces */}
       <div
         aria-hidden="true"
         className="ce-ambient-layer"
         style={{ position: "absolute", inset: 0, pointerEvents: "none", overflow: "hidden" }}
       >
-        <svg
-          width="100%" height="100%"
-          viewBox="0 0 1200 800"
-          preserveAspectRatio="none"
-          style={{ position: "absolute", inset: 0 }}
-        >
-          {/* ── Light traces — thin cubic bezier curves, hugging edges ── */}
-
-          {/* Top-left corner arc */}
-          <path className="ce-trace-1"
-            d="M -10,42 C 50,-14 138,22 212,6"
+        <svg width="100%" height="100%" viewBox="0 0 1200 800" preserveAspectRatio="none"
+          style={{ position: "absolute", inset: 0 }}>
+          <path className="ce-trace-1" d="M -10,42 C 50,-14 138,22 212,6"
             fill="none" stroke="#C9A961" strokeWidth="0.8" strokeOpacity="0.13" />
-
-          {/* Top-right corner arc */}
-          <path className="ce-trace-2"
-            d="M 988,8 C 1058,-18 1142,26 1215,14"
+          <path className="ce-trace-2" d="M 988,8 C 1058,-18 1142,26 1215,14"
             fill="none" stroke="#C9A961" strokeWidth="0.7" strokeOpacity="0.10" />
-
-          {/* Left edge, lower sweep */}
-          <path className="ce-trace-3"
-            d="M -14,548 C 16,594 6,652 -14,722"
+          <path className="ce-trace-3" d="M -14,548 C 16,594 6,652 -14,722"
             fill="none" stroke="#C9A961" strokeWidth="0.7" strokeOpacity="0.10" />
-
-          {/* Right edge, lower sweep */}
-          <path className="ce-trace-4"
-            d="M 1214,504 C 1194,572 1210,652 1216,742"
+          <path className="ce-trace-4" d="M 1214,504 C 1194,572 1210,652 1216,742"
             fill="none" stroke="#C9A961" strokeWidth="0.6" strokeOpacity="0.09" />
-
-          {/* Bottom-left sweep */}
-          <path className="ce-trace-5"
-            d="M 18,790 C 92,756 192,796 292,776"
+          <path className="ce-trace-5" d="M 18,790 C 92,756 192,796 292,776"
             fill="none" stroke="#C9A961" strokeWidth="0.6" strokeOpacity="0.09" />
-
-          {/* Bottom-right sweep */}
-          <path className="ce-trace-6"
-            d="M 908,776 C 1008,796 1112,756 1215,788"
+          <path className="ce-trace-6" d="M 908,776 C 1008,796 1112,756 1215,788"
             fill="none" stroke="#C9A961" strokeWidth="0.7" strokeOpacity="0.10" />
 
-          {/* ── Scattered light points — low density, edges and corners ── */}
-
-          {/* Top-left corner */}
           <circle className="ce-dot-1"  cx="44"   cy="70"  r="1.5" fill="#C9A961" fillOpacity="0.18" />
-          {/* Top-right corner */}
           <circle className="ce-dot-2"  cx="1156" cy="46"  r="1.2" fill="#EEF3FA" fillOpacity="0.10" />
-          {/* Left edge, upper-mid */}
           <circle className="ce-dot-3"  cx="22"   cy="262" r="1.3" fill="#C9A961" fillOpacity="0.12" />
-          {/* Right edge, upper-mid */}
           <circle className="ce-dot-4"  cx="1178" cy="214" r="1.5" fill="#C9A961" fillOpacity="0.14" />
-          {/* Left edge, lower */}
           <circle className="ce-dot-5"  cx="18"   cy="524" r="1.1" fill="#EEF3FA" fillOpacity="0.07" />
-          {/* Right edge, lower */}
           <circle className="ce-dot-6"  cx="1182" cy="492" r="1.3" fill="#C9A961" fillOpacity="0.11" />
-          {/* Bottom-left area */}
           <circle className="ce-dot-7"  cx="76"   cy="732" r="1.0" fill="#EEF3FA" fillOpacity="0.06" />
-          {/* Bottom, left-of-center */}
           <circle className="ce-dot-8"  cx="312"  cy="764" r="1.2" fill="#C9A961" fillOpacity="0.09" />
-          {/* Bottom, right-of-center */}
           <circle className="ce-dot-9"  cx="888"  cy="770" r="1.0" fill="#EEF3FA" fillOpacity="0.06" />
-          {/* Bottom-right area */}
           <circle className="ce-dot-10" cx="1124" cy="742" r="1.4" fill="#C9A961" fillOpacity="0.13" />
         </svg>
       </div>
 
-      {/* Slow ambient navy lift — drifts behind all content */}
       <div
         aria-hidden="true"
         className="ce-bg-drift"
@@ -963,7 +1316,6 @@ function SignalIntelligenceLayout({ signals }: { signals: V2Signal[] }) {
         }}
       />
 
-      {/* All content sits above the drift layer */}
       <div style={{ position: "relative" }}>
         <V2Nav />
 
@@ -998,15 +1350,25 @@ function SignalIntelligenceLayout({ signals }: { signals: V2Signal[] }) {
             </div>
           ) : (
             <>
-              {/* Primary signal card — stagger 3 */}
+              {/* Directional Command Layer — stagger 3 */}
+              <div className="ce-el-3">
+                <DirectionalCommandLayer signals={eligible} />
+              </div>
+
+              {/* Force Matrix — stagger 4 */}
+              <div className="ce-el-4">
+                <ForceMatrixTable signals={eligible} />
+              </div>
+
+              {/* Primary signal card — stagger 5 */}
               {primary && (
-                <div className="ce-el-3" style={{ marginBottom: 44 }}>
+                <div className="ce-el-5" style={{ marginBottom: 44 }}>
                   <SignalWithContext primarySignal={<PrimarySignalCard signal={primary} />} />
                 </div>
               )}
 
-              {/* Secondary signals or quiet under-review state — stagger 4 */}
-              <div className="ce-el-4">
+              {/* Signal list — stagger 6 */}
+              <div className="ce-el-6">
                 {remaining.length > 0 ? (
                   <div>
                     <p style={{
@@ -1026,17 +1388,41 @@ function SignalIntelligenceLayout({ signals }: { signals: V2Signal[] }) {
                     ))}
                   </div>
                 ) : (
-                  <p
-                    className="ce-under-review"
-                    style={{
-                      fontSize: 12, color: CE_MUTED, margin: 0,
-                      letterSpacing: "0.01em", lineHeight: 1.6,
-                      borderTop: `1px solid ${CE_FAINT}`, paddingTop: 20,
-                    }}
-                  >
+                  <p className="ce-under-review" style={{
+                    fontSize: 12, color: CE_MUTED, margin: 0,
+                    letterSpacing: "0.01em", lineHeight: 1.6,
+                    borderTop: `1px solid ${CE_FAINT}`, paddingTop: 20,
+                  }}>
                     More signals are under review. The gate decides when they are ready.
                   </p>
                 )}
+              </div>
+
+              {/* Active Convergences — at bottom */}
+              <div style={{ marginTop: 64 }}>
+                <div style={{ marginBottom: 16 }}>
+                  <p style={{
+                    fontSize: 9, fontWeight: 700, letterSpacing: "0.45em", textTransform: "uppercase",
+                    color: CE_MUTED, margin: "0 0 7px",
+                  }}>
+                    Convergence Intelligence
+                  </p>
+                  <p style={{
+                    fontFamily: playfair.style.fontFamily,
+                    fontSize: 18, fontWeight: 600, color: CE_WHITE,
+                    margin: "0 0 14px",
+                  }}>
+                    Active Convergences
+                  </p>
+                  <div style={{ height: 1, background: "rgba(0,224,255,0.15)" }} />
+                </div>
+                <div style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+                  gap: 16,
+                }}>
+                  {displayConvergences.map((c) => <ConvergenceCard key={c.id} c={c} />)}
+                </div>
               </div>
             </>
           )}
@@ -1053,19 +1439,23 @@ export default async function SignalsPage() {
 
   // V2 path
   if (v2Mode) {
-    let v2Signals: V2Signal[] = [];
+    let v2Signals: V2Signal[]           = [];
+    let v2Convergences: ConvergenceResult[] = [];
     try {
-      v2Signals = await fetchV2Signals();
+      [v2Signals, v2Convergences] = await Promise.all([
+        fetchV2Signals(),
+        fetchConvergences(),
+      ]);
     } catch {
       // render empty state on error
     }
-    return <SignalIntelligenceLayout signals={v2Signals} />;
+    return <SignalIntelligenceLayout signals={v2Signals} convergences={v2Convergences} />;
   }
 
   // V1 path (unchanged)
-  let signals: SignalResult[]         = [];
+  let signals: SignalResult[]           = [];
   let convergences: ConvergenceResult[] = [];
-  let fetchError: string | null       = null;
+  let fetchError: string | null         = null;
 
   try {
     [signals, convergences] = await Promise.all([fetchSignals(), fetchConvergences()]);
