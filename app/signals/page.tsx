@@ -68,9 +68,6 @@ type V2Signal = {
   dominant_path: string | null;
   operator_move: string | null;
   directional_weight: number | null;
-  v2_category: string | null;
-  v2_subcategory: string | null;
-  confidence: number | null;
   signal_scores: { final_score: number } | null;
   signal_pressure_vectors: Array<{ pressure_vectors: VectorRef | null }>;
   signal_doctrine_vectors: Array<{ doctrine_vectors: VectorRef | null }>;
@@ -178,7 +175,6 @@ async function fetchV2Signals(): Promise<V2Signal[]> {
       id, title, summary, implication, category, subcategory, published_at,
       signal_state, is_base_signal, is_featured,
       directional_thesis, dominant_path, operator_move, directional_weight,
-      v2_category, v2_subcategory, confidence,
       signal_scores ( final_score ),
       signal_pressure_vectors ( pressure_vectors ( id, name ) ),
       signal_doctrine_vectors ( doctrine_vectors ( id, name ) )
@@ -537,7 +533,6 @@ function V2Nav() {
 function getV2Score(signal: V2Signal): number {
   const scored = getFinalScore(signal);
   if (scored > 0) return Math.round(scored);
-  if (signal.confidence) return Math.round(signal.confidence * 100);
   return 0;
 }
 
@@ -996,7 +991,7 @@ function SignalIntelligenceLayout({
   const sorted   = [...eligible].sort((a, b) => {
     if (a.is_base_signal && !b.is_base_signal) return -1;
     if (!a.is_base_signal && b.is_base_signal) return 1;
-    if (a.is_base_signal && b.is_base_signal) return (b.confidence ?? 0) - (a.confidence ?? 0);
+    if (a.is_base_signal && b.is_base_signal) return (b.directional_weight ?? 0) - (a.directional_weight ?? 0);
     return getFinalScore(b) - getFinalScore(a);
   });
   const primary   = sorted[0] ?? null;
@@ -1274,131 +1269,16 @@ function SignalIntelligenceLayout({
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default async function SignalsPage() {
-  const v2Mode = process.env.NEXT_PUBLIC_SIGNALS_V2 === "true";
-
-  // V2 path
-  if (v2Mode) {
-    let v2Signals: V2Signal[]           = [];
-    let v2Convergences: ConvergenceResult[] = [];
-    try {
-      [v2Signals, v2Convergences] = await Promise.all([
-        fetchV2Signals(),
-        fetchConvergences(),
-      ]);
-    } catch {
-      // render empty state on error
-    }
-    return <SignalIntelligenceLayout signals={v2Signals} convergences={v2Convergences} />;
-  }
-
-  // V1 path (unchanged)
-  let signals: SignalResult[]           = [];
-  let convergences: ConvergenceResult[] = [];
-  let fetchError: string | null         = null;
-
+  let v2Signals: V2Signal[]           = [];
+  let v2Convergences: ConvergenceResult[] = [];
   try {
-    [signals, convergences] = await Promise.all([fetchSignals(), fetchConvergences()]);
-  } catch (err) {
-    fetchError = err instanceof Error ? err.message : "Unknown error";
+    [v2Signals, v2Convergences] = await Promise.all([
+      fetchV2Signals(),
+      fetchConvergences(),
+    ]);
+  } catch {
+    // render empty state on error
   }
-
-  const byCategory: { category: SignalCategory; signals: SignalResult[] }[] = [];
-  for (const cat of CATEGORY_ORDER) {
-    const catSignals = signals
-      .filter((s) => s.category === cat)
-      .sort((a, b) => getFinalScore(b) - getFinalScore(a))
-      .slice(0, 3);
-    if (catSignals.length > 0) byCategory.push({ category: cat, signals: catSignals });
-  }
-
-  const totalSignals = byCategory.reduce((n, g) => n + g.signals.length, 0);
-
-  return (
-    <>
-      <CENav />
-
-      <main className="min-h-screen" style={{ background: "#09091c", color: "#f1f5f9" }}>
-        <div className="mx-auto max-w-5xl px-6 py-16">
-
-          <header className="mb-16">
-            <p className="mb-3 text-xs font-semibold tracking-[0.35em] uppercase" style={{ color: "#00E0FF" }}>
-              Cognitive Empire
-            </p>
-            <h1 className="mb-3 text-4xl font-bold tracking-tight" style={{ color: "#f1f5f9" }}>
-              CE Signals
-            </h1>
-            <p className="text-base" style={{ color: "#64748b" }}>
-              Structural pressure intelligence. Doctrine-governed. Human-reviewed.
-            </p>
-            <div className="mt-6 flex flex-wrap gap-2">
-              <Tag>{byCategory.length} categories active</Tag>
-              <Tag>{totalSignals} signals visible</Tag>
-              <Tag>{convergences.length} convergences</Tag>
-            </div>
-          </header>
-
-          {fetchError && (
-            <div className="mb-10 rounded-lg px-5 py-4 text-sm"
-              style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171" }}>
-              {fetchError}
-            </div>
-          )}
-
-          <section className="mb-20">
-            <div className="mb-6 pb-4" style={{ borderBottom: "1px solid #1c1a35" }}>
-              <SectionLabel>Convergences</SectionLabel>
-              <h2 className="mt-1 text-2xl font-semibold" style={{ color: "#f1f5f9" }}>Active Convergences</h2>
-              <p className="mt-1 text-sm" style={{ color: "#475569" }}>
-                When 2 or more signals activate the same doctrine law simultaneously.
-              </p>
-            </div>
-            {convergences.length === 0 ? (
-              <p className="text-sm" style={{ color: "#334155" }}>No convergences published yet.</p>
-            ) : (
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {convergences.map((c) => <ConvergenceCard key={c.id} c={c} />)}
-              </div>
-            )}
-          </section>
-
-          <section>
-            <div className="mb-10 pb-4" style={{ borderBottom: "1px solid #1c1a35" }}>
-              <SectionLabel>Signal Intelligence</SectionLabel>
-              <h2 className="mt-1 text-2xl font-semibold" style={{ color: "#f1f5f9" }}>Signals by Category</h2>
-              <p className="mt-1 text-sm" style={{ color: "#475569" }}>
-                Top 3 per category by CE Signal Score. Updated after human review.
-              </p>
-            </div>
-            {byCategory.length === 0 ? (
-              <p className="text-sm" style={{ color: "#334155" }}>No signals published yet.</p>
-            ) : (
-              <div className="space-y-16">
-                {byCategory.map(({ category, signals: catSignals }) => (
-                  <div key={category}>
-                    <div className="mb-5 flex items-center justify-between">
-                      <h3 className="text-lg font-semibold" style={{ color: "#e2e8f0" }}>
-                        {fmtCategory(category)}
-                      </h3>
-                      <span className="text-xs" style={{ color: "#334155" }}>
-                        {catSignals.length} signal{catSignals.length !== 1 ? "s" : ""}
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                      {catSignals.map((s) => <SignalCard key={s.id} signal={s} />)}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-
-          <footer className="mt-24 pt-8 text-center text-xs"
-            style={{ borderTop: "1px solid #1c1a35", color: "#334155" }}>
-            Signals are published after human review. No autopublish.
-          </footer>
-
-        </div>
-      </main>
-    </>
-  );
+  return <SignalIntelligenceLayout signals={v2Signals} convergences={v2Convergences} />;
 }
+

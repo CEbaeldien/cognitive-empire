@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { session_id, task, best_model, rating, notes } = body as Record<string, unknown>;
+  const { session_id, mode, task, best_model, rating, notes } = body as Record<string, unknown>;
 
   if (!rating || typeof rating !== "number" || rating < 1 || rating > 5) {
     return NextResponse.json({ error: "rating must be 1–5" }, { status: 400 });
@@ -27,6 +27,7 @@ export async function POST(req: NextRequest) {
     .from("orchestrator_feedback")
     .insert({
       session_id: session_id ?? null,
+      mode:       mode ?? null,
       task:       task ?? null,
       best_model: best_model ?? null,
       rating,
