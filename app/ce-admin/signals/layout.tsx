@@ -54,17 +54,24 @@ const IcoReview = () => (
   </svg>
 );
 
-const NAV: { href: string; label: string; icon: React.ReactNode; badge?: boolean }[] = [
+const IcoMMCP = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
+    <rect x="3" y="14" width="7" height="7" /><line x1="17" y1="14" x2="17" y2="21" /><line x1="14" y1="17.5" x2="21" y2="17.5" />
+  </svg>
+);
+
+const NAV: { href: string; label: string; icon: React.ReactNode; badge?: boolean; section?: boolean }[] = [
   { href: "/ce-admin/signals",        label: "All Signals",   icon: <IcoList /> },
   { href: "/ce-admin/signals/review", label: "Review Queue",  icon: <IcoReview />, badge: true },
   { href: "/ce-admin/signals/new",    label: "New Signal",    icon: <IcoPlus /> },
+  { href: "/ce-admin/mmcp",           label: "MMCP",          icon: <IcoMMCP /> },
 ];
 
 function isNavActive(href: string, pathname: string): boolean {
-  if (href === "/ce-admin/signals/new") return pathname === "/ce-admin/signals/new";
-  if (href === "/ce-admin/signals/review") {
-    return pathname === "/ce-admin/signals/review" || pathname.endsWith("/review");
-  }
+  if (href === "/ce-admin/mmcp")           return pathname.startsWith("/ce-admin/mmcp");
+  if (href === "/ce-admin/signals/new")    return pathname === "/ce-admin/signals/new";
+  if (href === "/ce-admin/signals/review") return pathname === "/ce-admin/signals/review" || pathname.endsWith("/review");
   // "All Signals": list page + signal detail edit pages
   return (
     pathname === "/ce-admin/signals" ||

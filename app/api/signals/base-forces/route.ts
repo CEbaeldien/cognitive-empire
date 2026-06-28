@@ -14,7 +14,7 @@ function sb() {
 export async function GET() {
   const { data, error } = await sb()
     .from("signals")
-    .select("id, title, directional_thesis, signal_state, dominant_path, operator_move")
+    .select("id, title, directional_thesis, signal_state, dominant_path, operator_move, directional_weight, signal_scores ( final_score )")
     .eq("is_base_signal", true)
     .eq("status", "published")
     .order("directional_weight", { ascending: false });
