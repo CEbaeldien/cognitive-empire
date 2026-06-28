@@ -66,7 +66,7 @@ async function callModel(
       body: JSON.stringify({
         model: modelId,
         max_tokens: 1024,
-        messages: messages.filter((m) => m.role !== "system"),
+        messages,
       }),
     });
     if (!res.ok) throw new Error(`Anthropic error ${res.status}`);
