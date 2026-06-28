@@ -20,7 +20,8 @@ const C = {
 // ── Types ──────────────────────────────────────────────────────────────────────
 type Mode = "signal" | "decision" | "maintenance";
 
-const STAGES = ["INTAKE", "DIAGNOSIS", "SYNTHESIS", "APPROVAL", "ACTION", "MEMORY"] as const;
+const STAGES          = ["INTAKE", "DIAGNOSIS", "SYNTHESIS", "APPROVAL", "ACTION", "MEMORY"] as const;
+const DECISION_STAGES = ["MISSION", "REASONING", "CHALLENGE", "SYNTHESIS", "APPROVAL", "ACTION", "MEMORY"] as const;
 
 type BaseSignal = {
   id: string;
@@ -731,6 +732,454 @@ OPERATOR_MOVE: specific action`;
   return null;
 }
 
+// ── Decision Flow Mode ────────────────────────────────────────────────────────
+type DecisionDraft = {
+  title: string;
+  situation: string;
+  objective: string;
+  constraints: string;
+  options: string;
+  stakes: string;
+  reversibility: "" | "reversible" | "partially-reversible" | "irreversible";
+  approval_level: "" | "R1" | "R2" | "R3" | "R4";
+  synthesis: string;
+  next_action: string;
+  memory_note: string;
+};
+
+const D_BADGE_MAP: [string, string][] = [
+  ["DRAFT",             C.dim],
+  ["REASONING",         C.cyan],
+  ["CHALLENGED",        "#E09A40"],
+  ["SYNTHESIZED",       C.gold],
+  ["APPROVAL REQUIRED", C.gold],
+  ["ACTION READY",      "#4CAF82"],
+  ["MEMORY QUEUED",     C.muted],
+];
+
+function DecisionSummaryBlock({ pairs }: { pairs: [string, string][] }) {
+  return (
+    <div style={{ background: C.panel, border: `1px solid ${C.border}`, padding: "12px 16px", marginBottom: 20 }}>
+      {pairs.map(([l, v]) => v ? (
+        <p key={l} style={{ fontSize: 12, color: C.muted, margin: "0 0 4px", lineHeight: 1.5 }}>
+          <span style={{ color: C.dim }}>{l}: </span>
+          {v.length > 160 ? v.slice(0, 160) + "…" : v}
+        </p>
+      ) : null)}
+    </div>
+  );
+}
+
+function DecisionFlowMode({
+  keys,
+  sessionId,
+  stage,
+  setStage,
+  setFeedbackOpen,
+}: {
+  keys: KeyStore;
+  sessionId: string;
+  stage: number;
+  setStage: (n: number) => void;
+  setFeedbackOpen: (v: boolean) => void;
+}) {
+  const [draft, setDraft] = useState<DecisionDraft>({
+    title: "", situation: "", objective: "", constraints: "",
+    options: "", stakes: "", reversibility: "", approval_level: "",
+    synthesis: "", next_action: "", memory_note: "",
+  });
+  const [challenges, setChallenges] = useState<ModelResponse[]>([]);
+  const [downloaded, setDownloaded] = useState(false);
+
+  const setF = (k: keyof DecisionDraft) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+      setDraft(prev => ({ ...prev, [k]: e.target.value }));
+
+  // Fire model challenge when entering stage 2 (CHALLENGE)
+  useEffect(() => {
+    if (stage !== 2) return;
+    const active = (Object.keys(keys) as (keyof KeyStore)[]).filter(p => keys[p].trim() !== "");
+    if (active.length === 0) return;
+
+    const sys = `You are a governance analyst challenging a proposed decision within the Cognitive Empire MMCP framework. Identify hidden risks, surface unconsidered alternatives, and stress-test the decision's reasoning. Be direct — not supportive.
+
+Decision: ${draft.title}
+Situation: ${draft.situation}
+Objective: ${draft.objective}
+Constraints: ${draft.constraints}
+Options: ${draft.options}
+Stakes: ${draft.stakes}
+
+Output EXACTLY in this format:
+ASSUMPTION_RISK: [key assumption that could be wrong]
+ALTERNATIVE_PATH: [overlooked option worth considering]
+CONSEQUENCE_GAP: [underweighted second-order effect]
+CHALLENGE_VERDICT: weak | moderate | strong`;
+
+    const initial: ModelResponse[] = active.map(p => ({ provider: p, label: PROVIDER_LABELS[p], text: "", done: false }));
+    setChallenges(initial);
+    active.forEach(prov => {
+      callProvider(prov, keys[prov], sys, "Challenge this decision.")
+        .then(text => setChallenges(prev => prev.map(r => r.provider === prov ? { ...r, text, done: true } : r)))
+        .catch((err: unknown) => {
+          const msg = err instanceof Error ? err.message : "Failed";
+          setChallenges(prev => prev.map(r => r.provider === prov ? { ...r, error: msg, done: true } : r));
+        });
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stage]);
+
+  const downloadDecision = useCallback(() => {
+    const levelDesc: Record<string, string> = {
+      R1: "Informational", R2: "Recommendation",
+      R3: "Draft/Reversible Action", R4: "Consequential/Irreversible Action",
+    };
+    const txt = [
+      "CE ORCHESTRATOR — DECISION FLOW RECORD",
+      `Session: ${sessionId}   Date: ${new Date().toISOString()}`,
+      "",
+      `DECISION: ${draft.title}`,
+      "",
+      "── MISSION",
+      `Situation: ${draft.situation || "—"}`,
+      `Objective: ${draft.objective || "—"}`,
+      "",
+      "── REASONING",
+      `Constraints: ${draft.constraints || "—"}`,
+      `Options: ${draft.options || "—"}`,
+      `Stakes: ${draft.stakes || "—"}`,
+      "",
+      "── CHALLENGE",
+      challenges.length > 0
+        ? challenges.map(r => `[${r.label}]\n${r.error ? "Error: " + r.error : r.text}`).join("\n\n")
+        : "(Self-challenge only — no model keys provided)",
+      "",
+      "── SYNTHESIS",
+      `Final decision: ${draft.synthesis || "—"}`,
+      `Reversibility: ${draft.reversibility || "—"}`,
+      "",
+      "── APPROVAL",
+      `Level: ${draft.approval_level || "—"} — ${levelDesc[draft.approval_level] ?? "—"}`,
+      "",
+      "── ACTION",
+      `Next action: ${draft.next_action || "—"}`,
+      "",
+      "── MEMORY",
+      `Note: ${draft.memory_note || "—"}`,
+    ].join("\n");
+    const blob = new Blob([txt], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url;
+    a.download = `ce-decision-${sessionId.slice(0, 8)}.txt`;
+    a.click(); URL.revokeObjectURL(url);
+    setDownloaded(true);
+  }, [draft, challenges, sessionId]);
+
+  const [bLabel, bColor] = D_BADGE_MAP[Math.min(stage, D_BADGE_MAP.length - 1)];
+  const lbl: React.CSSProperties = {
+    display: "block", fontSize: 11, color: C.dim,
+    marginBottom: 6, letterSpacing: "0.08em", textTransform: "uppercase",
+  };
+  const ta = { ...inputStyle, resize: "vertical" as const };
+  const focusGold = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => { e.currentTarget.style.borderColor = C.gold; };
+  const blurBorder = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => { e.currentTarget.style.borderColor = C.borderMid; };
+
+  const stageLine = (label: string) => (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" as const, marginBottom: 20 }}>
+      <p style={{ fontSize: 11, color: C.dim, letterSpacing: "0.1em", textTransform: "uppercase" as const, margin: 0 }}>
+        Decision Flow — {label}
+      </p>
+      <span style={{
+        fontSize: 10, fontWeight: 700, letterSpacing: "0.14em",
+        textTransform: "uppercase" as const,
+        border: `1px solid ${bColor}`, color: bColor, padding: "2px 9px",
+      }}>{bLabel}</span>
+    </div>
+  );
+
+  // ── Stage 0: MISSION ─────────────────────────────────────────────────────────
+  if (stage === 0) return (
+    <div style={{ paddingTop: 8 }}>
+      {stageLine("Mission")}
+      <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+        <div>
+          <label style={lbl}>Decision Title *</label>
+          <input value={draft.title} onChange={setF("title")} style={inputStyle} onFocus={focusGold} onBlur={blurBorder}
+            placeholder="What is the decision you are governing?" />
+        </div>
+        <div>
+          <label style={lbl}>Situation / Context</label>
+          <textarea rows={4} value={draft.situation} onChange={setF("situation")} style={ta} onFocus={focusGold} onBlur={blurBorder}
+            placeholder="What is happening? What triggered this decision?" />
+        </div>
+        <div>
+          <label style={lbl}>Objective</label>
+          <textarea rows={3} value={draft.objective} onChange={setF("objective")} style={ta} onFocus={focusGold} onBlur={blurBorder}
+            placeholder="What outcome does this decision need to produce?" />
+        </div>
+        <GoldBtn onClick={() => setStage(1)} disabled={!draft.title.trim()}>Begin Reasoning →</GoldBtn>
+      </div>
+    </div>
+  );
+
+  // ── Stage 1: REASONING ───────────────────────────────────────────────────────
+  if (stage === 1) return (
+    <div style={{ paddingTop: 8 }}>
+      {stageLine("Reasoning")}
+      <DecisionSummaryBlock pairs={[["Decision", draft.title], ["Situation", draft.situation], ["Objective", draft.objective]]} />
+      <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+        <div>
+          <label style={lbl}>Known Constraints</label>
+          <textarea rows={3} value={draft.constraints} onChange={setF("constraints")} style={ta} onFocus={focusGold} onBlur={blurBorder}
+            placeholder="What cannot be changed? What are you working within?" />
+        </div>
+        <div>
+          <label style={lbl}>Options Being Considered</label>
+          <textarea rows={4} value={draft.options} onChange={setF("options")} style={ta} onFocus={focusGold} onBlur={blurBorder}
+            placeholder="List all options under consideration. Include the option to do nothing." />
+        </div>
+        <div>
+          <label style={lbl}>Stakes / Consequence</label>
+          <textarea rows={3} value={draft.stakes} onChange={setF("stakes")} style={ta} onFocus={focusGold} onBlur={blurBorder}
+            placeholder="What is at risk? What does failure cost?" />
+        </div>
+        <GoldBtn onClick={() => setStage(2)}>Submit for Challenge →</GoldBtn>
+      </div>
+    </div>
+  );
+
+  // ── Stage 2: CHALLENGE ───────────────────────────────────────────────────────
+  if (stage === 2) {
+    const hasKeys = Object.values(keys).some(v => v.trim() !== "");
+    const allDone = challenges.length > 0 && challenges.every(r => r.done);
+    return (
+      <div style={{ paddingTop: 8 }}>
+        {stageLine("Challenge")}
+        <DecisionSummaryBlock pairs={[
+          ["Decision", draft.title], ["Constraints", draft.constraints],
+          ["Options", draft.options], ["Stakes", draft.stakes],
+        ]} />
+        {hasKeys && challenges.length > 0 ? (
+          <div style={{ marginBottom: 24 }}>
+            <p style={{ fontSize: 11, color: C.dim, letterSpacing: "0.08em", textTransform: "uppercase" as const, margin: "0 0 12px" }}>
+              Model Challenges{!allDone && " — Running…"}
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 12 }}>
+              {challenges.map(r => (
+                <div key={r.provider} style={{ background: C.panel, border: `1px solid ${r.done ? C.border : C.borderMid}`, padding: "14px 16px" }}>
+                  <p style={{ fontSize: 11, color: "#E09A40", fontWeight: 600, letterSpacing: "0.08em", margin: "0 0 8px" }}>{r.label}</p>
+                  {!r.done
+                    ? <p style={{ fontSize: 12, color: C.dim, margin: 0 }}>Challenging…</p>
+                    : r.error
+                    ? <p style={{ fontSize: 12, color: "#E07070", margin: 0 }}>Unavailable — {r.error}</p>
+                    : <p style={{ fontSize: 12, color: C.muted, lineHeight: 1.65, whiteSpace: "pre-wrap" as const, margin: 0 }}>
+                        {r.text.slice(0, 320)}{r.text.length > 320 ? "…" : ""}
+                      </p>
+                  }
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div style={{ background: C.panel, border: `1px solid ${C.border}`, padding: "16px 18px", marginBottom: 24 }}>
+            <p style={{ fontSize: 11, color: C.dim, letterSpacing: "0.08em", textTransform: "uppercase" as const, margin: "0 0 10px" }}>
+              Self-Challenge Prompts
+            </p>
+            {[
+              "What key assumption is your decision built on — and what if it is wrong?",
+              "Which option did you rule out too quickly?",
+              "Who is most affected by this decision and have you accounted for their constraints?",
+              "What does failure look like in 90 days — and is it recoverable?",
+              "Is the reversibility of this decision accurately assessed?",
+            ].map((q, i) => (
+              <p key={i} style={{ fontSize: 12, color: C.muted, margin: "0 0 8px", lineHeight: 1.6 }}>
+                <span style={{ color: C.dim, fontFamily: "monospace" }}>Q{i + 1} </span>{q}
+              </p>
+            ))}
+            <p style={{ fontSize: 11, color: C.dim, marginTop: 10 }}>Add API keys to run model-assisted challenge.</p>
+          </div>
+        )}
+        <GoldBtn onClick={() => setStage(3)}>Proceed to Synthesis →</GoldBtn>
+        <p style={{ fontSize: 11, color: C.dim, marginTop: 8 }}>Challenge is optional. Advance when ready.</p>
+      </div>
+    );
+  }
+
+  // ── Stage 3: SYNTHESIS ───────────────────────────────────────────────────────
+  if (stage === 3) {
+    const revOpts: { val: DecisionDraft["reversibility"]; label: string }[] = [
+      { val: "reversible",           label: "Reversible" },
+      { val: "partially-reversible", label: "Partially Reversible" },
+      { val: "irreversible",         label: "Irreversible" },
+    ];
+    return (
+      <div style={{ paddingTop: 8 }}>
+        {stageLine("Synthesis")}
+        {challenges.filter(r => !r.error && r.text).length > 0 && (
+          <div style={{ marginBottom: 20 }}>
+            <p style={{ fontSize: 11, color: C.dim, letterSpacing: "0.08em", textTransform: "uppercase" as const, margin: "0 0 10px" }}>
+              Challenge Findings
+            </p>
+            {challenges.filter(r => !r.error && r.text).map(r => (
+              <div key={r.provider} style={{ background: "#0A0A0A", border: `1px solid ${C.border}`, padding: "10px 14px", marginBottom: 8 }}>
+                <p style={{ fontSize: 11, color: "#E09A40", fontWeight: 600, margin: "0 0 4px" }}>{r.label}</p>
+                <p style={{ fontSize: 12, color: C.dim, lineHeight: 1.6, whiteSpace: "pre-wrap" as const, margin: 0 }}>
+                  {r.text.slice(0, 400)}{r.text.length > 400 ? "…" : ""}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+        <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+          <div>
+            <label style={lbl}>Final Decision / Synthesis *</label>
+            <textarea rows={5} value={draft.synthesis} onChange={setF("synthesis")} style={ta} onFocus={focusGold} onBlur={blurBorder}
+              placeholder="Having considered the challenge: what is your decision, and why?" />
+          </div>
+          <div>
+            <label style={lbl}>Reversibility *</label>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" as const }}>
+              {revOpts.map(({ val, label }) => (
+                <button key={val} type="button"
+                  onClick={() => setDraft(prev => ({ ...prev, reversibility: val }))}
+                  style={{
+                    border: `1px solid ${draft.reversibility === val ? C.gold : C.borderMid}`,
+                    color: draft.reversibility === val ? C.gold : C.muted,
+                    background: draft.reversibility === val ? "rgba(201,169,97,0.08)" : "transparent",
+                    padding: "7px 16px", fontSize: 12, cursor: "pointer",
+                    transition: "border-color 150ms, color 150ms, background 150ms",
+                  }}>{label}</button>
+              ))}
+            </div>
+          </div>
+          <GoldBtn onClick={() => setStage(4)} disabled={!draft.synthesis.trim() || !draft.reversibility}>
+            Set Approval Level →
+          </GoldBtn>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Stage 4: APPROVAL ────────────────────────────────────────────────────────
+  if (stage === 4) {
+    const levels: { val: DecisionDraft["approval_level"]; label: string; desc: string }[] = [
+      { val: "R1", label: "R1", desc: "Informational. No approval required. Noted and logged." },
+      { val: "R2", label: "R2", desc: "Recommendation. Shared for awareness. No binding action." },
+      { val: "R3", label: "R3", desc: "Draft / Reversible Action. Can proceed. Reversible if wrong." },
+      { val: "R4", label: "R4", desc: "Consequential / Irreversible. Explicit approval required before action." },
+    ];
+    const isR4 = draft.approval_level === "R4";
+    return (
+      <div style={{ paddingTop: 8 }}>
+        {stageLine("Approval")}
+        <div style={{ background: "#0A0A0A", border: `1px solid ${C.gold}`, padding: "16px 20px", marginBottom: 24 }}>
+          <p style={{ fontSize: 11, color: C.gold, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase" as const, margin: "0 0 10px" }}>
+            Decision Record
+          </p>
+          <Row label="Decision" value={draft.title} />
+          <div style={{ marginTop: 6 }}>
+            <Row label="Synthesis" value={draft.synthesis.slice(0, 120) + (draft.synthesis.length > 120 ? "…" : "")} />
+          </div>
+          <div style={{ marginTop: 6 }}>
+            <Row label="Reversibility" value={draft.reversibility || "—"} />
+          </div>
+        </div>
+        <p style={{ fontSize: 11, color: C.dim, letterSpacing: "0.08em", textTransform: "uppercase" as const, margin: "0 0 12px" }}>
+          Required Approval Level *
+        </p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
+          {levels.map(({ val, label, desc }) => (
+            <button key={val} type="button"
+              onClick={() => setDraft(prev => ({ ...prev, approval_level: val }))}
+              style={{
+                border: `1px solid ${draft.approval_level === val ? C.gold : C.border}`,
+                background: draft.approval_level === val ? "rgba(201,169,97,0.07)" : C.panel,
+                padding: "12px 16px", cursor: "pointer", textAlign: "left" as const,
+                transition: "border-color 150ms, background 150ms",
+                display: "flex", alignItems: "center", gap: 14,
+              }}>
+              <span style={{
+                fontSize: 13, fontWeight: 700, fontFamily: "monospace",
+                color: draft.approval_level === val ? C.gold : C.muted, minWidth: 24, flexShrink: 0,
+              }}>{label}</span>
+              <span style={{ fontSize: 12, color: C.muted, lineHeight: 1.5 }}>{desc}</span>
+            </button>
+          ))}
+        </div>
+        {isR4 && (
+          <div style={{ background: "rgba(224,90,90,0.07)", border: "1px solid rgba(224,90,90,0.40)", padding: "14px 18px", marginBottom: 20 }}>
+            <p style={{ fontSize: 12, color: "#E07070", fontWeight: 600, margin: "0 0 6px", letterSpacing: "0.06em" }}>
+              ⚑ EXPLICIT APPROVAL REQUIRED
+            </p>
+            <p style={{ fontSize: 12, color: "#E07070", opacity: 0.8, margin: 0, lineHeight: 1.55 }}>
+              R4 decisions are consequential or irreversible. This record must be reviewed and approved by the appropriate authority before any action is taken. The system does not act autonomously on R4 decisions.
+            </p>
+          </div>
+        )}
+        <GoldBtn onClick={() => setStage(5)} disabled={!draft.approval_level}>Confirm Approval →</GoldBtn>
+      </div>
+    );
+  }
+
+  // ── Stage 5: ACTION ──────────────────────────────────────────────────────────
+  if (stage === 5) return (
+    <div style={{ paddingTop: 8 }}>
+      {stageLine("Action")}
+      <DecisionSummaryBlock pairs={[
+        ["Decision",     draft.title],
+        ["Approval",     `${draft.approval_level}${draft.reversibility ? " — " + draft.reversibility : ""}`],
+        ["Synthesis",    draft.synthesis],
+      ]} />
+      <div style={{ marginBottom: 20 }}>
+        <label style={lbl}>Next Action *</label>
+        <textarea rows={4} value={draft.next_action} onChange={setF("next_action")} style={ta} onFocus={focusGold} onBlur={blurBorder}
+          placeholder="What is the specific, immediate next move? Be precise — vague actions are not actionable." />
+      </div>
+      <GoldBtn onClick={() => setStage(6)} disabled={!draft.next_action.trim()}>Advance to Memory →</GoldBtn>
+    </div>
+  );
+
+  // ── Stage 6: MEMORY ──────────────────────────────────────────────────────────
+  if (stage === 6) {
+    const maturity: [string, boolean][] = [
+      ["Input captured",          true],
+      ["Constraints identified",  !!draft.constraints.trim()],
+      ["Options compared",        !!draft.options.trim()],
+      ["Challenge completed",     true],
+      ["Approval level assigned", !!draft.approval_level],
+      ["Action defined",          !!draft.next_action.trim()],
+      ["Memory note queued",      !!draft.memory_note.trim()],
+    ];
+    return (
+      <div style={{ paddingTop: 8 }}>
+        {stageLine("Memory")}
+        <div style={{ marginBottom: 20 }}>
+          <label style={lbl}>Memory Note</label>
+          <textarea rows={3} value={draft.memory_note} onChange={setF("memory_note")} style={ta} onFocus={focusGold} onBlur={blurBorder}
+            placeholder="What should be remembered from this decision for future reference?" />
+        </div>
+        <div style={{ background: C.panel, border: `1px solid ${C.border}`, padding: "14px 18px", marginBottom: 24 }}>
+          <p style={{ fontSize: 11, color: C.dim, letterSpacing: "0.1em", textTransform: "uppercase" as const, margin: "0 0 10px" }}>
+            Decision Maturity
+          </p>
+          {maturity.map(([label, done]) => (
+            <div key={label} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
+              <span style={{ fontSize: 11, color: done ? "#4CAF82" : C.dim, fontFamily: "monospace", minWidth: 12 }}>{done ? "✓" : "—"}</span>
+              <span style={{ fontSize: 12, color: done ? C.muted : C.dim }}>{label}</span>
+            </div>
+          ))}
+        </div>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" as const }}>
+          <GoldBtn onClick={downloadDecision}>{downloaded ? "Downloaded ✓" : "Download Decision Record →"}</GoldBtn>
+          <GoldBtn onClick={() => setFeedbackOpen(true)}>Submit Feedback & Close →</GoldBtn>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+}
+
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div>
@@ -765,7 +1214,15 @@ function ModeContent({
     );
   }
   if (mode === "decision") {
-    return <div style={{ color: C.muted, padding: "40px 0", fontSize: 14 }}>Decision Flow — coming in next session</div>;
+    return (
+      <DecisionFlowMode
+        keys={keys}
+        sessionId={sessionId}
+        stage={stage}
+        setStage={setStage}
+        setFeedbackOpen={setFeedbackOpen}
+      />
+    );
   }
   return <div style={{ color: C.muted, padding: "40px 0", fontSize: 14 }}>Maintenance Audit — coming in next session</div>;
 }
@@ -784,16 +1241,16 @@ function BetaBadge() {
 }
 
 // ── ProgressionRail ───────────────────────────────────────────────────────────
-function ProgressionRail({ stage }: { stage: number }) {
-  const atApproval = stage === 3;
+function ProgressionRail({ stage, stages, approvalIdx }: { stage: number; stages: readonly string[]; approvalIdx: number }) {
+  const atApproval = stage === approvalIdx;
   return (
     <div>
       <div style={{ display: "flex", alignItems: "center", padding: "12px 0", flexWrap: "wrap" as const }}>
-        {STAGES.map((label, i) => {
+        {stages.map((label, i) => {
           const isActive    = i === stage;
           const isCompleted = i < stage;
-          const dotColor    = (i === 3 && stage >= 3) ? C.gold : C.cyan;
-          const labelColor  = isActive ? (i === 3 ? C.gold : C.text) : isCompleted ? C.muted : C.dim;
+          const dotColor    = (i === approvalIdx && stage >= approvalIdx) ? C.gold : C.cyan;
+          const labelColor  = isActive ? (i === approvalIdx ? C.gold : C.text) : isCompleted ? C.muted : C.dim;
           return (
             <div key={label} style={{ display: "flex", alignItems: "center" }}>
               {i > 0 && <span style={{ color: "#333", fontSize: 11, margin: "0 6px" }}>→</span>}
@@ -802,8 +1259,8 @@ function ProgressionRail({ stage }: { stage: number }) {
                   <div style={{
                     width: 6, height: 6, borderRadius: "50%",
                     background: dotColor, flexShrink: 0,
-                    boxShadow: stage < 3 ? `0 0 6px ${C.cyan}` : "none",
-                    animation: stage < 3 ? "cePulse 1.5s ease-in-out infinite" : "none",
+                    boxShadow: stage < approvalIdx ? `0 0 6px ${C.cyan}` : "none",
+                    animation: stage < approvalIdx ? "cePulse 1.5s ease-in-out infinite" : "none",
                   }} />
                 )}
                 {isCompleted && <span style={{ color: C.muted, fontSize: 10, marginRight: 2 }}>✓</span>}
@@ -1069,7 +1526,11 @@ function SessionView({
           </button>
           <BetaBadge />
         </div>
-        <ProgressionRail stage={stage} />
+        <ProgressionRail
+          stage={stage}
+          stages={mode === "decision" ? DECISION_STAGES : STAGES}
+          approvalIdx={mode === "decision" ? 4 : 3}
+        />
         <div style={{ height: 1, background: C.border, margin: "16px 0 20px" }} />
         <BYOKPanel keys={keys} setKeys={setKeys} open={keysOpen} setOpen={setKeysOpen} />
         <ModeContent
