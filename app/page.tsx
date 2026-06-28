@@ -26,9 +26,10 @@ const P = {
 } as const;
 
 function SystemCard({
-  n, title, body, href, animClass,
+  n, title, body, href, animClass, status, entry,
 }: {
   n: string; title: string; body: string; href: string; animClass: string;
+  status?: string; entry?: string;
 }) {
   return (
     <Link href={href} className={`home-card ${animClass}`} style={{
@@ -52,9 +53,35 @@ function SystemCard({
       }}>
         {title}
       </h3>
-      <p style={{ fontSize: "0.85rem", color: P.muted, lineHeight: 1.7, margin: "0 0 16px", flex: 1 }}>
+      <p style={{ fontSize: "0.85rem", color: P.muted, lineHeight: 1.7, margin: "0 0 14px", flex: 1 }}>
         {body}
       </p>
+      {(status || entry) && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14 }}>
+          {status && (
+            <span style={{
+              fontSize: "0.54rem", fontWeight: 700, letterSpacing: "0.20em",
+              fontFamily: "monospace", color: P.dim,
+              background: "rgba(255,255,255,0.03)",
+              border: `1px solid ${P.border}`,
+              padding: "3px 7px",
+            }}>
+              STATUS: <span style={{ color: P.gold }}>{status}</span>
+            </span>
+          )}
+          {entry && (
+            <span style={{
+              fontSize: "0.54rem", fontWeight: 700, letterSpacing: "0.20em",
+              fontFamily: "monospace", color: P.dim,
+              background: "rgba(255,255,255,0.03)",
+              border: `1px solid ${P.border}`,
+              padding: "3px 7px",
+            }}>
+              ENTRY: <span style={{ color: P.muted }}>{entry}</span>
+            </span>
+          )}
+        </div>
+      )}
       <span className="home-card-arrow" style={{
         fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.16em",
         textTransform: "uppercase", color: P.gold,
@@ -70,32 +97,32 @@ const SYSTEMS = [
   {
     n: "n:01", title: "Drift Intelligence",
     body: "Revenue decay detection. Upload CSV free.",
-    href: "/drift",
+    href: "/drift", status: "LIVE", entry: "Upload CSV",
   },
   {
     n: "n:02", title: "CE Signals",
     body: "Structural intelligence. 2026–2031.",
-    href: "/signals",
+    href: "/signals", status: "LIVE", entry: "Browse Signals",
   },
   {
     n: "n:03", title: "The Orchestrator",
     body: "Multi-model MMCP. Beta access.",
-    href: "/orchestrator",
+    href: "/orchestrator", status: "BETA", entry: "Open Session",
   },
   {
     n: "n:04", title: "Maintenance Gravity",
     body: "Research. The doctrine of operational debt.",
-    href: "/maintenance-gravity",
+    href: "/maintenance-gravity", status: "LIVE", entry: "Read Research",
   },
   {
     n: "n:05", title: "Work",
     body: "Request a Maintenance Gravity Audit.",
-    href: "/work",
+    href: "/work", status: "OPEN", entry: "Request Audit",
   },
   {
     n: "n:06", title: "Connect",
     body: "Dr. E. Founder.",
-    href: "/connect",
+    href: "/connect", status: "OPEN", entry: "Route Inquiry",
   },
 ];
 

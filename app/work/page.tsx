@@ -301,13 +301,41 @@ export default function WorkPage() {
             </form>
           )}
 
-          {/* Doctrine note */}
+          {/* What you receive */}
           <div className="ce-w3" style={{
-            marginTop: 40, paddingTop: 20,
+            marginTop: 40, paddingTop: 28,
             borderTop: `1px solid ${P.border}`,
           }}>
-            <p style={{ fontSize: "0.75rem", color: P.dim, lineHeight: 1.7, margin: 0 }}>
-              <span style={{ color: P.gold }}>Maintenance Gravity</span> is the accumulating operational drag created when intelligent systems enter production. Audits expose hidden maintenance load, governance gaps, and continuity risk before they become structural debt.
+            <p style={{
+              fontSize: "0.58rem", fontWeight: 700, letterSpacing: "0.36em",
+              textTransform: "uppercase", color: P.gold, margin: "0 0 16px",
+              fontFamily: "monospace",
+            }}>
+              What You Receive
+            </p>
+            <div className="ce-work-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 20 }}>
+              {[
+                { label: "Gravity Score", desc: "0–100 weighted severity rating across your system." },
+                { label: "Risk Register", desc: "Top friction points ranked by maintenance load." },
+                { label: "Action Path", desc: "First move recommendation with reasoning." },
+              ].map((item) => (
+                <div key={item.label} style={{
+                  background: P.panelDeep,
+                  border: `1px solid ${P.border}`,
+                  borderTop: `1px solid ${P.goldDim}`,
+                  padding: "14px 16px",
+                }}>
+                  <p style={{ fontSize: "0.62rem", fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: P.gold, margin: "0 0 6px", fontFamily: "monospace" }}>
+                    {item.label}
+                  </p>
+                  <p style={{ fontSize: "0.78rem", color: P.dim, lineHeight: 1.6, margin: 0 }}>
+                    {item.desc}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <p style={{ fontSize: "0.72rem", color: P.dim, lineHeight: 1.7, margin: 0 }}>
+              <span style={{ color: P.gold }}>Maintenance Gravity</span> audits are delivered personally through Dr. E with a structured written report and recommended action path.
             </p>
           </div>
 

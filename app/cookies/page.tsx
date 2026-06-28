@@ -8,7 +8,7 @@ export const metadata = {
 
 export default function CookiesPage() {
   return (
-    <div className="min-h-screen bg-[#080d1a] text-[#f1f5f9]">
+    <div className="min-h-screen bg-[#03050A] text-[#f1f5f9]">
       <CENav />
 
       <div className="max-w-3xl mx-auto px-6 md:px-8 py-16 md:py-24">
@@ -16,7 +16,7 @@ export default function CookiesPage() {
           ← Legal Hub
         </Link>
 
-        <p className="text-[10px] text-blue-400 uppercase tracking-widest mb-4">Cookie Policy</p>
+        <p className="text-[10px] text-[#C9A961] uppercase tracking-widest mb-4">Cookie Policy</p>
         <h1 className="text-4xl font-thin text-[#f1f5f9] mb-4">Cookie Policy</h1>
         <p className="text-[#475569] text-sm mb-12">Cognitive Empire Systems Ltd · Last updated: June 2026</p>
 
@@ -60,7 +60,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   return (
     <section className="mb-10">
       <h2 className="text-base font-semibold text-[#f1f5f9] mb-4">{title}</h2>
-      <div className="space-y-3 text-[#94a3b8] text-sm leading-relaxed [&_strong]:text-[#cbd5e1] [&_a]:text-blue-400 [&_a:hover]:text-blue-300 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-2">
+      <div className="space-y-3 text-[#94a3b8] text-sm leading-relaxed [&_strong]:text-[#cbd5e1] [&_a]:text-[#C9A961] [&_a:hover]:text-[#D4B877] [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-2">
         {children}
       </div>
     </section>

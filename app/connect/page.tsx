@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import CENav from "../components/CENav";
+import CEFooter from "../components/CEFooter";
 
 // ─── Routing Visual ────────────────────────────────────────────────────────────
 
@@ -35,23 +36,23 @@ function RoutingVisual() {
 
         {/* Trunk */}
         <path d="M46 150 L118 150"
-          stroke="rgba(220,220,210,0.32)" strokeWidth="0.85" />
+          stroke="rgba(220,220,210,0.48)" strokeWidth="0.85" />
 
         {/* Branch node */}
-        <circle cx="118" cy="150" r="2.5" fill="rgba(245,245,235,0.38)" />
+        <circle cx="118" cy="150" r="2.5" fill="rgba(245,245,235,0.55)" />
 
         {/* INTAKE — top lane */}
         <path d="M118 150 Q148 150 168 72 L330 72"
-          stroke="rgba(220,220,210,0.28)" strokeWidth="0.78" />
+          stroke="rgba(220,220,210,0.44)" strokeWidth="0.78" />
         {/* ROUTE */}
         <path d="M118 150 Q148 150 168 114 L330 114"
-          stroke="rgba(220,220,210,0.22)" strokeWidth="0.72" />
+          stroke="rgba(220,220,210,0.36)" strokeWidth="0.72" />
         {/* GOVERN */}
         <path d="M118 150 Q148 150 168 186 L330 186"
-          stroke="rgba(220,220,210,0.22)" strokeWidth="0.72" />
+          stroke="rgba(220,220,210,0.36)" strokeWidth="0.72" />
         {/* CONNECT — bottom lane */}
         <path d="M118 150 Q148 150 168 228 L330 228"
-          stroke="rgba(220,220,210,0.26)" strokeWidth="0.78" />
+          stroke="rgba(220,220,210,0.42)" strokeWidth="0.78" />
 
         {/* Mid-path marks */}
         <circle cx="224" cy="72" r="1.5" fill="rgba(245,245,235,0.28)" />
@@ -87,13 +88,13 @@ function RoutingVisual() {
           stroke="rgba(220,220,210,0.13)" strokeWidth="0.5" strokeDasharray="2 2.5" />
 
         {/* Labels */}
-        <text x="360" y="76" fill="rgba(196,197,194,0.62)"
+        <text x="360" y="76" fill="rgba(201,169,97,0.82)"
           fontSize="7.5" fontFamily="'Courier New',monospace" letterSpacing="2.5">INTAKE</text>
-        <text x="360" y="118" fill="rgba(196,197,194,0.44)"
+        <text x="360" y="118" fill="rgba(196,197,194,0.65)"
           fontSize="7.5" fontFamily="'Courier New',monospace" letterSpacing="2.5">ROUTE</text>
-        <text x="360" y="190" fill="rgba(196,197,194,0.44)"
+        <text x="360" y="190" fill="rgba(196,197,194,0.65)"
           fontSize="7.5" fontFamily="'Courier New',monospace" letterSpacing="2.5">GOVERN</text>
-        <text x="360" y="232" fill="rgba(196,197,194,0.55)"
+        <text x="360" y="232" fill="rgba(196,197,194,0.75)"
           fontSize="7.5" fontFamily="'Courier New',monospace" letterSpacing="2.5">CONNECT</text>
       </svg>
     </div>
@@ -690,7 +691,7 @@ export default function ConnectPage() {
   };
 
   return (
-    <div className="min-h-screen text-white" style={{ background: "#030405" }}>
+    <div className="min-h-screen text-white" style={{ background: "#03050A" }}>
       <style>{`
         @keyframes cursor-blink { 0%,100%{opacity:1} 50%{opacity:0} }
         .cursor-blink { animation: cursor-blink 1s step-end infinite; }
@@ -836,27 +837,7 @@ export default function ConnectPage() {
         </AnimatePresence>
       </section>
 
-      {/* Footer */}
-      <footer
-        className="mt-16"
-        style={{ borderTop: "1px solid rgba(245,242,232,0.07)" }}
-      >
-        <div className="max-w-[1440px] mx-auto px-5 lg:px-10 py-6 flex items-center justify-between">
-          <span
-            className="text-[9px] tracking-[0.34em] uppercase"
-            style={{ color: "rgba(196,197,194,0.22)" }}
-          >
-            Cognitive Empire
-          </span>
-          <span style={{ color: "rgba(196,197,194,0.22)", fontSize: "11px" }}>·</span>
-          <span
-            className="text-[9px] tracking-[0.34em] uppercase"
-            style={{ color: "rgba(196,197,194,0.22)" }}
-          >
-            Intelligence. Structure. Empire.
-          </span>
-        </div>
-      </footer>
+      <CEFooter />
     </div>
   );
 }

@@ -16,11 +16,11 @@ const POLICIES = [
 
 export default function LegalPage() {
   return (
-    <div className="min-h-screen bg-[#080d1a] text-[#f1f5f9]">
+    <div className="min-h-screen bg-[#03050A] text-[#f1f5f9]">
       <CENav />
 
       <div className="max-w-3xl mx-auto px-6 md:px-8 py-16 md:py-24">
-        <p className="text-[10px] text-blue-400 uppercase tracking-widest mb-6">
+        <p className="text-[10px] text-[#C9A961] uppercase tracking-widest mb-6">
           Legal
         </p>
         <h1 className="text-4xl font-thin text-[#f1f5f9] mb-6">
@@ -59,7 +59,7 @@ export default function LegalPage() {
             <div className="flex flex-col sm:flex-row sm:gap-4">
               <dt className="text-[#475569] w-44 shrink-0">Contact</dt>
               <dd>
-                <a href="mailto:founder@cognitiveempire.com" className="text-blue-400 hover:text-blue-300 transition-colors">
+                <a href="mailto:founder@cognitiveempire.com" className="text-[#C9A961] hover:text-[#D4B877] transition-colors">
                   founder@cognitiveempire.com
                 </a>
               </dd>
@@ -76,13 +76,13 @@ export default function LegalPage() {
             <Link
               key={p.href}
               href={p.href}
-              className="flex items-start justify-between gap-4 p-5 bg-[#0f1629] border border-[#1e2a45] hover:border-blue-500/30 transition-colors group"
+              className="flex items-start justify-between gap-4 p-5 bg-[#0A1221] border border-[#1e2a45] hover:border-[rgba(201,169,97,0.30)] transition-colors group"
             >
               <div>
-                <p className="text-[#f1f5f9] text-sm font-medium group-hover:text-blue-400 transition-colors">{p.label}</p>
+                <p className="text-[#f1f5f9] text-sm font-medium group-hover:text-[#C9A961] transition-colors">{p.label}</p>
                 <p className="text-[#64748b] text-xs mt-1">{p.desc}</p>
               </div>
-              <span className="text-[#334155] group-hover:text-blue-400 transition-colors shrink-0 mt-0.5">→</span>
+              <span className="text-[#334155] group-hover:text-[#C9A961] transition-colors shrink-0 mt-0.5">→</span>
             </Link>
           ))}
         </div>
