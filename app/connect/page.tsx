@@ -30,11 +30,6 @@ function RoutingVisual() {
         {/* Source ring + node */}
         <circle cx="42" cy="150" r="11" fill="none"
           stroke="rgba(220,220,210,0.14)" strokeWidth="0.5" />
-        <motion.circle cx="42" cy="150" r="11" fill="none"
-          stroke="rgba(245,245,235,0.12)" strokeWidth="0.5"
-          animate={{ r: [11, 22], opacity: [0.18, 0] }}
-          transition={{ duration: 4.5, repeat: Infinity, ease: "easeOut", repeatDelay: 2.5 }}
-        />
         <circle cx="42" cy="150" r="3.5" fill="rgba(245,245,235,0.55)"
           filter="url(#node-glow)" />
 
@@ -75,17 +70,11 @@ function RoutingVisual() {
           stroke="rgba(220,220,210,0.28)" strokeWidth="0.65" fill="none" />
 
         {/* Terminal nodes */}
-        <motion.circle cx="330" cy="72" r="3" fill="rgba(245,245,235,0.68)"
-          filter="url(#node-glow)"
-          animate={{ opacity: [0.45, 0.85, 0.45] }}
-          transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
-        />
+        <circle cx="330" cy="72" r="3" fill="rgba(245,245,235,0.68)"
+          filter="url(#node-glow)" />
         <circle cx="330" cy="114" r="2.5" fill="rgba(245,245,235,0.4)" />
         <circle cx="330" cy="186" r="2.5" fill="rgba(245,245,235,0.4)" />
-        <motion.circle cx="330" cy="228" r="2.5" fill="rgba(245,245,235,0.52)"
-          animate={{ opacity: [0.32, 0.62, 0.32] }}
-          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-        />
+        <circle cx="330" cy="228" r="2.5" fill="rgba(245,245,235,0.52)" />
 
         {/* Dashed connectors to labels */}
         <line x1="333" y1="72" x2="356" y2="72"

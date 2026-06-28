@@ -57,39 +57,55 @@ export function SignalContextPanel({ eyebrow, accent, children }: SignalContextP
 
 /**
  * Wraps the primary signal card with a judgment-process strip above and
- * structural-basis / what-to-watch panels on either side.
- *
- * The copy in those panels is static until "structural_basis" and
- * "watch_note" fields are added to the signals schema and approval step.
+ * optional structural-basis / what-to-watch panels on either side.
+ * Panels are hidden when their content is null.
  */
-export function SignalWithContext({ primarySignal }: { primarySignal: React.ReactNode }) {
+export function SignalWithContext({
+  primarySignal,
+  structuralBasis,
+  watchNote,
+}: {
+  primarySignal:    React.ReactNode;
+  structuralBasis?: string | null;
+  watchNote?:       string | null;
+}) {
+  const hasLeft  = Boolean(structuralBasis);
+  const hasRight = Boolean(watchNote);
+  const hasPanels = hasLeft || hasRight;
+
+  if (!hasPanels) {
+    return (
+      <section>
+        <JudgmentProcessStrip />
+        <div className="ce-primary-slot" style={{ borderRadius: 10, overflow: "hidden" }}>
+          {primarySignal}
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section>
       <JudgmentProcessStrip />
 
       <div className="ce-signal-row">
-        <SignalContextPanel eyebrow="Structural basis" accent="left">
-          <p>
-            Optimization fragility — a system tuned to a measurable proxy
-            can hold steady on that proxy while the property it was meant
-            to protect quietly degrades.
-          </p>
-          <p className="ce-context-meta">
-            Doctrine vector — pending mapping at approval
-          </p>
-        </SignalContextPanel>
+        {hasLeft ? (
+          <SignalContextPanel eyebrow="Structural basis" accent="left">
+            <p>{structuralBasis}</p>
+          </SignalContextPanel>
+        ) : (
+          <div />
+        )}
 
         <div className="ce-primary-slot">{primarySignal}</div>
 
-        <SignalContextPanel eyebrow="What to watch" accent="right">
-          <p>
-            Pressure is rising across two independent domains without a
-            shared correction mechanism. Confidence reflects an early
-            convergence, not a settled pattern — it strengthens if a third
-            domain shows the same divergence, and fades if evaluation
-            methods catch up first.
-          </p>
-        </SignalContextPanel>
+        {hasRight ? (
+          <SignalContextPanel eyebrow="What to watch" accent="right">
+            <p>{watchNote}</p>
+          </SignalContextPanel>
+        ) : (
+          <div />
+        )}
       </div>
     </section>
   );

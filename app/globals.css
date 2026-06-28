@@ -734,12 +734,12 @@ html {
   --ce-muted:           #8B9AB3;
   --ce-dim:             #5E6B80;
 
-  --ce-cyan:            #00D8FF;
+  --ce-cyan:            #C9A961;
   --ce-blue:            #2E8CFF;
 
-  --ce-gold:            #C5A26F;
-  --ce-gold-soft:       rgba(197, 162, 111, 0.16);
-  --ce-gold-border:     rgba(197, 162, 111, 0.42);
+  --ce-gold:            #C9A961;
+  --ce-gold-soft:       rgba(201, 169, 97, 0.16);
+  --ce-gold-border:     rgba(201, 169, 97, 0.42);
 
   --ce-border:          rgba(255, 255, 255, 0.10);
   --ce-border-blue:     rgba(46, 140, 255, 0.18);
@@ -793,11 +793,11 @@ html {
 
 .canon-plate {
   border:       1px solid rgba(197, 162, 111, 0.26);
-  border-left:  3px solid #C5A26F;
+  border-left:  3px solid #C9A961;
   background:
-    linear-gradient(90deg, rgba(197, 162, 111, 0.10), transparent 55%),
+    linear-gradient(90deg, rgba(201, 169, 97, 0.10), transparent 55%),
     var(--ce-panel);
-  transition: all 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: all 220ms ease;
 }
 
 .canon-plate:hover {
@@ -985,20 +985,20 @@ html {
 }
 .doctrine-chip[data-type="danger"]  { background: rgba(255,80,60,0.08);    border-color: rgba(255,80,60,0.30);    color: #FF7B6B; }
 .doctrine-chip[data-type="warning"] { background: rgba(255,200,60,0.08);   border-color: rgba(255,200,60,0.30);   color: #FFC84A; }
-.doctrine-chip[data-type="info"]    { background: rgba(0,216,255,0.07);    border-color: rgba(0,216,255,0.26);    color: #00D8FF; }
-.doctrine-chip[data-type="gold"]    { background: rgba(197,162,111,0.09);  border-color: rgba(197,162,111,0.36);  color: #C5A26F; }
+.doctrine-chip[data-type="info"]    { background: rgba(201,169,97,0.09);   border-color: rgba(201,169,97,0.36);   color: #C9A961; }
+.doctrine-chip[data-type="gold"]    { background: rgba(201,169,97,0.09);   border-color: rgba(201,169,97,0.36);   color: #C9A961; }
 
 /* Stat extract cards (Section 01 right panel) */
 .stat-extract {
   padding: 14px 18px;
-  background: rgba(0,216,255,0.04);
-  border: 1px solid rgba(0,216,255,0.10);
+  background: rgba(201,169,97,0.04);
+  border: 1px solid rgba(201,169,97,0.10);
   border-radius: 12px;
   transition: background 220ms ease, border-color 220ms ease;
 }
 .stat-extract:hover {
-  background: rgba(0,216,255,0.08);
-  border-color: rgba(0,216,255,0.22);
+  background: rgba(201,169,97,0.08);
+  border-color: rgba(201,169,97,0.22);
 }
 .stat-verb {
   font-size: 9px;
@@ -1011,7 +1011,7 @@ html {
 .stat-change {
   font-size: 15px;
   font-weight: 600;
-  color: #00D8FF;
+  color: #C9A961;
   letter-spacing: -0.2px;
 }
 
@@ -1025,8 +1025,8 @@ html {
 }
 .doctrine-panel-b {
   background: var(--ce-panel-elevated);
-  border: 1px solid rgba(0,216,255,0.07);
-  border-left: 2.5px solid rgba(0,216,255,0.20);
+  border: 1px solid rgba(201,169,97,0.07);
+  border-left: 2.5px solid rgba(201,169,97,0.20);
   border-radius: 20px;
   padding: 26px 30px;
 }
@@ -1034,7 +1034,7 @@ html {
 /* Intelligence module (section 20) */
 .intelligence-module {
   background: var(--ce-navy-2);
-  border: 1px solid rgba(0,216,255,0.12);
+  border: 1px solid rgba(201,169,97,0.12);
   border-radius: 24px;
   padding: 38px 40px;
   position: relative;
@@ -1045,7 +1045,7 @@ html {
   position: absolute;
   top: -40px; right: -40px;
   width: 280px; height: 280px;
-  background: radial-gradient(circle, rgba(0,216,255,0.05), transparent 70%);
+  background: radial-gradient(circle, rgba(201,169,97,0.05), transparent 70%);
   pointer-events: none;
 }
 
@@ -1087,11 +1087,11 @@ html {
 }
 
 /* Hero staggered entrance */
-.mg-eyebrow   { animation: gravity-rise  700ms cubic-bezier(0.16, 1, 0.3, 1)   0ms both; }
-.mg-title     { animation: gravity-rise 1000ms cubic-bezier(0.16, 1, 0.3, 1) 120ms both; }
-.mg-core-line { animation: gravity-rise  900ms cubic-bezier(0.16, 1, 0.3, 1) 300ms both; }
-.mg-hero-meta { animation: gravity-rise  800ms cubic-bezier(0.16, 1, 0.3, 1) 480ms both; }
-.mg-rail-fade { animation: gravity-rise  800ms cubic-bezier(0.16, 1, 0.3, 1) 640ms both; }
+.mg-eyebrow   { animation: gravity-rise 280ms cubic-bezier(0.25, 0.1, 0.25, 1.0)   0ms both; }
+.mg-title     { animation: gravity-rise 280ms cubic-bezier(0.25, 0.1, 0.25, 1.0) 100ms both; }
+.mg-core-line { animation: gravity-rise 280ms cubic-bezier(0.25, 0.1, 0.25, 1.0) 180ms both; }
+.mg-hero-meta { animation: gravity-rise 280ms cubic-bezier(0.25, 0.1, 0.25, 1.0) 260ms both; }
+.mg-rail-fade { animation: gravity-rise 280ms cubic-bezier(0.25, 0.1, 0.25, 1.0) 340ms both; }
 
 /* Ambient gravity field */
 .mg-gravity-field {
@@ -1106,26 +1106,22 @@ html {
   position: absolute;
   inset: -20%;
   background:
-    radial-gradient(circle at 35% 35%, rgba(197,162,111,0.035), transparent 22%),
+    radial-gradient(circle at 35% 35%, rgba(201,169,97,0.035), transparent 22%),
     radial-gradient(circle at 65% 55%, rgba(255,255,255,0.025), transparent 28%);
-  animation: gravity-drift 18s ease-in-out infinite alternate;
   pointer-events: none;
 }
 
 /* Gravity scroll reveal — heavier than sr-panel */
 .gr-panel {
   opacity: 0;
-  transform: translateY(28px) scale(0.992);
-  filter: blur(4px);
+  transform: translateY(18px);
   transition:
-    opacity   800ms cubic-bezier(0.16, 1, 0.3, 1),
-    transform 800ms cubic-bezier(0.16, 1, 0.3, 1),
-    filter    800ms cubic-bezier(0.16, 1, 0.3, 1);
+    opacity   280ms cubic-bezier(0.25, 0.1, 0.25, 1.0),
+    transform 280ms cubic-bezier(0.25, 0.1, 0.25, 1.0);
 }
 .gr-panel.gr-revealed {
   opacity: 1;
-  transform: translateY(0) scale(1);
-  filter: blur(0);
+  transform: translateY(0);
 }
 @media (prefers-reduced-motion: reduce) {
   .gr-panel {
@@ -1138,7 +1134,7 @@ html {
     opacity: 1 !important;
     transform: none !important;
   }
-  .mg-gravity-field::before { animation: none !important; }
+  .mg-gravity-field::before { opacity: 0 !important; }
 }
 
 /* Gravity card hover — gains mass, pulls attention */
@@ -1150,12 +1146,12 @@ html {
     background   260ms ease;
 }
 .gravity-card:hover {
-  transform: translateY(-2px) scale(1.006);
-  border-color: rgba(197, 162, 111, 0.42);
+  transform: translateY(-2px);
+  border-color: rgba(201, 169, 97, 0.42);
   box-shadow:
-    0 0 0 1px rgba(197, 162, 111, 0.14),
+    0 0 0 1px rgba(201, 169, 97, 0.14),
     0 24px 80px rgba(0, 0, 0, 0.42),
-    inset 0 0 40px rgba(197, 162, 111, 0.025);
+    inset 0 0 40px rgba(201, 169, 97, 0.025);
 }
 
 /* Gravity list rows — shift right, show mass marker */
@@ -1177,8 +1173,8 @@ html {
 
 /* Canon plate — MG variant */
 .mg-canon-plate {
-  border: 1px solid rgba(197, 162, 111, 0.26);
-  border-left: 3px solid #C5A26F;
+  border: 1px solid rgba(201, 169, 97, 0.26);
+  border-left: 3px solid #C9A961;
   background:
     linear-gradient(90deg, rgba(197, 162, 111, 0.09), transparent 56%),
     #0D1524;
@@ -1188,9 +1184,9 @@ html {
 }
 .mg-canon-plate:hover {
   transform: scale(1.004);
-  border-color: rgba(197, 162, 111, 0.50);
+  border-color: rgba(201, 169, 97, 0.50);
   background:
-    linear-gradient(90deg, rgba(197, 162, 111, 0.12), transparent 58%),
+    linear-gradient(90deg, rgba(201, 169, 97, 0.12), transparent 58%),
     rgba(13, 21, 36, 0.94);
 }
 

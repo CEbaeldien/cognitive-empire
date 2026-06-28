@@ -38,7 +38,7 @@ export default function MaintenanceGravityPage() {
       className={`${inter.className} ${playfair.variable} antialiased text-[#E6EDF7]`}
       style={{
         background: `
-          radial-gradient(circle at 22% 12%, rgba(197,162,111,0.042), transparent 28%),
+          radial-gradient(circle at 22% 12%, rgba(201,169,97,0.042), transparent 28%),
           radial-gradient(circle at 78% 82%, rgba(255,255,255,0.014), transparent 30%),
           linear-gradient(180deg, #05070B 0%, #0B1220 52%, #05070B 100%)
         `,
@@ -72,7 +72,7 @@ export default function MaintenanceGravityPage() {
             <div className="hidden md:flex items-center gap-x-3">
               <a
                 href="/operator-kernel"
-                className="text-[11px] tracking-[3px] uppercase font-mono text-[#C5A26F] hover:text-[#D4B47E] transition-colors"
+                className="text-[11px] tracking-[3px] uppercase font-mono text-[#C9A961] hover:text-[#D4B07E] transition-colors"
               >
                 OPS KERNEL
               </a>
@@ -83,7 +83,7 @@ export default function MaintenanceGravityPage() {
               <span className="hidden md:inline text-[9px] tracking-[2.5px] text-[#5E6B80] uppercase font-mono select-none">
                 Public Canon Release
               </span>
-              <span className="text-[#C5A26F] text-[11px] font-mono font-semibold tracking-[1px]">
+              <span className="text-[#C9A961] text-[11px] font-mono font-semibold tracking-[1px]">
                 001
               </span>
             </div>
@@ -101,7 +101,7 @@ export default function MaintenanceGravityPage() {
 
             {/* Eyebrow */}
             <div className="mg-eyebrow flex items-center gap-x-4 mb-7">
-              <span className="text-[9px] tracking-[3.5px] text-[rgba(197,162,111,0.75)] uppercase font-mono select-none">
+              <span className="text-[9px] tracking-[3.5px] text-[rgba(201,169,97,0.75)] uppercase font-mono select-none">
                 Mini Canonical Release 1
               </span>
             </div>
@@ -151,7 +151,7 @@ export default function MaintenanceGravityPage() {
 
         {/* Mobile: hero (shown only on mobile/tablet) */}
         <div className="lg:hidden px-6 pt-12 pb-8 border-b border-white/[0.07]">
-          <div className="mg-eyebrow text-[9px] tracking-[3px] text-[rgba(197,162,111,0.7)] uppercase font-mono mb-6 select-none">
+          <div className="mg-eyebrow text-[9px] tracking-[3px] text-[rgba(201,169,97,0.7)] uppercase font-mono mb-6 select-none">
             Mini Canonical Release 1
           </div>
           <h1 className="mg-title heading-serif text-[3.2rem] leading-[0.88] tracking-[-2.5px] text-[#F4F7FB] mb-7">
@@ -266,7 +266,7 @@ export default function MaintenanceGravityPage() {
                 <div className="mg-canon-plate">
                   <p className="text-[0.97rem] leading-[1.7] text-[#E6EDF7]">
                     Continuity is not uptime.{' '}
-                    <span className="text-[#C5A26F] font-medium">Continuity is governed survivability.</span>
+                    <span className="text-[#C9A961] font-medium">Continuity is governed survivability.</span>
                   </p>
                 </div>
                 <div className="space-y-3 text-[#8B9AB3] text-[0.88rem] leading-[1.76] pl-1">
@@ -286,9 +286,9 @@ export default function MaintenanceGravityPage() {
             <section id="ce-position" className="section-shell">
               <div
                 className="gravity-card bg-[#0B1220] border border-white/[0.07] rounded-xl p-7"
-                style={{ borderLeft: '2.5px solid rgba(197,162,111,0.40)' }}
+                style={{ borderLeft: '2.5px solid rgba(201,169,97,0.40)' }}
               >
-                <div className="text-[8px] tracking-[2.5px] text-[rgba(197,162,111,0.55)] uppercase font-mono mb-5 select-none">
+                <div className="text-[8px] tracking-[2.5px] text-[rgba(201,169,97,0.55)] uppercase font-mono mb-5 select-none">
                   The Canonical Response
                 </div>
                 <div className="space-y-3 text-[0.88rem] leading-[1.76]">
@@ -322,18 +322,18 @@ export default function MaintenanceGravityPage() {
                 <span className="mg-seal-corner mg-seal-corner-bl" aria-hidden="true" />
                 <span className="mg-seal-corner mg-seal-corner-br" aria-hidden="true" />
 
-                <div className="mb-6 flex justify-center text-[rgba(197,162,111,0.6)]">
+                <div className="mb-6 flex justify-center text-[rgba(201,169,97,0.6)]">
                   <CEMark className="w-12 h-12" />
                 </div>
 
                 <div className="heading-serif text-[1.5rem] md:text-[1.8rem] leading-[1.2] tracking-[-0.8px] text-[#F4F7FB] mb-2">
                   AI creates operational speed.
                 </div>
-                <div className="heading-serif text-[1.5rem] md:text-[1.8rem] leading-[1.2] tracking-[-0.8px] text-[#C5A26F] mb-8">
+                <div className="heading-serif text-[1.5rem] md:text-[1.8rem] leading-[1.2] tracking-[-0.8px] text-[#C9A961] mb-8">
                   Maintenance Gravity determines<br className="hidden sm:block" /> whether that speed endures.
                 </div>
 
-                <div className="w-12 h-px bg-[rgba(197,162,111,0.22)] mx-auto mb-8" />
+                <div className="w-12 h-px bg-[rgba(201,169,97,0.22)] mx-auto mb-8" />
 
                 <p className="text-[#8B9AB3] text-[0.85rem] leading-[1.82] max-w-[400px] mx-auto">
                   The organizations that will matter most are not those that automate the most,

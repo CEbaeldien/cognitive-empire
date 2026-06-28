@@ -7,12 +7,12 @@ export const dynamic = "force-dynamic";
 
 const playfair = Playfair_Display({ subsets: ["latin"], weight: ["400", "600", "700"] });
 
-const GOLD      = "#C5A26F";
-const GOLD_DIM  = "rgba(197,162,111,0.55)";
-const GOLD_FAINT = "rgba(197,162,111,0.15)";
-const CE_WHITE  = "#F4F7FB";
-const CE_MUTED  = "#8B9AB3";
-const BG_DEEP   = "#05070B";
+const GOLD      = "#C9A961";
+const GOLD_DIM  = "rgba(201,169,97,0.55)";
+const GOLD_FAINT = "rgba(201,169,97,0.15)";
+const CE_WHITE  = "#EEF3FA";
+const CE_MUTED  = "#7A8DA6";
+const BG_DEEP   = "#03050A";
 
 function sb() {
   return createClient(

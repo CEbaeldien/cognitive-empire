@@ -48,10 +48,10 @@ export default function CENav() {
           transition: background 150ms ease;
         }
         .ce-nav-link:hover { color: #E6EDF7; }
-        .ce-nav-link:hover::after { background: rgba(197,162,111,0.28); }
+        .ce-nav-link:hover::after { background: rgba(201,169,97,0.28); }
 
         .ce-nav-active {
-          color: #C5A26F;
+          color: #C9A961;
           text-decoration: none;
           position: relative;
           padding-bottom: 3px;
@@ -65,7 +65,7 @@ export default function CENav() {
           position: absolute;
           bottom: 0; left: 0; right: 0;
           height: 1px;
-          background: rgba(197,162,111,0.55);
+          background: rgba(201,169,97,0.55);
         }
 
         .ce-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; flex-shrink: 0; }
@@ -81,7 +81,7 @@ export default function CENav() {
 
         .ce-status-pip {
           width: 5px; height: 5px; border-radius: 50%;
-          background: rgba(197,162,111,0.55);
+          background: rgba(201,169,97,0.55);
           flex-shrink: 0; margin-left: 2px; display: inline-block;
         }
 
@@ -116,7 +116,7 @@ export default function CENav() {
           top: 68px;
           z-index: 49;
           background: #05070B;
-          border-top: 1px solid rgba(197,162,111,0.10);
+          border-top: 1px solid rgba(201,169,97,0.10);
           display: flex;
           flex-direction: column;
           overflow-y: auto;
@@ -134,7 +134,7 @@ export default function CENav() {
           text-decoration: none;
           transition: color 120ms ease, background 120ms ease;
         }
-        .ce-mobile-nav-item:hover { background: rgba(197,162,111,0.04); }
+        .ce-mobile-nav-item:hover { background: rgba(201,169,97,0.04); }
 
         @media (max-width: 767px) {
           .ce-desktop-links { display: none; }
@@ -220,7 +220,7 @@ export default function CENav() {
                 key={link.label}
                 href={link.href}
                 className="ce-mobile-nav-item"
-                style={{ color: isActive ? "#C5A26F" : "#8B9AB3" }}
+                style={{ color: isActive ? "#C9A961" : "#8B9AB3" }}
               >
                 {link.label}
               </Link>
