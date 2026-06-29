@@ -36,14 +36,308 @@ const playfair = Playfair_Display({
    Metadata
 ───────────────────────────────────────────────────────── */
 export const metadata: Metadata = {
-  title: 'Intelligence Is Abundant. Judgment Is Power. — Cognitive Empire',
+  title: 'Ops Kernel Command Center — Cognitive Empire',
   description:
-    'The Public Kernel for Intelligence-Abundant Systems — a public doctrine for operators, builders, and institutions navigating intelligence-abundant systems.',
+    'Mission governance, signal advancement, and structural decisions. The operational surface of the Cognitive Empire Operator Kernel.',
   openGraph: {
-    title: 'Intelligence Is Abundant. Judgment Is Power.',
-    description: 'The Cognitive Empire Public Doctrine — Operator Kernel.',
+    title: 'Ops Kernel Command Center — Cognitive Empire',
+    description: 'Mission governance, signal advancement, and structural decisions.',
     siteName: 'Cognitive Empire',
   },
+}
+
+/* ─────────────────────────────────────────────────────────
+   Command-center data
+───────────────────────────────────────────────────────── */
+const METRICS = [
+  { label: 'Mission Score',     value: '—',   color: '#C5A26F', note: 'No active mission' },
+  { label: 'Gravity Score',     value: '—',   color: '#8B9AB3', note: 'Not computed'      },
+  { label: 'Signals Advanced',  value: '0',   color: '#00D8FF', note: 'This week'         },
+  { label: 'Open Loops',        value: '—',   color: '#8B9AB3', note: 'No data'           },
+  { label: 'Approval Pressure', value: 'LOW', color: '#4CAF82', note: 'Current state'     },
+] as const
+
+const STATE_NODES = [
+  'Signal', 'Judgment', 'Governance', 'Ops', 'Phys. Infra', 'Memory',
+] as const
+
+const CMD_MODULES = [
+  {
+    id: 'module-mission',
+    num: 'M-01',
+    title: 'Mission Control',
+    status: 'IDLE',
+    statusColor: '#5E6B80',
+    body: 'No active mission defined. The mission frame anchors all downstream decisions and sets the operative context for signal evaluation.',
+  },
+  {
+    id: 'module-signals',
+    num: 'M-02',
+    title: 'Signal Advancement',
+    status: 'WATCHING',
+    statusColor: '#00D8FF',
+    body: '0 signals in advancement queue. Signals are advanced when accumulated evidence reveals structural pressure across monitored domains.',
+  },
+  {
+    id: 'module-gravity',
+    num: 'M-03',
+    title: 'Gravity Control',
+    status: 'NOMINAL',
+    statusColor: '#4CAF82',
+    body: 'No active decay vectors detected. Gravity control monitors maintenance pressure and system coherence across operational layers.',
+  },
+  {
+    id: 'module-approvals',
+    num: 'M-04',
+    title: 'Approval Gates',
+    status: 'CLEAR',
+    statusColor: '#4CAF82',
+    body: 'No pending approvals. R3 and R4 decisions require explicit approval before advancement. R4 requires named authorization.',
+  },
+  {
+    id: 'module-ops',
+    num: 'M-05',
+    title: 'Ops Depth Layers',
+    status: 'SCANNING',
+    statusColor: '#C5A26F',
+    body: 'Layer scan: 0 active processes flagged. Ops depth monitors operational systems across all active CE layers.',
+  },
+  {
+    id: 'module-memory',
+    num: 'M-06',
+    title: 'Memory Queue',
+    status: 'EMPTY',
+    statusColor: '#5E6B80',
+    body: '0 items queued for memory. Decisions, signals, and approvals that pass maturity checks are queued here for institutional record.',
+  },
+  {
+    id: 'module-review',
+    num: 'M-07',
+    title: 'Weekly Mission Review',
+    status: 'PENDING',
+    statusColor: '#8B9AB3',
+    body: 'Next review: not scheduled. Weekly mission reviews validate state continuity, flag drift, and confirm operational memory integrity.',
+  },
+] as const
+
+/* ─────────────────────────────────────────────────────────
+   Command-center components (server-rendered)
+───────────────────────────────────────────────────────── */
+function CommandCenterHeader() {
+  return (
+    <section id="cmd-header" className="section-shell mb-8">
+      <div style={{
+        display: 'flex', alignItems: 'center',
+        justifyContent: 'space-between', gap: 16,
+        marginBottom: 12, flexWrap: 'wrap' as const,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{
+            fontSize: 9, letterSpacing: '3px', color: '#5E6B80',
+            textTransform: 'uppercase' as const, fontFamily: 'monospace',
+          }}>
+            COGNITIVE EMPIRE
+          </span>
+          <div style={{ width: 20, height: 1, background: 'rgba(255,255,255,0.10)' }} />
+          <span style={{
+            fontSize: 9, letterSpacing: '3px', color: '#5E6B80',
+            textTransform: 'uppercase' as const, fontFamily: 'monospace',
+          }}>
+            INTERNAL OPS
+          </span>
+        </div>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 6,
+          padding: '3px 10px',
+          border: '1px solid rgba(0,216,255,0.22)',
+          fontSize: 9, letterSpacing: '2px',
+          color: '#00D8FF', fontFamily: 'monospace',
+          textTransform: 'uppercase' as const, flexShrink: 0,
+        }}>
+          <span style={{
+            width: 5, height: 5, borderRadius: '50%',
+            background: '#00D8FF', display: 'inline-block',
+          }} />
+          ACTIVE
+        </div>
+      </div>
+
+      <h1 style={{
+        fontSize: 'clamp(2.0rem, 4.5vw, 3.0rem)',
+        fontWeight: 700, letterSpacing: '-0.04em',
+        color: '#F4F7FB', lineHeight: 1.0, marginBottom: 14,
+      }}>
+        Ops Kernel{' '}
+        <span style={{ color: '#C5A26F' }}>Command Center</span>
+      </h1>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' as const }}>
+        <p style={{ fontSize: 14, color: '#8B9AB3', lineHeight: 1.6, margin: 0 }}>
+          Mission governance, signal advancement, and structural decisions.
+        </p>
+        <a
+          href="#canon-layer"
+          style={{
+            fontSize: 11, color: '#C5A26F', textDecoration: 'none',
+            letterSpacing: '0.5px', flexShrink: 0,
+            borderBottom: '1px solid rgba(197,162,111,0.22)',
+            paddingBottom: 1,
+          }}
+        >
+          ↓ Canon Layer
+        </a>
+      </div>
+
+      <div style={{
+        marginTop: 20, height: 1,
+        background: 'linear-gradient(90deg, rgba(197,162,111,0.30), rgba(197,162,111,0.06) 65%, transparent)',
+      }} />
+    </section>
+  )
+}
+
+function MetricsStrip() {
+  return (
+    <div id="cmd-metrics" className="section-shell mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-[6px]">
+        {METRICS.map(m => (
+          <div
+            key={m.label}
+            style={{
+              background: '#090D18',
+              border: '1px solid rgba(255,255,255,0.06)',
+              padding: '12px 14px',
+            }}
+          >
+            <div style={{
+              fontSize: 8, letterSpacing: '2px', color: '#2A3548',
+              textTransform: 'uppercase' as const,
+              fontFamily: 'monospace', marginBottom: 8,
+            }}>
+              {m.label}
+            </div>
+            <div style={{
+              fontSize: 21, fontWeight: 700, color: m.color,
+              letterSpacing: '-0.03em', lineHeight: 1, marginBottom: 5,
+              fontVariantNumeric: 'tabular-nums' as const,
+            }}>
+              {m.value}
+            </div>
+            <div style={{ fontSize: 9, color: '#2A3548', letterSpacing: '0.5px' }}>
+              {m.note}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function StateRail() {
+  return (
+    <div id="cmd-state" className="section-shell mb-10">
+      <div style={{
+        fontSize: 8, letterSpacing: '2.5px', color: '#2A3548',
+        textTransform: 'uppercase' as const,
+        fontFamily: 'monospace', marginBottom: 8,
+      }}>
+        Operational State Rail
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', overflowX: 'auto', paddingBottom: 4 }}>
+        {STATE_NODES.map((node, i) => (
+          <div key={node} style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+            <div style={{
+              padding: '5px 14px',
+              border: '1px solid rgba(255,255,255,0.07)',
+              fontSize: 10, letterSpacing: '2px',
+              color: '#4A5570',
+              textTransform: 'uppercase' as const,
+              fontFamily: 'monospace', whiteSpace: 'nowrap' as const,
+            }}>
+              {node}
+            </div>
+            {i < STATE_NODES.length - 1 && (
+              <div style={{ width: 14, height: 1, background: 'rgba(255,255,255,0.07)', flexShrink: 0 }} />
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function CommandModules() {
+  return (
+    <div className="mb-10 space-y-[6px]">
+      {CMD_MODULES.map(m => (
+        <div
+          key={m.id}
+          id={m.id}
+          className="section-shell"
+          style={{
+            background: '#080E1A',
+            border: '1px solid rgba(255,255,255,0.06)',
+            padding: '16px 18px',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+            <span style={{
+              fontSize: 9, letterSpacing: '2px', color: '#2A3548',
+              fontFamily: 'monospace', textTransform: 'uppercase' as const,
+              flexShrink: 0,
+            }}>
+              {m.num}
+            </span>
+            <div style={{ height: 1, flex: 1, background: 'rgba(255,255,255,0.05)' }} />
+            <span style={{
+              fontSize: 9, letterSpacing: '2px', color: m.statusColor,
+              fontFamily: 'monospace', textTransform: 'uppercase' as const,
+              flexShrink: 0,
+            }}>
+              {m.status}
+            </span>
+          </div>
+          <div style={{
+            fontWeight: 600, fontSize: 13,
+            color: '#D8E2EF', marginBottom: 5,
+            letterSpacing: '-0.01em',
+          }}>
+            {m.title}
+          </div>
+          <div style={{ fontSize: 12, color: '#4A5A70', lineHeight: 1.65 }}>
+            {m.body}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function CanonLayerDivider() {
+  return (
+    <div id="canon-layer" style={{ margin: '52px 0 48px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div style={{ flex: 1, height: 1, background: 'rgba(197,162,111,0.16)' }} />
+        <div style={{
+          fontSize: 9, letterSpacing: '4px', color: '#C5A26F',
+          textTransform: 'uppercase' as const, fontFamily: 'monospace',
+          padding: '5px 18px',
+          border: '1px solid rgba(197,162,111,0.20)',
+        }}>
+          CANON LAYER
+        </div>
+        <div style={{ flex: 1, height: 1, background: 'rgba(197,162,111,0.16)' }} />
+      </div>
+      <div style={{
+        marginTop: 10, textAlign: 'center' as const,
+        fontSize: 10, color: '#2A3548',
+        letterSpacing: '2px', textTransform: 'uppercase' as const,
+        fontFamily: 'monospace',
+      }}>
+        Public Doctrine — Cognitive Empire Mini Canon
+      </div>
+    </div>
+  )
 }
 
 /* ─────────────────────────────────────────────────────────
@@ -214,7 +508,14 @@ export default function OperatorKernelPage() {
         {/* Main reading column */}
         <main className="flex-1 max-w-[880px] px-8 pt-14 pb-24 min-w-0">
 
-          {/* ── Hero ───────────────────────────────────── */}
+          {/* ── COMMAND CENTER ───────────────────────────── */}
+          <CommandCenterHeader />
+          <MetricsStrip />
+          <StateRail />
+          <CommandModules />
+          <CanonLayerDivider />
+
+          {/* ── CANON: Hero ──────────────────────────────── */}
           <KernelHero />
 
           {/* ── 01: The Prime Doctrine ─────────────────── */}
