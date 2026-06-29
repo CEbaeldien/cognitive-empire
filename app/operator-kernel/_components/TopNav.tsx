@@ -27,30 +27,15 @@ export function TopNav() {
               </a>
             </div>
             <div className="hidden md:block rounded-full border border-white/10 px-3.5 py-1 text-[10px] tracking-[2.5px] text-[#8B9AB3] select-none">
-              PUBLIC MINI CANON
+              OPS KERNEL
             </div>
           </div>
 
-          {/* Right: section anchors + download CTA */}
-          <div className="flex items-center gap-x-8 text-sm">
-            <a
-              href="#prime-doctrine"
-              className="hidden md:inline text-[#8B9AB3] hover:text-[#C5A26F] transition-colors duration-150"
-            >
-              Prime
-            </a>
-            <a
-              href="#eight-laws"
-              className="hidden md:inline text-[#8B9AB3] hover:text-[#C5A26F] transition-colors duration-150"
-            >
-              Laws
-            </a>
-            <a
-              href="#signals"
-              className="hidden md:inline text-[#8B9AB3] hover:text-[#C5A26F] transition-colors duration-150"
-            >
-              Signals
-            </a>
+          {/* Right: download CTA */}
+          <div className="flex items-center gap-x-6 text-sm">
+            <span className="hidden md:inline text-[10px] tracking-[2px] text-[#2A3548] font-mono uppercase select-none">
+              20 Modules
+            </span>
             <DownloadButton variant="nav" />
           </div>
 
