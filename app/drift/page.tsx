@@ -228,9 +228,16 @@ export default function DriftPage() {
           .ce-d1,.ce-d2,.ce-d3 { opacity: 1; transform: none; }
         }
 
+        .ce-col-ref-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 10px;
+        }
+
         @media (max-width: 768px) {
           .ce-drift-wrap  { padding: 40px 20px 64px !important; }
           .ce-stat-grid   { grid-template-columns: repeat(3,1fr) !important; }
+          .ce-col-ref-grid { grid-template-columns: 1fr !important; }
           .ce-result-row  { grid-template-columns: 1fr 60px !important; }
           .ce-result-row > *:nth-child(3),
           .ce-result-row > *:nth-child(4) { display: none; }
@@ -299,27 +306,85 @@ export default function DriftPage() {
               )}
 
               {/* Column reference */}
-              <div style={{ marginTop: 24, padding: "16px 20px", background: P.panel, border: `1px solid ${P.border}` }}>
-                <p style={{ fontSize: "0.6rem", fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", color: P.dim, margin: "0 0 10px" }}>
+              <div style={{ marginTop: 24, padding: "20px 22px", background: P.panel, border: `1px solid ${P.border}` }}>
+                <p style={{ fontSize: "0.6rem", fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", color: P.dim, margin: "0 0 4px" }}>
                   Recognised Column Names
                 </p>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "6px 20px" }}>
+                <p style={{ fontSize: "0.78rem", color: P.dim, margin: "0 0 18px", lineHeight: 1.6 }}>
+                  Drift accepts common CRM and spreadsheet column names. More complete data produces sharper scoring.
+                </p>
+                <div className="ce-col-ref-grid">
                   {([
-                    ["opportunity / opportunity_name / deal / name / company / account", "Opportunity identifier"],
-                    ["value / amount / deal_value / arr / revenue",                      "Deal value (number)"],
-                    ["probability / close_probability / win_rate",                       "Win probability 0–100"],
-                    ["stage / deal_stage / pipeline_stage",                              "Pipeline stage"],
-                    ["last_activity_date / last_activity / last_contact",                "Last activity (ISO date)"],
-                    ["next_action / next_step / follow_up",                              "Next action text"],
-                    ["owner / owner_name / assigned_to / rep",                           "Deal owner"],
-                    ["overdue_followup_count / overdue_count",                           "Overdue follow-up count"],
-                  ] as [string, string][]).map(([col, desc]) => (
-                    <div key={col} style={{ display: "flex", gap: 8, alignItems: "baseline" }}>
-                      <code style={{ fontSize: "0.68rem", color: P.gold, fontFamily: "monospace", flexShrink: 0, lineHeight: 1.6 }}>{col}</code>
-                      <span style={{ fontSize: "0.72rem", color: P.muted }}>{desc}</span>
+                    {
+                      label:   "Opportunity Name",
+                      aliases: ["opportunity", "opportunity_name", "deal", "deal_name", "company", "account", "name", "customer", "prospect"],
+                      desc:    "Identifying each open opportunity.",
+                    },
+                    {
+                      label:   "Deal Value",
+                      aliases: ["value", "amount", "deal_value", "arr", "revenue"],
+                      desc:    "Estimating revenue exposure.",
+                    },
+                    {
+                      label:   "Win Probability",
+                      aliases: ["probability", "close_probability", "win_rate"],
+                      desc:    "Weighting revenue-at-risk calculations.",
+                    },
+                    {
+                      label:   "Pipeline Stage",
+                      aliases: ["stage", "deal_stage", "pipeline_stage"],
+                      desc:    "Detecting late-stage decay pressure.",
+                    },
+                    {
+                      label:   "Last Activity",
+                      aliases: ["last_activity_date", "last_activity", "last_contact", "last_contact_date"],
+                      desc:    "Measuring inactivity — the primary decay signal.",
+                    },
+                    {
+                      label:   "Next Action",
+                      aliases: ["next_action", "next_step", "next_steps", "follow_up"],
+                      desc:    "Flagging opportunities with no forward motion.",
+                    },
+                    {
+                      label:   "Owner",
+                      aliases: ["owner", "owner_name", "assigned_to", "rep", "sales_rep"],
+                      desc:    "Accountability tracking per deal.",
+                    },
+                    {
+                      label:   "Overdue Follow-up Count",
+                      aliases: ["overdue_followup_count", "overdue_count"],
+                      desc:    "Direct signal for ignored commitments.",
+                    },
+                  ]).map(({ label, aliases, desc }) => (
+                    <div key={label} style={{
+                      padding: "12px 14px",
+                      border: `1px solid ${P.border}`,
+                      background: P.panelDeep,
+                    }}>
+                      <p style={{ fontSize: "0.78rem", fontWeight: 600, color: P.text, margin: "0 0 6px" }}>{label}</p>
+                      <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "4px 5px", marginBottom: 7 }}>
+                        {aliases.map(a => (
+                          <code key={a} style={{
+                            fontSize: "0.64rem", color: P.gold, fontFamily: "monospace",
+                            background: "rgba(201,169,97,0.07)", border: "1px solid rgba(201,169,97,0.14)",
+                            padding: "1px 6px", lineHeight: 1.7,
+                          }}>{a}</code>
+                        ))}
+                      </div>
+                      <p style={{ fontSize: "0.72rem", color: P.muted, margin: 0, lineHeight: 1.5 }}>
+                        Used for: {desc}
+                      </p>
                     </div>
                   ))}
                 </div>
+                <p style={{
+                  fontSize: "0.72rem", color: P.dim, lineHeight: 1.65,
+                  margin: "16px 0 0", paddingTop: 14,
+                  borderTop: `1px solid ${P.border}`,
+                }}>
+                  <span style={{ color: P.muted }}>Minimum useful scan:</span> opportunity name, last activity date, next action, and stage.{" "}
+                  Add <span style={{ color: P.gold }}>value</span> and <span style={{ color: P.gold }}>owner</span> to unlock exposure and accountability scoring.
+                </p>
               </div>
             </div>
 
