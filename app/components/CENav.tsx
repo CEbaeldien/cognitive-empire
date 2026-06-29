@@ -5,11 +5,13 @@ import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 
 const NAV_LINKS = [
-  { label: "Home",        href: "/"        },
-  { label: "Signals",     href: "/signals" },
-  { label: "CE Research", href: "/ce-research"  },
-  { label: "Work",        href: "/work"    },
-  { label: "Connect",     href: "/connect" },
+  { label: "Home",         href: "/"             },
+  { label: "Signals",      href: "/signals"      },
+  { label: "Drift",        href: "/drift"        },
+  { label: "Orchestrator", href: "/orchestrator" },
+  { label: "CE Research",  href: "/ce-research"  },
+  { label: "Work",         href: "/work"         },
+  { label: "Connect",      href: "/connect"      },
 ];
 
 export default function CENav() {
