@@ -34,7 +34,7 @@ export function TopNav() {
           {/* Right: download CTA */}
           <div className="flex items-center gap-x-6 text-sm">
             <span className="hidden md:inline text-[10px] tracking-[2px] text-[#2A3548] font-mono uppercase select-none">
-              20 Modules
+              15 Modules
             </span>
             <DownloadButton variant="nav" />
           </div>

@@ -1,67 +1,88 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import type { ReactNode } from 'react'
 
-/* ── Color tokens ───────────────────────────────────────── */
-const T = {
-  bg:           '#05070B',
-  panel:        '#090E1A',
-  panelHover:   '#0D1524',
+/* ── Design tokens ───────────────────────────────────────── */
+const C = {
+  bg:           '#03050A',
+  surface:      '#06090F',
+  panel:        '#090E18',
+  panelRaised:  '#0C1220',
   border:       'rgba(255,255,255,0.07)',
-  borderGold:   'rgba(197,162,111,0.32)',
-  borderCyan:   'rgba(0,216,255,0.20)',
-  text:         '#E6EDF7',
-  muted:        '#8B9AB3',
-  dim:          '#4A5570',
-  dimmer:       '#2A3548',
+  borderGold:   'rgba(197,162,111,0.28)',
+  borderCyan:   'rgba(0,216,255,0.16)',
+  borderWarn:   'rgba(160,90,30,0.28)',
+  borderAction: 'rgba(55,120,85,0.28)',
+  text:         '#D8E2EF',
+  textBright:   '#EEF4FA',
+  muted:        '#7A8DA6',
+  dim:          '#3E5068',
+  dimmer:       '#243040',
   gold:         '#C5A26F',
-  goldSoft:     'rgba(197,162,111,0.07)',
+  goldSoft:     'rgba(197,162,111,0.06)',
   cyan:         '#00D8FF',
-  warn:         'rgba(180,100,40,0.10)',
-  warnText:     '#9B6234',
-  warnBorder:   'rgba(180,100,40,0.28)',
+  cyanSoft:     'rgba(0,216,255,0.04)',
+  warnText:     '#8A5520',
+  warnBg:       'rgba(130,70,20,0.08)',
+  actionText:   '#3D7A58',
+  actionBg:     'rgba(45,110,70,0.07)',
 } as const
 
 /* ── Types ──────────────────────────────────────────────── */
-type Zone = 'ops-kernel' | 'maintenance-gravity'
+type GroupKey = 'core-doctrine' | 'operational-reality' | 'horizon-constraints'
+type TabKey   = 'ops-kernel'   | 'maintenance-gravity'  | 'physical'            | 'metrics'
+
+type LawEntry = { numeral: string; title: string; description: string }
 
 type OpsModule = {
-  id: string
-  zone: Zone
-  num: string
-  title: string
-  thesis: string
-  core: string
-  operational_meaning: string
-  failure_pattern: string
-  operator_question: string
-  laws?: { numeral: string; title: string; description: string }[]
+  id:                 string
+  group:              GroupKey
+  num:                string
+  title:              string
+  subtitle:           string
+  thesis:             string
+  operationalMeaning: string
+  failurePattern:     string
+  operatorQuestion:   string
+  operatorMove:       string
+  relatedModules:     string[]
+  canonLinks:         { label: string }[]
+  route:              string
+  laws?:              LawEntry[]
 }
 
-/* ── Module Data: Ops Kernel ─────────────────────────────── */
-const OPS_KERNEL: OpsModule[] = [
+/* ── Module data ─────────────────────────────────────────── */
+const MODULES: OpsModule[] = [
+  /* ── CORE DOCTRINE ─── */
   {
-    id: 'prime-doctrine',
-    zone: 'ops-kernel',
-    num: '01',
-    title: 'Prime Doctrine',
-    thesis: 'When intelligence becomes abundant, confusion becomes the bottleneck.',
-    core: 'The defining shift of this era is not that machines can produce more — text, code, images, analysis, workflows. That is the visible layer. The deeper shift is structural. Execution simplifies. Production cheapens. Iteration accelerates. Output multiplies. What changes is not capability. What changes is constraint.',
-    operational_meaning: 'The bottleneck has migrated from production to judgment. The operator who produces more has no structural advantage. The operator who selects, governs, and directs has the advantage.',
-    failure_pattern: 'Continuing to optimize production capacity after the bottleneck has moved to judgment. Building more workflows, automating more outputs — while structural coherence collapses.',
-    operator_question: 'Where is the real bottleneck in my system right now?',
+    id:                 'prime-doctrine',
+    group:              'core-doctrine',
+    num:                '01',
+    title:              'Prime Doctrine',
+    subtitle:           'Production is not the constraint. Judgment is.',
+    thesis:             'The defining shift of this era is not that machines can produce more. That is the visible layer. The deeper shift is structural. Execution simplifies. Production cheapens. Iteration accelerates. Output multiplies. What changes is not capability. What changes is constraint.',
+    operationalMeaning: 'The bottleneck has migrated from production to judgment. The operator who produces more has no structural advantage. The operator who selects, governs, and directs has the advantage.',
+    failurePattern:     'Continuing to optimize production capacity after the bottleneck has moved to judgment. Building more workflows, automating more outputs — while structural coherence collapses.',
+    operatorQuestion:   'Where is the real bottleneck in my system right now?',
+    operatorMove:       'Audit where you are spending effort. Is it at the production layer or the judgment layer? Move resources to judgment.',
+    relatedModules:     ['bottleneck-migration', 'decision-half-life', 'governance-abundance'],
+    canonLinks:         [{ label: 'CE Public Canon — Prime Doctrine' }],
+    route:              'Ops Kernel / Core Doctrine',
   },
   {
-    id: 'immutable-laws',
-    zone: 'ops-kernel',
-    num: '02',
-    title: 'Immutable Laws',
-    thesis: 'Eight structural laws govern how constraint behaves under intelligence abundance.',
-    core: 'The Eight Laws are not predictions. They are structural observations about how constraint migrates. Use them as a diagnostic lens. When something breaks in your system, ask which law is expressing itself.',
-    operational_meaning: 'Each law describes a migration — from one bottleneck to another. The operator who can name which law is currently dominant has structural orientation. The operator who cannot is reacting.',
-    failure_pattern: 'Treating the Eight Laws as theoretical framework rather than live operational structure. Failing to identify which law is driving the current constraint.',
-    operator_question: 'Which law is currently most active in my system?',
+    id:                 'immutable-laws',
+    group:              'core-doctrine',
+    num:                '02',
+    title:              'Immutable Laws',
+    subtitle:           'Eight laws govern how constraint migrates under abundance.',
+    thesis:             'The Eight Laws are not predictions. They are structural observations about how constraint migrates. Use them as a diagnostic lens. When something breaks in your system, ask which law is expressing itself.',
+    operationalMeaning: 'Each law describes a migration — from one bottleneck to another. The operator who can name which law is currently dominant has structural orientation. The operator who cannot is reacting.',
+    failurePattern:     'Treating the Eight Laws as theoretical framework rather than live operational structure. Failing to identify which law is driving the current constraint.',
+    operatorQuestion:   'Which law is currently most active in my system?',
+    operatorMove:       'Name the law that is currently most active in your primary system. Act from that identification — not from the visible symptom.',
+    relatedModules:     ['prime-doctrine', 'bottleneck-migration', 'governance-abundance'],
+    canonLinks:         [{ label: 'CE Public Canon — The Eight Laws' }],
+    route:              'Ops Kernel / Core Doctrine',
     laws: [
       { numeral: 'I',    title: 'Intelligence Abundance',   description: 'When intelligence becomes abundant, output inflates and value migrates upstream.' },
       { numeral: 'II',   title: 'Bottleneck Migration',     description: 'When one constraint collapses, another becomes dominant. Optimizing the wrong layer amplifies instability.' },
@@ -74,229 +95,254 @@ const OPS_KERNEL: OpsModule[] = [
     ],
   },
   {
-    id: 'signal-vs-noise',
-    zone: 'ops-kernel',
-    num: '03',
-    title: 'Signal vs Noise',
-    thesis: 'Intelligence abundance reorganizes information asymmetry — it does not eliminate it.',
-    core: 'When production becomes inexpensive, visibility becomes a lagging indicator of structural reality. Search visibility is a distribution event, not a discovery event. Signal compounds quietly. Noise scales rapidly.',
-    operational_meaning: 'The operator must distinguish signals — accumulated structural evidence revealing directional pressure — from noise: high-volume, low-value information artifacts. Noise is not wrong. It is insufficient.',
-    failure_pattern: 'Mistaking visibility for signal strength. Acting on distribution events as if they were structural evidence. Tracking what is loud rather than what is structurally true.',
-    operator_question: 'What am I treating as signal that is actually noise?',
+    id:                 'signal-vs-noise',
+    group:              'core-doctrine',
+    num:                '03',
+    title:              'Signal vs Noise',
+    subtitle:           'When production cheapens, visibility becomes a lagging indicator.',
+    thesis:             'Intelligence abundance does not eliminate information asymmetry. It reorganizes it. When production becomes inexpensive, visibility becomes a lagging indicator of structural reality. Signal compounds quietly. Noise scales rapidly.',
+    operationalMeaning: 'The operator must distinguish signals — accumulated structural evidence revealing directional pressure — from noise: high-volume, low-value information artifacts. Noise is not wrong. It is insufficient.',
+    failurePattern:     'Mistaking visibility for signal strength. Acting on distribution events as if they were structural evidence. Tracking what is loud rather than what is structurally true.',
+    operatorQuestion:   'What am I treating as signal that is actually noise?',
+    operatorMove:       'Audit your top 5 information inputs. For each, ask: is this structural evidence or a distribution event? Cut at least one noise input.',
+    relatedModules:     ['bottleneck-migration', 'diagnostic-questions', 'second-order-effects'],
+    canonLinks:         [{ label: 'CE Public Canon — Signal vs Noise' }],
+    route:              'Ops Kernel / Core Doctrine',
   },
   {
-    id: 'bottleneck-migration',
-    zone: 'ops-kernel',
-    num: '04',
-    title: 'Bottleneck Migration',
-    thesis: 'When one constraint collapses, another becomes dominant.',
-    core: 'Every system operates under constraint. When one constraint dissolves, another becomes dominant. Production → Selection. Execution → Ownership. Access → Orchestration. Building → Governance. Analysis → Responsibility. Creation → Continuity. Visibility → Verifiability. Speed → Survivability.',
-    operational_meaning: 'Optimizing the old bottleneck after migration is invisible waste. Tracking the dominant constraint requires active diagnosis, not historical precedent.',
-    failure_pattern: "Solving last era's constraint after the bottleneck has already migrated. The system looks productive while the real bottleneck accumulates pressure elsewhere.",
-    operator_question: 'What bottleneck am I still optimizing for that has already moved?',
+    id:                 'bottleneck-migration',
+    group:              'core-doctrine',
+    num:                '04',
+    title:              'Bottleneck Migration',
+    subtitle:           'The constraint has already moved. Are you optimizing the old one?',
+    thesis:             'Every system operates under constraint. When one dissolves, another becomes dominant. Production → Selection. Execution → Ownership. Access → Orchestration. Building → Governance. Analysis → Responsibility. Creation → Continuity. Visibility → Verifiability. Speed → Survivability.',
+    operationalMeaning: 'Optimizing the old bottleneck after migration is invisible waste. Tracking the dominant constraint requires active diagnosis, not historical precedent.',
+    failurePattern:     "Solving last era's constraint after the bottleneck has already migrated. The system looks productive while the real bottleneck accumulates pressure elsewhere.",
+    operatorQuestion:   'What bottleneck am I still optimizing for that has already moved?',
+    operatorMove:       'Identify the current dominant constraint. Confirm it has not migrated. Stop optimizing anything that is not the current bottleneck.',
+    relatedModules:     ['prime-doctrine', 'immutable-laws', 'maintenance-gravity'],
+    canonLinks:         [{ label: 'CE Public Canon — Bottleneck Migration' }],
+    route:              'Ops Kernel / Core Doctrine',
   },
   {
-    id: 'modular-cognition',
-    zone: 'ops-kernel',
-    num: '05',
-    title: 'Modular Cognition',
-    thesis: 'Access is not architecture. Using multiple models is not orchestration.',
-    core: 'Modular Cognition is the deliberate structuring of distributed intelligence into a governed system. Architecture determines outcome. The operator commits. Accumulating capabilities without a governing structure creates the illusion of power while creating structural fragility.',
-    operational_meaning: 'Intelligence must be governed at the architecture level, not just at the tool level. The operator who uses twelve AI tools without a governing structure is not orchestrating — they are accumulating.',
-    failure_pattern: 'Collecting capabilities without a governing architecture. Tool abundance without structural commitment. High surface area with no coherent system beneath it.',
-    operator_question: 'What is the governing architecture of my intelligence stack?',
+    id:                 'modular-cognition',
+    group:              'core-doctrine',
+    num:                '05',
+    title:              'Modular Cognition',
+    subtitle:           'Access is not architecture.',
+    thesis:             'Modular Cognition is the deliberate structuring of distributed intelligence into a governed system. Architecture determines outcome. The operator commits. Accumulating capabilities without a governing structure creates the illusion of power while creating structural fragility.',
+    operationalMeaning: 'Intelligence must be governed at the architecture level, not just at the tool level. The operator who uses twelve AI tools without a governing structure is not orchestrating — they are accumulating.',
+    failurePattern:     'Collecting capabilities without a governing architecture. Tool abundance without structural commitment. High surface area with no coherent system beneath it.',
+    operatorQuestion:   'What is the governing architecture of my intelligence stack?',
+    operatorMove:       'Map your intelligence stack. Identify which components have a governing architecture and which are accumulated tools. Retire at least one ungoverned tool.',
+    relatedModules:     ['governance-abundance', 'complexity-accumulation', 'decision-half-life'],
+    canonLinks:         [{ label: 'CE Public Canon — Modular Cognition' }],
+    route:              'Ops Kernel / Core Doctrine',
   },
   {
-    id: 'decision-half-life',
-    zone: 'ops-kernel',
-    num: '06',
-    title: 'Decision Half-Life',
-    thesis: 'Some decisions must be defended. Others must adapt. Confusing the two destroys cognitive capital.',
-    core: 'Not all decisions should be treated equally. High half-life decisions are commitments that must be defended under pressure — identity, governance structure, core doctrine. Low half-life decisions must be updated as conditions change — tactics, tools, surface approaches.',
-    operational_meaning: 'The operator must classify decisions by their half-life before committing resources to defend or revise them. Defending a low-half-life decision wastes capital. Revising a high-half-life decision creates incoherence.',
-    failure_pattern: 'Treating all decisions the same — either defending everything rigidly and becoming obsolete, or adapting everything reactively and becoming incoherent.',
-    operator_question: 'Which of my current commitments need defense, and which need revision?',
+    id:                 'decision-half-life',
+    group:              'core-doctrine',
+    num:                '06',
+    title:              'Decision Half-Life',
+    subtitle:           'Some decisions must be defended. Others must adapt.',
+    thesis:             'Not all decisions should be treated equally. High half-life decisions are commitments that must be defended under pressure — identity, governance structure, core doctrine. Low half-life decisions must be updated as conditions change — tactics, tools, surface approaches.',
+    operationalMeaning: 'The operator must classify decisions by their half-life before committing resources to defend or revise them. Defending a low-half-life decision wastes capital. Revising a high-half-life decision creates incoherence.',
+    failurePattern:     'Treating all decisions the same — either defending everything rigidly and becoming obsolete, or adapting everything reactively and becoming incoherent.',
+    operatorQuestion:   'Which of my current commitments need defense, and which need revision?',
+    operatorMove:       'List your top 3 current commitments. Assign each a half-life: high (must defend) or low (must update). Act accordingly before the next decision point.',
+    relatedModules:     ['governance-abundance', 'operator-moves', 'survivable-systems'],
+    canonLinks:         [{ label: 'CE Public Canon — Decision Half-Life' }],
+    route:              'Ops Kernel / Core Doctrine',
   },
   {
-    id: 'failure-modes',
-    zone: 'ops-kernel',
-    num: '07',
-    title: 'Failure Modes',
-    thesis: 'In abundant environments, intelligence fails silently.',
-    core: "In constrained environments, incompetence fails visibly — the output does not exist. In abundant environments, intelligence fails silently — the output exists, looks good, and the structure is breaking underneath it. These are structural failures caused by optimizing the visible layer after the bottleneck has migrated upward.",
-    operational_meaning: 'Silent failure cannot be detected by measuring outputs. It requires structural audit — checking the governance layer, the ownership layer, the escalation layer — not the production layer.',
-    failure_pattern: 'Using production metrics to detect structural failure. Output is increasing. Coherence is decreasing. No alarm sounds.',
-    operator_question: 'What in my system is failing silently right now?',
+    id:                 'governance-abundance',
+    group:              'core-doctrine',
+    num:                '07',
+    title:              'Governance Under Abundance',
+    subtitle:           'Capability without governance is liability.',
+    thesis:             'Every intelligent system requires three layers: computation, commitment, and consequence. Computation can be distributed. Commitment must be bounded by authority. Consequence must be owned by identifiable actors. The more capable the system, the more critical governance becomes.',
+    operationalMeaning: 'Capability without governance is liability. The operator who expands capability without expanding governance structure is accelerating toward a governance failure.',
+    failurePattern:     'Building capable systems without defined ownership, authority boundaries, or consequence structures. High output, low accountability.',
+    operatorQuestion:   'Who owns the consequence in every system I am running?',
+    operatorMove:       'For each system you run, confirm: who owns the consequence? If unowned, assign ownership explicitly or retire the system.',
+    relatedModules:     ['modular-cognition', 'decision-half-life', 'survivable-systems'],
+    canonLinks:         [{ label: 'CE Public Canon — Governance Under Abundance' }],
+    route:              'Ops Kernel / Core Doctrine',
+  },
+
+  /* ── OPERATIONAL REALITY ─── */
+  {
+    id:                 'maintenance-gravity',
+    group:              'operational-reality',
+    num:                'MG-01',
+    title:              'Maintenance Gravity',
+    subtitle:           'Starting is cheap. Sustaining compounds.',
+    thesis:             'Creation friction is falling faster than continuity capacity is expanding. Starting becomes inexpensive. Sustaining compounds. Every new tool, workflow, automation, and system adds future upkeep, ownership, and escalation cost. The question is no longer only: Can this be built? The question is: Can this remain coherent?',
+    operationalMeaning: 'Every system created adds future governance cost. The operator who creates without accounting for maintenance gravity will be crushed by it — not in the moment of creation, but months later when the system demands attention it was never designed to receive.',
+    failurePattern:     'The operator feels productive while the system becomes harder to govern. Output is increasing. Maintenance gravity is accumulating. No alarm sounds until the system fails to sustain.',
+    operatorQuestion:   'What have I created that I can no longer maintain cleanly?',
+    operatorMove:       'List every system, tool, and workflow created in the last 6 months. For each: can you maintain it cleanly? Retire or explicitly assign everything you cannot.',
+    relatedModules:     ['complexity-accumulation', 'survivable-systems', 'bottleneck-migration'],
+    canonLinks:         [{ label: 'CE Public Canon — Maintenance Gravity' }],
+    route:              'Maintenance Gravity / Operational Reality',
   },
   {
-    id: 'governance-abundance',
-    zone: 'ops-kernel',
-    num: '08',
-    title: 'Governance Under Abundance',
-    thesis: 'Intelligence abundance expands capability. Governance determines consequence.',
-    core: 'Every intelligent system requires three layers: computation, commitment, and consequence. Computation can be distributed. Commitment must be bounded by authority. Consequence must be owned by identifiable actors. The more capable the system, the more critical governance becomes.',
-    operational_meaning: 'Capability without governance is liability. The operator who expands capability without expanding governance structure is accelerating toward a governance failure.',
-    failure_pattern: 'Building capable systems without defined ownership, authority boundaries, or consequence structures. High output, low accountability.',
-    operator_question: 'Who owns the consequence in every system I am running?',
+    id:                 'complexity-accumulation',
+    group:              'operational-reality',
+    num:                'MG-02',
+    title:              'Complexity Accumulation',
+    subtitle:           'Complexity accumulates invisibly until it governs you.',
+    thesis:             "Systems do not announce when they become too complex to govern. Complexity accumulates through addition — new tools, integrations, exceptions, workarounds, and debt. Each addition feels manageable. The aggregate becomes structural drag.",
+    operationalMeaning: 'The operator must audit complexity actively. Passive management allows accumulation until crisis. Complexity becomes invisible through familiarity — the operator no longer sees what they navigate around every day.',
+    failurePattern:     'Adding capabilities, integrations, and tools without retiring the old ones. Workarounds become architecture. Exceptions become defaults. The system becomes ungovernable.',
+    operatorQuestion:   'What complexity have I accumulated that I have not audited in 90 days?',
+    operatorMove:       'Select one system you manage. List every integration, exception, and workaround added in the last 12 months. Retire at least one this week.',
+    relatedModules:     ['maintenance-gravity', 'survivable-systems', 'metrics-that-matter'],
+    canonLinks:         [{ label: 'CE Public Canon — Complexity Accumulation' }],
+    route:              'Maintenance Gravity / Operational Reality',
   },
   {
-    id: 'strategic-imperfection',
-    zone: 'ops-kernel',
-    num: '09',
-    title: 'Strategic Imperfection',
-    thesis: 'Under abundance, identity becomes scarce. Constraint signals authorship.',
-    core: 'Perfection scales. Imitation scales faster. Strategic Imperfection is deliberate asymmetry: the disciplined refusal to optimize every surface into sameness. When every output is polished to the same standard, the operator becomes indistinguishable from the system generating outputs.',
-    operational_meaning: 'The operator must choose which surfaces to leave deliberately imperfect — where the seams show authorship, not error. Authentic constraint is a signal that cannot be counterfeited at scale.',
-    failure_pattern: 'Optimizing all surfaces to maximum polish, achieving indistinguishability from generated outputs. Looking perfect. Being invisible.',
-    operator_question: 'What deliberate constraints am I maintaining to signal authorship?',
+    id:                 'survivable-systems',
+    group:              'operational-reality',
+    num:                'MG-03',
+    title:              'Survivable Systems',
+    subtitle:           'Build for reduction, not just expansion.',
+    thesis:             'Abundance rewards expansion. Survival rewards coherence. The systems that endure will be the systems that remain governable under pressure. The survivable system has defined ownership at every layer, clear escalation paths, and the capacity to reduce scope without losing function.',
+    operationalMeaning: 'Design for reduction, not just expansion. A system that can shed 40% of its surface area and still function coherently is more survivable than one that requires every part to operate.',
+    failurePattern:     'Building for maximum capability rather than maximum coherence. The system becomes brittle under any significant perturbation — it can expand but cannot contract.',
+    operatorQuestion:   'If I removed 40% of my current capabilities, would what remained be more survivable?',
+    operatorMove:       'Identify 40% of your current capability surface that could be removed. If you cannot identify it, treat this as a governance emergency.',
+    relatedModules:     ['maintenance-gravity', 'governance-abundance', 'metrics-that-matter'],
+    canonLinks:         [{ label: 'CE Public Canon — Survivable Systems' }],
+    route:              'Maintenance Gravity / Operational Reality',
   },
   {
-    id: 'agentic-commerce',
-    zone: 'ops-kernel',
-    num: '10',
-    title: 'Agentic Commerce',
-    thesis: 'Commerce shifts from attention markets toward agent-mediated markets.',
-    core: 'Intelligence abundance does not eliminate markets. It restructures them. Persuasion loses power where verification dominates. The decision-maker is increasingly an agent acting on behalf of a human.',
-    operational_meaning: 'Agent-legibility — structural clarity, verifiability, parseable information — becomes competitive advantage. The operator must design for agents, not just for humans.',
-    failure_pattern: 'Continuing to optimize for human attention and persuasion when the primary decision layer is shifting to agent-mediated evaluation.',
-    operator_question: 'Is my system legible to an agent making a decision on behalf of a human?',
+    id:                 'metrics-that-matter',
+    group:              'operational-reality',
+    num:                'MG-04',
+    title:              'Metrics That Matter',
+    subtitle:           'The wrong metrics accelerate failure.',
+    thesis:             'Output metrics measure the wrong layer after the bottleneck has migrated. The metrics that matter are structural: coherence, ownership clarity, decision half-life, escalation integrity, and maintenance load — not production volume.',
+    operationalMeaning: 'Replace production metrics with governance metrics. Measure what determines survivability, not what looks impressive in a report. Volume is not signal. Structure is signal.',
+    failurePattern:     'Using volume metrics as proxies for structural health. Producing more while governing less. Looking healthy while becoming fragile.',
+    operatorQuestion:   'Am I measuring what will determine my survivability in the next 18 months?',
+    operatorMove:       'Replace one production metric with a structural governance metric this week. Measure ownership clarity, decision half-life, or escalation integrity instead.',
+    relatedModules:     ['diagnostic-questions', 'complexity-accumulation', 'governance-abundance'],
+    canonLinks:         [{ label: 'CE Public Canon — Metrics Under Abundance' }],
+    route:              'Maintenance Gravity / Operational Reality',
   },
   {
-    id: 'great-filter',
-    zone: 'ops-kernel',
-    num: '11',
-    title: 'The Great Filter',
-    thesis: 'Abundance does not eliminate competition. It intensifies selection.',
-    core: 'The Great Filter of abundance does not ask who can produce. It asks who can remain coherent. Abundance is the selection pressure. The filter is not productivity — it is coherence under scale.',
-    operational_meaning: 'Expansion without coherence is not growth — it is the setup for filter-failure. The survivable operator builds governance capacity at least as fast as capability capacity.',
-    failure_pattern: 'Expanding capabilities while losing organizational coherence, governance clarity, or directional consistency. Growing into incoherence.',
-    operator_question: 'Am I becoming more coherent or less coherent as my capabilities expand?',
+    id:                 'diagnostic-questions',
+    group:              'operational-reality',
+    num:                'MG-05',
+    title:              'Diagnostic Questions',
+    subtitle:           'Four questions orient the operator under structural pressure.',
+    thesis:             'What changed? What structural direction does it support? What pressure is accumulating? What second-order consequence follows? These are not analytical questions — they are navigational. Apply them to every signal, every decision, every new capability before committing.',
+    operationalMeaning: 'Structural orientation does not require prediction. It requires the discipline to ask navigational questions before acting. The operator who applies these four questions consistently builds directional capital over time.',
+    failurePattern:     'Reacting to events without structural orientation. Operating in the visible layer only. Addressing the first-order problem without diagnosing the structural direction it represents.',
+    operatorQuestion:   'Apply all four questions to the most significant decision you made this week.',
+    operatorMove:       'Take the most significant recent event. Write one-line answers to all four questions. Act from the structural direction they identify, not from the immediate symptom.',
+    relatedModules:     ['signal-vs-noise', 'second-order-effects', 'operator-moves'],
+    canonLinks:         [{ label: 'CE Public Canon — The Four Questions' }],
+    route:              'Maintenance Gravity / Operational Reality',
   },
   {
-    id: 'renaissance-operator',
-    zone: 'ops-kernel',
-    num: '12',
-    title: 'Renaissance Operator',
-    thesis: 'The Renaissance Operator does not outproduce abundance. They orchestrate it.',
-    core: 'They are more stable, more deliberate, and more difficult to replace. The Renaissance Operator is defined not by what they can produce, but by what they govern. In an era of abundant production, the premium role shifts from skilled producer to skilled governor.',
-    operational_meaning: 'Governance, orchestration, and directional authority are the new scarce capabilities. The operator who develops these compounds in value as abundance expands.',
-    failure_pattern: 'Trying to outcompete in production capacity — generating more, faster — rather than developing governance depth and directional authority.',
-    operator_question: 'What can I govern that a purely capable system cannot?',
+    id:                 'operator-moves',
+    group:              'operational-reality',
+    num:                'MG-06',
+    title:              'Operator Moves',
+    subtitle:           'The operator has defined structural moves available.',
+    thesis:             "Direction Without Prediction: The operator does not need to predict every event. They need to understand which constraint is becoming dominant. Available moves: audit complexity, retire what cannot be maintained, clarify ownership, raise governance level on critical decisions, identify which law is most active.",
+    operationalMeaning: "The operator's job is not to forecast — it is to maintain direction under volatility by reading which bottleneck is accumulating pressure and executing the appropriate structural move.",
+    failurePattern:     'Waiting for certainty before moving. Analysis paralysis in the face of structural pressure. The operator studies the constraint rather than moving against it.',
+    operatorQuestion:   'What is the one structural move available to me right now that I have been avoiding?',
+    operatorMove:       'Identify the current dominant constraint. Select the one structural move that directly addresses it. Execute before analysis is complete.',
+    relatedModules:     ['diagnostic-questions', 'bottleneck-migration', 'maintenance-gravity'],
+    canonLinks:         [{ label: 'CE Public Canon — Direction Without Prediction' }],
+    route:              'Maintenance Gravity / Operational Reality',
+  },
+
+  /* ── HORIZON & CONSTRAINTS ─── */
+  {
+    id:                 'physical-constraints',
+    group:              'horizon-constraints',
+    num:                'HC-01',
+    title:              'Physical Constraints',
+    subtitle:           'Digital intelligence remains bounded by physical systems.',
+    thesis:             'Intelligence abundance appears digital. Its constraints are physical. Digital intelligence remains bounded by physical systems — energy infrastructure, compute hardware, supply chains, and physical geography. No digital system overrides energy scarcity, infrastructure failure, or geographic physical reality.',
+    operationalMeaning: 'Physical constraint is the ultimate governance layer. The operator who treats digital capability as unconstrained by physical infrastructure will be surprised by the physical layer.',
+    failurePattern:     'Treating digital capability as sovereign from physical infrastructure. Failing to model energy, compute, and physical system dependencies into operational planning.',
+    operatorQuestion:   'What physical constraints bound my digital intelligence stack?',
+    operatorMove:       'Map the physical dependencies of your digital intelligence stack. Identify the single physical constraint that could most rapidly limit your capability.',
+    relatedModules:     ['bottleneck-migration', 'survivable-systems', 'second-order-effects'],
+    canonLinks:         [{ label: 'CE Public Canon — Physical Constraints' }],
+    route:              'Constraints / Horizon',
   },
   {
-    id: 'physical-constraints',
-    zone: 'ops-kernel',
-    num: '13',
-    title: 'Physical Constraints',
-    thesis: 'Intelligence abundance appears digital. Its constraints are physical.',
-    core: 'Digital intelligence remains bounded by physical systems — energy infrastructure, compute hardware, supply chains, and physical geography. No digital system overrides energy scarcity, infrastructure failure, or geographic physical reality.',
-    operational_meaning: 'Physical constraint is the ultimate governance layer. The operator who treats digital capability as unconstrained by physical infrastructure will be surprised by the physical layer.',
-    failure_pattern: 'Treating digital capability as sovereign from physical infrastructure. Failing to model energy, compute, and physical system dependencies into operational planning.',
-    operator_question: 'What physical constraints bound my digital intelligence stack?',
-  },
-  {
-    id: 'second-order-effects',
-    zone: 'ops-kernel',
-    num: '14',
-    title: 'Second-Order Effects',
-    thesis: 'First-order effects are visible. Second-order effects are consequential.',
-    core: 'First-order effects are visible. Second-order effects are harder to see, yet more consequential. Design for consequence, not excitement. Every operational decision generates second-order effects that govern the eventual outcome.',
-    operational_meaning: 'The discipline is not to predict second-order effects — it is to ask for them before acting. What does this enable next? What constraint does this remove, and what constraint does that removal create?',
-    failure_pattern: 'Acting on visible first-order effects while ignoring the second-order consequences. Solving the current problem while creating the next one.',
-    operator_question: 'What second-order effects am I generating that I have not yet evaluated?',
+    id:                 'second-order-effects',
+    group:              'horizon-constraints',
+    num:                'HC-02',
+    title:              'Second-Order Effects',
+    subtitle:           'Design for consequence, not excitement.',
+    thesis:             'First-order effects are visible. Second-order effects are harder to see, yet more consequential. Every operational decision generates second-order effects that govern the eventual outcome. Design for consequence, not excitement.',
+    operationalMeaning: 'The discipline is not to predict second-order effects — it is to ask for them before acting. What does this enable next? What constraint does this remove, and what constraint does that removal create?',
+    failurePattern:     'Acting on visible first-order effects while ignoring the second-order consequences. Solving the current problem while creating the next one.',
+    operatorQuestion:   'What second-order effects am I generating that I have not yet evaluated?',
+    operatorMove:       'For your most recent significant decision: write the second-order effects. If you have not done this, do it before the second-order consequences arrive uninvited.',
+    relatedModules:     ['physical-constraints', 'diagnostic-questions', 'governance-abundance'],
+    canonLinks:         [{ label: 'CE Public Canon — Second-Order Effects' }],
+    route:              'Constraints / Horizon',
   },
 ]
 
-/* ── Module Data: Maintenance Gravity ───────────────────── */
-const MAINTENANCE_GRAVITY: OpsModule[] = [
-  {
-    id: 'maintenance-gravity',
-    zone: 'maintenance-gravity',
-    num: 'MG-01',
-    title: 'Maintenance Gravity',
-    thesis: 'Creation friction is falling faster than continuity capacity is expanding.',
-    core: 'Starting becomes inexpensive. Sustaining compounds. Every new tool, workflow, automation, and system adds future upkeep, ownership, and escalation cost. The question is no longer only: Can this be built? The question is: Can this remain coherent?',
-    operational_meaning: 'Every system created adds future governance cost. The operator who creates without accounting for maintenance gravity will be crushed by it — not in the moment of creation, but months later when the system demands attention it was never designed to receive.',
-    failure_pattern: 'The operator feels productive while the system becomes harder to govern. Output is increasing. Maintenance gravity is accumulating. No alarm sounds until the system fails to sustain.',
-    operator_question: 'What have I created that I can no longer maintain cleanly?',
-  },
-  {
-    id: 'complexity-accumulation',
-    zone: 'maintenance-gravity',
-    num: 'MG-02',
-    title: 'Complexity Accumulation',
-    thesis: 'Complexity accumulates invisibly until it becomes ungovernable.',
-    core: 'Systems do not announce when they become too complex to govern. Complexity accumulates through addition — new tools, integrations, exceptions, workarounds, and debt. Each addition feels manageable. The aggregate becomes structural drag.',
-    operational_meaning: 'The operator must audit complexity actively. Passive management allows accumulation until crisis. Complexity becomes invisible through familiarity — the operator no longer sees what they navigate around every day.',
-    failure_pattern: 'Adding capabilities, integrations, and tools without retiring the old ones. Workarounds become architecture. Exceptions become defaults. The system becomes ungovernable.',
-    operator_question: 'What complexity have I accumulated that I have not audited in 90 days?',
-  },
-  {
-    id: 'survivable-systems',
-    zone: 'maintenance-gravity',
-    num: 'MG-03',
-    title: 'Survivable Systems',
-    thesis: 'Abundance rewards expansion. Survival rewards coherence.',
-    core: 'The systems that endure will be the systems that remain governable under pressure. The survivable system has defined ownership at every layer, clear escalation paths, and the capacity to reduce scope without losing function.',
-    operational_meaning: 'Design for reduction, not just expansion. A system that can shed 40% of its surface area and still function coherently is more survivable than one that requires every part to operate.',
-    failure_pattern: 'Building for maximum capability rather than maximum coherence. The system becomes brittle under any significant perturbation — it can expand but cannot contract.',
-    operator_question: 'If I removed 40% of my current capabilities, would what remained be more survivable?',
-  },
-  {
-    id: 'metrics-that-matter',
-    zone: 'maintenance-gravity',
-    num: 'MG-04',
-    title: 'Metrics That Matter',
-    thesis: 'In abundance, the wrong metrics accelerate failure.',
-    core: 'Output metrics measure the wrong layer after the bottleneck has migrated. The metrics that matter are structural: coherence, ownership clarity, decision half-life, escalation integrity, and maintenance load — not production volume.',
-    operational_meaning: 'Replace production metrics with governance metrics. Measure what determines survivability, not what looks impressive in a report. Volume is not signal. Structure is signal.',
-    failure_pattern: 'Using volume metrics as proxies for structural health. Producing more while governing less. Looking healthy while becoming fragile.',
-    operator_question: 'Am I measuring what will determine my survivability in the next 18 months?',
-  },
-  {
-    id: 'diagnostic-questions',
-    zone: 'maintenance-gravity',
-    num: 'MG-05',
-    title: 'Diagnostic Questions',
-    thesis: 'Four questions orient the operator under structural pressure.',
-    core: 'What changed? What structural direction does it support? What pressure is accumulating? What second-order consequence follows? These are not analytical questions — they are navigational. Apply them to every signal, every decision, every new capability before committing.',
-    operational_meaning: 'Structural orientation does not require prediction. It requires the discipline to ask navigational questions before acting. The operator who applies these four questions consistently builds directional capital over time.',
-    failure_pattern: 'Reacting to events without structural orientation. Operating in the visible layer only. Addressing the first-order problem without diagnosing the structural direction it represents.',
-    operator_question: 'Apply all four questions to the most significant decision you made this week.',
-  },
-  {
-    id: 'operator-moves',
-    zone: 'maintenance-gravity',
-    num: 'MG-06',
-    title: 'Operator Moves',
-    thesis: 'The operator has a defined set of structural moves at each constraint level.',
-    core: "Direction Without Prediction: The operator does not need to predict every event. They need to understand which constraint is becoming dominant. Available moves: audit complexity, retire what cannot be maintained, clarify ownership at each layer, raise governance level on critical decisions, identify which law is currently most active.",
-    operational_meaning: "The operator's job is not to forecast — it is to maintain direction under volatility by reading which bottleneck is accumulating pressure and executing the appropriate structural move.",
-    failure_pattern: 'Waiting for certainty before moving. Analysis paralysis in the face of structural pressure. The operator studies the constraint rather than moving against it.',
-    operator_question: 'What is the one structural move available to me right now that I have been avoiding?',
-  },
+/* ── Nav group config ─────────────────────────────────────── */
+const GROUPS: { key: GroupKey; label: string; color: string }[] = [
+  { key: 'core-doctrine',       label: 'Core Doctrine',       color: '#C5A26F' },
+  { key: 'operational-reality', label: 'Operational Reality', color: '#00D8FF' },
+  { key: 'horizon-constraints', label: 'Horizon & Constraints', color: '#8B9AB3' },
 ]
 
-const ALL_MODULES = [...OPS_KERNEL, ...MAINTENANCE_GRAVITY]
+/* ── Tab config ───────────────────────────────────────────── */
+const TABS: { key: TabKey; label: string; firstModule: string }[] = [
+  { key: 'ops-kernel',         label: 'Ops Kernel',          firstModule: 'prime-doctrine'    },
+  { key: 'maintenance-gravity',label: 'Maintenance Gravity', firstModule: 'maintenance-gravity' },
+  { key: 'physical',           label: 'Physical',            firstModule: 'physical-constraints' },
+  { key: 'metrics',            label: 'Metrics',             firstModule: 'metrics-that-matter' },
+]
 
-/* ── Main Component ─────────────────────────────────────── */
+const TAB_FOR_GROUP: Record<GroupKey, TabKey> = {
+  'core-doctrine':       'ops-kernel',
+  'operational-reality': 'maintenance-gravity',
+  'horizon-constraints': 'physical',
+}
+
+/* ── Main component ──────────────────────────────────────── */
 export function OpsKernelConsole() {
-  const [activeId, setActiveId] = useState('prime-doctrine')
-  const [transitioning, setTransitioning] = useState(false)
+  const [activeId, setActiveId]     = useState('prime-doctrine')
+  const [activeTab, setActiveTab]   = useState<TabKey>('ops-kernel')
+  const [transitioning, setTrans]   = useState(false)
 
-  const activeIdx = ALL_MODULES.findIndex(m => m.id === activeId)
-  const active    = ALL_MODULES[activeIdx]!
-  const prev      = activeIdx > 0 ? ALL_MODULES[activeIdx - 1] : null
-  const next      = activeIdx < ALL_MODULES.length - 1 ? ALL_MODULES[activeIdx + 1] : null
+  const idx     = MODULES.findIndex(m => m.id === activeId)
+  const active  = MODULES[idx]!
+  const prev    = idx > 0 ? MODULES[idx - 1] : null
+  const next    = idx < MODULES.length - 1 ? MODULES[idx + 1] : null
 
   const goTo = useCallback((id: string) => {
     if (id === activeId) return
-    setTransitioning(true)
+    setTrans(true)
     setTimeout(() => {
       setActiveId(id)
-      setTransitioning(false)
-    }, 180)
+      const m = MODULES.find(m => m.id === id)
+      if (m) setActiveTab(TAB_FOR_GROUP[m.group])
+      setTrans(false)
+    }, 160)
   }, [activeId])
+
+  const goToTab = useCallback((tab: TabKey) => {
+    setActiveTab(tab)
+    const first = TABS.find(t => t.key === tab)?.firstModule
+    if (first) goTo(first)
+  }, [goTo])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -312,501 +358,683 @@ export function OpsKernelConsole() {
     return () => window.removeEventListener('keydown', onKey)
   }, [goTo, prev, next])
 
-  const isGravity = active.zone === 'maintenance-gravity'
-  const accentColor = isGravity ? T.cyan : T.gold
-  const accentBorder = isGravity ? T.borderCyan : T.borderGold
-  const progressPct = ((activeIdx + 1) / ALL_MODULES.length) * 100
+  const groupColor = GROUPS.find(g => g.key === active.group)?.color ?? C.gold
 
   return (
     <>
       <style>{`
-        .ok-shell {
-          display: flex;
+        /* ── Shell ── */
+        .ck-shell {
+          display: flex; flex-direction: column;
           height: calc(100vh - 80px);
-          background: ${T.bg};
+          background: ${C.bg}; overflow: hidden;
           position: relative;
-          overflow: hidden;
         }
-        .ok-nav {
-          width: 236px;
-          flex-shrink: 0;
-          border-right: 1px solid ${T.border};
-          overflow-y: auto;
-          padding: 16px 0 48px;
-          position: relative;
-          z-index: 1;
+        /* subtle dot grid */
+        .ck-shell::before {
+          content: '';
+          position: absolute; inset: 0; pointer-events: none;
+          background-image:
+            radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px);
+          background-size: 28px 28px;
+          z-index: 0;
         }
-        .ok-content {
-          flex: 1;
-          overflow-y: auto;
-          padding: 40px 52px 80px;
-          max-width: 820px;
-          position: relative;
-          z-index: 1;
-          transition: opacity 180ms ease;
+
+        /* ── Zone tabs ── */
+        .ck-tabs {
+          display: flex; align-items: stretch; gap: 0;
+          height: 36px; flex-shrink: 0;
+          border-bottom: 1px solid ${C.border};
+          background: ${C.surface};
+          position: relative; z-index: 1;
+          padding: 0 12px;
+          overflow-x: auto; scrollbar-width: none;
         }
-        .ok-mobile-strip {
-          display: none;
+        .ck-tabs::-webkit-scrollbar { display: none; }
+        .ck-tab-btn {
+          display: flex; align-items: center; gap: 5px;
+          padding: 0 14px; height: 36px;
+          font-size: 9px; letter-spacing: 2.5px;
+          text-transform: uppercase; font-family: monospace;
+          cursor: pointer; border: none; background: none;
+          border-bottom: 2px solid transparent;
+          color: ${C.dim}; white-space: nowrap; flex-shrink: 0;
+          transition: color 130ms ease, border-color 130ms ease;
+          margin-bottom: -1px;
         }
-        @media (max-width: 1023px) {
-          .ok-shell {
-            flex-direction: column;
-            height: auto;
-            min-height: calc(100vh - 80px);
-            overflow: visible;
-          }
-          .ok-nav { display: none; }
-          .ok-mobile-strip {
-            display: flex;
-            overflow-x: auto;
-            gap: 4px;
-            padding: 10px 16px;
-            border-bottom: 1px solid ${T.border};
-            background: ${T.bg};
-            position: sticky;
-            top: 80px;
-            z-index: 20;
-            scrollbar-width: none;
-          }
-          .ok-mobile-strip::-webkit-scrollbar { display: none; }
-          .ok-content {
-            padding: 28px 20px 60px;
-            overflow-y: visible;
-            max-width: 100%;
-          }
+        .ck-tab-btn:hover:not([data-active]) { color: ${C.muted}; }
+        .ck-tab-btn[data-active] { color: ${C.gold}; border-bottom-color: ${C.gold}; }
+        .ck-tab-dot {
+          width: 4px; height: 4px; border-radius: 50%; flex-shrink: 0;
+          background: currentColor; opacity: 0.6;
         }
-        @media (max-width: 639px) {
-          .ok-content { padding: 24px 16px 60px; }
+
+        /* ── Three-column body ── */
+        .ck-body {
+          display: grid;
+          grid-template-columns: 272px 1fr 272px;
+          flex: 1; min-height: 0; overflow: hidden;
+          position: relative; z-index: 1;
         }
-        .ok-nav-btn {
-          display: block;
-          width: 100%;
-          text-align: left;
-          background: none;
-          border: none;
+
+        /* ── Left rail ── */
+        .ck-left {
+          border-right: 1px solid ${C.border};
+          overflow-y: auto; padding: 14px 0 48px;
+          background: ${C.surface};
+          scrollbar-width: thin;
+          scrollbar-color: rgba(255,255,255,0.05) transparent;
+        }
+        .ck-left::-webkit-scrollbar { width: 3px; }
+        .ck-left::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); border-radius: 2px; }
+
+        /* ── Center viewport ── */
+        .ck-center {
+          overflow-y: auto; padding: 28px 36px 64px;
+          scrollbar-width: thin;
+          scrollbar-color: rgba(255,255,255,0.05) transparent;
+          transition: opacity 160ms ease;
+        }
+        .ck-center::-webkit-scrollbar { width: 3px; }
+        .ck-center::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); border-radius: 2px; }
+
+        /* ── Right panel ── */
+        .ck-right {
+          border-left: 1px solid ${C.border};
+          overflow-y: auto; padding: 20px 0 48px;
+          background: ${C.surface};
+          scrollbar-width: thin;
+          scrollbar-color: rgba(255,255,255,0.05) transparent;
+        }
+        .ck-right::-webkit-scrollbar { width: 3px; }
+        .ck-right::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); border-radius: 2px; }
+
+        /* ── Nav group header ── */
+        .ck-group-hd {
+          font-size: 8px; letter-spacing: 2.5px;
+          text-transform: uppercase; font-family: monospace;
+          padding: 0 14px; margin: 14px 0 5px;
+          user-select: none; color: ${C.dimmer};
+        }
+        .ck-group-hd:first-child { margin-top: 4px; }
+
+        /* ── Nav item ── */
+        .ck-nav-item {
+          display: flex; align-items: center; gap: 8px;
+          width: 100%; text-align: left;
+          background: none; border: none;
           border-left: 2px solid transparent;
-          cursor: pointer;
-          padding: 6px 16px 6px 14px;
-          font-size: 11px;
-          letter-spacing: 0.15px;
-          line-height: 1.4;
-          transition: color 130ms ease, background 130ms ease, border-color 130ms ease;
+          cursor: pointer; padding: 5px 14px 5px 12px;
+          font-size: 11px; line-height: 1.35; color: ${C.dim};
+          transition: color 120ms, background 120ms, border-color 120ms;
         }
-        .ok-nav-btn:hover { background: rgba(255,255,255,0.02); }
-        .ok-nav-btn[data-active="true"] {
-          border-left-color: ${T.gold};
+        .ck-nav-item:hover:not([data-active]) {
+          background: rgba(255,255,255,0.02); color: ${C.muted};
+        }
+        .ck-nav-item[data-active] {
+          border-left-color: ${C.gold};
+          background: rgba(197,162,111,0.05);
+          color: ${C.gold};
+        }
+        .ck-nav-num {
+          font-size: 8px; font-family: monospace;
+          letter-spacing: 1px; opacity: 0.4; flex-shrink: 0;
+        }
+
+        /* ── Content blocks ── */
+        .ck-block {
+          background: ${C.panel};
+          border: 1px solid ${C.border};
+          border-radius: 2px;
+          padding: 14px 16px; margin-bottom: 7px;
+        }
+        .ck-block-label {
+          display: flex; align-items: center; gap: 7px;
+          font-size: 8px; letter-spacing: 2.5px;
+          text-transform: uppercase; font-family: monospace;
+          margin-bottom: 9px;
+        }
+        .ck-block-marker {
+          width: 5px; height: 5px; flex-shrink: 0;
+        }
+
+        /* ── Right panel sections ── */
+        .ck-rp-section {
+          padding: 12px 16px 14px;
+          border-bottom: 1px solid ${C.border};
+        }
+        .ck-rp-label {
+          font-size: 8px; letter-spacing: 2.5px;
+          text-transform: uppercase; font-family: monospace;
+          color: ${C.dimmer}; margin-bottom: 8px; display: block;
+        }
+        .ck-rp-btn {
+          display: block; width: 100%;
+          background: none; border: 1px solid ${C.border};
+          cursor: pointer; text-align: left;
+          padding: 9px 12px; font-size: 11px;
+          color: ${C.muted}; line-height: 1.35;
+          transition: border-color 130ms, color 130ms, background 130ms;
+          margin-bottom: 5px;
+        }
+        .ck-rp-btn:hover {
+          border-color: ${C.borderGold}; color: ${C.gold};
+          background: rgba(197,162,111,0.04);
+        }
+        .ck-rp-btn:last-child { margin-bottom: 0; }
+        .ck-nav-next-prev {
+          display: flex; gap: 5px; padding: 0 16px;
+        }
+        .ck-dir-btn {
+          flex: 1; border: 1px solid ${C.border};
+          background: none; cursor: pointer;
+          padding: 8px 10px; font-size: 10px;
+          font-family: monospace; letter-spacing: 1px;
+          color: ${C.dim}; text-align: center;
+          transition: border-color 130ms, color 130ms, background 130ms;
+        }
+        .ck-dir-btn:hover:not(:disabled) {
+          border-color: ${C.borderGold}; color: ${C.gold};
+          background: rgba(197,162,111,0.04);
+        }
+        .ck-dir-btn:disabled { opacity: 0.2; cursor: default; }
+
+        /* ── Mobile: horizontal strip ── */
+        .ck-mobile-strip {
+          display: none;
+          overflow-x: auto; gap: 4px;
+          padding: 8px 12px;
+          border-bottom: 1px solid ${C.border};
+          background: ${C.surface};
+          position: sticky; top: 80px; z-index: 20;
+          scrollbar-width: none;
+        }
+        .ck-mobile-strip::-webkit-scrollbar { display: none; }
+        .ck-mobile-chip {
+          border: 1px solid ${C.border};
+          background: none; cursor: pointer;
+          padding: 4px 10px; font-size: 10px;
+          white-space: nowrap; flex-shrink: 0;
+          color: ${C.dim};
+          transition: border-color 120ms, color 120ms, background 120ms;
+        }
+        .ck-mobile-chip[data-active] {
+          border-color: ${C.borderGold}; color: ${C.gold};
           background: rgba(197,162,111,0.05);
         }
-        .ok-nav-btn[data-active="true"][data-zone="maintenance-gravity"] {
-          border-left-color: ${T.cyan};
-          background: rgba(0,216,255,0.04);
+
+        /* ── Laws grid ── */
+        .ck-laws-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+          gap: 6px; margin-top: 12px;
         }
-        .ok-section-label {
-          font-size: 8px;
-          letter-spacing: 2.5px;
-          text-transform: uppercase;
-          font-family: monospace;
-          padding: 0 16px;
-          margin-bottom: 4px;
-          user-select: none;
+        .ck-law-card {
+          background: ${C.panelRaised};
+          border: 1px solid ${C.border};
+          padding: 10px 12px;
+          transition: border-color 130ms;
         }
-        .ok-field-label {
-          font-size: 8px;
-          letter-spacing: 2.5px;
-          text-transform: uppercase;
-          font-family: monospace;
-          margin-bottom: 10px;
+        .ck-law-card:hover { border-color: rgba(197,162,111,0.20); }
+
+        /* ── Progress bar ── */
+        .ck-progress-track {
+          height: 1px; background: ${C.border};
+          position: relative; flex: 1;
         }
-        .ok-prev-next {
-          background: none;
-          border: 1px solid ${T.border};
-          cursor: pointer;
-          padding: 10px 16px;
-          font-size: 12px;
-          text-align: left;
-          flex: 1;
-          max-width: 260px;
-          transition: border-color 150ms ease, color 150ms ease;
-          line-height: 1.4;
+        .ck-progress-fill {
+          position: absolute; top: 0; left: 0; bottom: 0;
+          background: ${C.gold};
+          transition: width 240ms ease;
         }
-        .ok-prev-next:hover {
-          border-color: ${T.borderGold};
-          color: ${T.gold};
+
+        /* ── Responsive ── */
+        @media (max-width: 1279px) {
+          .ck-body { grid-template-columns: 252px 1fr; }
+          .ck-right { display: none; }
         }
-        .ok-chip {
-          border: 1px solid ${T.border};
-          padding: 4px 10px 5px;
-          font-size: 10px;
-          cursor: pointer;
-          white-space: nowrap;
-          flex-shrink: 0;
-          transition: border-color 130ms ease, color 130ms ease, background 130ms ease;
+        @media (max-width: 1023px) {
+          .ck-shell { height: auto; min-height: calc(100vh - 80px); overflow: visible; }
+          .ck-body { grid-template-columns: 1fr; }
+          .ck-left { display: none; }
+          .ck-center { overflow-y: visible; padding: 24px 20px 60px; }
+          .ck-tabs { display: none; }
+          .ck-mobile-strip { display: flex; }
         }
-        .ok-chip[data-active="true"] {
-          border-color: ${T.borderGold};
-          color: ${T.gold};
-          background: rgba(197,162,111,0.06);
+        @media (max-width: 639px) {
+          .ck-center { padding: 20px 14px 56px; }
         }
-        .ok-chip[data-active="true"][data-zone="maintenance-gravity"] {
-          border-color: ${T.borderCyan};
-          color: ${T.cyan};
-          background: rgba(0,216,255,0.04);
-        }
-        .ok-law-card {
-          background: ${T.panel};
-          border: 1px solid ${T.border};
-          padding: 12px 14px;
-          transition: border-color 150ms ease;
-        }
-        .ok-law-card:hover { border-color: rgba(197,162,111,0.22); }
         @media (prefers-reduced-motion: reduce) {
-          .ok-content, .ok-prev-next, .ok-nav-btn, .ok-chip, .ok-law-card {
-            transition: none !important;
-          }
+          .ck-center, .ck-tab-btn, .ck-nav-item, .ck-mobile-chip,
+          .ck-block, .ck-rp-btn, .ck-dir-btn, .ck-progress-fill,
+          .ck-law-card { transition: none !important; }
         }
       `}</style>
 
-      <div className="ok-shell">
-        {/* Subtle grid overlay */}
-        <div style={{
-          position: 'absolute', inset: 0, pointerEvents: 'none',
-          backgroundImage: [
-            'linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px)',
-            'linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px)',
-          ].join(', '),
-          backgroundSize: '52px 52px',
-        }} />
+      <div className="ck-shell">
 
-        {/* Mobile: horizontal module strip */}
-        <div className="ok-mobile-strip">
-          {ALL_MODULES.map(m => (
+        {/* ── Zone tabs ── */}
+        <div className="ck-tabs" role="tablist" aria-label="Content zones">
+          {TABS.map(tab => (
+            <button
+              key={tab.key}
+              className="ck-tab-btn"
+              role="tab"
+              data-active={activeTab === tab.key ? '' : undefined}
+              onClick={() => goToTab(tab.key)}
+            >
+              <span className="ck-tab-dot" />
+              {tab.label}
+            </button>
+          ))}
+          <div style={{ flex: 1 }} />
+          <span style={{
+            fontSize: 8, letterSpacing: '2px', color: C.dimmer,
+            fontFamily: 'monospace', textTransform: 'uppercase',
+            alignSelf: 'center', paddingRight: 4,
+          }}>
+            {MODULES.length} Modules
+          </span>
+        </div>
+
+        {/* ── Mobile strip ── */}
+        <div className="ck-mobile-strip">
+          {MODULES.map(m => (
             <button
               key={m.id}
-              className="ok-chip"
-              data-active={activeId === m.id ? 'true' : undefined}
-              data-zone={m.zone}
+              className="ck-mobile-chip"
+              data-active={activeId === m.id ? '' : undefined}
               onClick={() => goTo(m.id)}
             >
-              <span style={{ fontSize: 8, opacity: 0.5, marginRight: 4, fontFamily: 'monospace' }}>{m.num}</span>
+              <span style={{ opacity: 0.4, marginRight: 4, fontSize: 8, fontFamily: 'monospace' }}>{m.num}</span>
               {m.title}
             </button>
           ))}
         </div>
 
-        {/* Desktop: left nav */}
-        <nav className="ok-nav" aria-label="Module navigation">
-          <ZoneLabel label="Ops Kernel" style={{ color: T.gold }} />
-          {OPS_KERNEL.map(m => (
-            <button
-              key={m.id}
-              className="ok-nav-btn"
-              data-active={activeId === m.id ? 'true' : undefined}
-              data-zone={m.zone}
-              onClick={() => goTo(m.id)}
-              style={{ color: activeId === m.id ? T.gold : T.dim }}
-            >
-              <span style={{
-                fontSize: 8, fontFamily: 'monospace', letterSpacing: '1px',
-                marginRight: 6, opacity: 0.5,
-              }}>
-                {m.num}
-              </span>
-              {m.title}
-            </button>
-          ))}
+        {/* ── Three-column body ── */}
+        <div className="ck-body">
 
-          <ZoneLabel
-            label="Maintenance Gravity"
-            style={{ color: T.cyan, marginTop: 18 }}
-          />
-          {MAINTENANCE_GRAVITY.map(m => (
-            <button
-              key={m.id}
-              className="ok-nav-btn"
-              data-active={activeId === m.id ? 'true' : undefined}
-              data-zone={m.zone}
-              onClick={() => goTo(m.id)}
-              style={{ color: activeId === m.id ? T.cyan : T.dim }}
-            >
-              <span style={{
-                fontSize: 8, fontFamily: 'monospace', letterSpacing: '1px',
-                marginRight: 6, opacity: 0.5,
-              }}>
-                {m.num}
-              </span>
-              {m.title}
-            </button>
-          ))}
-
-          {/* Canon access */}
-          <div style={{
-            margin: '22px 14px 0',
-            padding: '14px 0 0',
-            borderTop: `1px solid ${T.border}`,
-          }}>
-            <div className="ok-section-label" style={{ color: T.dimmer }}>
-              Canon
-            </div>
-            <a
-              href="/downloads/ce-public-kernel.pdf"
-              style={{
-                display: 'block', fontSize: 11, color: T.dim,
-                textDecoration: 'none', padding: '5px 16px',
-                transition: 'color 130ms ease',
-              }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = T.gold }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = T.dim }}
-            >
-              ↓ Download PDF
-            </a>
-            <a
-              href="/"
-              style={{
-                display: 'block', fontSize: 11, color: T.dim,
-                textDecoration: 'none', padding: '5px 16px',
-                transition: 'color 130ms ease',
-              }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = T.muted }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = T.dim }}
-            >
-              ← CE Home
-            </a>
-          </div>
-        </nav>
-
-        {/* Content viewport */}
-        <main
-          className="ok-content"
-          style={{ opacity: transitioning ? 0 : 1 }}
-          aria-live="polite"
-          aria-atomic="true"
-        >
-          {/* Module header */}
-          <div style={{ marginBottom: 28 }}>
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12,
-            }}>
-              <span style={{
-                fontSize: 8, letterSpacing: '3px', color: accentColor,
-                textTransform: 'uppercase', fontFamily: 'monospace',
-              }}>
-                {isGravity ? 'Maintenance Gravity' : 'Ops Kernel'}
-              </span>
-              <div style={{ width: 20, height: 1, background: accentBorder }} />
-              <span style={{
-                fontSize: 8, letterSpacing: '2px', color: T.dimmer,
-                fontFamily: 'monospace', textTransform: 'uppercase',
-              }}>
-                {active.num}
-              </span>
-            </div>
-
-            <h1 style={{
-              fontSize: 'clamp(1.65rem, 3.2vw, 2.3rem)',
-              fontWeight: 700, color: T.text,
-              letterSpacing: '-0.03em', lineHeight: 1.0,
-              margin: '0 0 16px',
-            }}>
-              {active.title}
-            </h1>
-
-            <div style={{
-              height: 1,
-              background: `linear-gradient(90deg, ${accentBorder}, rgba(255,255,255,0.04) 55%, transparent)`,
-            }} />
-          </div>
-
-          {/* Thesis */}
-          <Field label="Thesis">
-            <p style={{
-              fontSize: '1.08rem', color: T.text,
-              lineHeight: 1.6, letterSpacing: '-0.01em', margin: 0,
-            }}>
-              {active.thesis}
-            </p>
-          </Field>
-
-          {/* Core */}
-          <Field label="Core Doctrine">
-            <p style={{ fontSize: '0.9rem', color: T.muted, lineHeight: 1.78, margin: 0 }}>
-              {active.core}
-            </p>
-            {active.laws && (
-              <div style={{
-                marginTop: 18,
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-                gap: 7,
-              }}>
-                {active.laws.map(law => (
-                  <div key={law.numeral} className="ok-law-card">
-                    <div style={{
-                      fontSize: 8, color: T.gold, fontFamily: 'monospace',
-                      letterSpacing: '2px', marginBottom: 6, textTransform: 'uppercase',
-                    }}>
-                      Law {law.numeral}
-                    </div>
-                    <div style={{
-                      fontSize: 12, fontWeight: 600, color: T.text, marginBottom: 5,
-                    }}>
-                      {law.title}
-                    </div>
-                    <div style={{ fontSize: 11, color: T.dim, lineHeight: 1.55 }}>
-                      {law.description}
-                    </div>
-                  </div>
+          {/* ── Left rail ── */}
+          <nav className="ck-left" aria-label="Module navigation">
+            {GROUPS.map(group => (
+              <div key={group.key}>
+                <div
+                  className="ck-group-hd"
+                  style={{ color: group.color + '55' }}
+                >
+                  {group.label}
+                </div>
+                {MODULES.filter(m => m.group === group.key).map(m => (
+                  <button
+                    key={m.id}
+                    className="ck-nav-item"
+                    data-active={activeId === m.id ? '' : undefined}
+                    onClick={() => goTo(m.id)}
+                    style={activeId === m.id ? { color: group.color, borderLeftColor: group.color + '88', background: group.color + '09' } : undefined}
+                  >
+                    <span className="ck-nav-num">{m.num}</span>
+                    {m.title}
+                  </button>
                 ))}
               </div>
-            )}
-          </Field>
+            ))}
 
-          {/* Operational Meaning */}
-          <Field label="Operational Meaning">
-            <p style={{ fontSize: '0.9rem', color: T.muted, lineHeight: 1.78, margin: 0 }}>
-              {active.operational_meaning}
-            </p>
-          </Field>
-
-          {/* Failure Pattern */}
-          <Field label="Failure Pattern" accent>
-            <p style={{
-              fontSize: '0.88rem', color: T.warnText,
-              lineHeight: 1.75, margin: 0,
+            {/* Canon footer */}
+            <div style={{
+              margin: '20px 12px 0', padding: '14px 2px 0',
+              borderTop: `1px solid ${C.border}`,
             }}>
-              {active.failure_pattern}
-            </p>
-          </Field>
-
-          {/* Operator Question */}
-          <div style={{
-            marginTop: 28,
-            padding: '16px 20px',
-            background: accentColor === T.gold
-              ? 'rgba(197,162,111,0.06)'
-              : 'rgba(0,216,255,0.04)',
-            borderLeft: `3px solid ${accentColor}`,
-            border: `1px solid ${accentBorder}`,
-          }}>
-            <div className="ok-field-label" style={{ color: accentColor }}>
-              Operator Question
+              <div className="ck-group-hd" style={{ marginTop: 0, color: C.dimmer }}>
+                Canon
+              </div>
+              <a
+                href="/downloads/ce-public-kernel.pdf"
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  padding: '5px 14px', fontSize: 11,
+                  color: C.dim, textDecoration: 'none',
+                  transition: 'color 120ms',
+                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = C.gold }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = C.dim }}
+              >
+                <span style={{ opacity: 0.6 }}>↓</span> Download PDF
+              </a>
             </div>
-            <p style={{
-              fontSize: '0.93rem', color: T.text,
-              lineHeight: 1.65, margin: 0, fontStyle: 'italic',
-            }}>
-              {active.operator_question}
-            </p>
-          </div>
+          </nav>
 
-          {/* Progress */}
-          <div style={{ marginTop: 36, display: 'flex', alignItems: 'center', gap: 14 }}>
-            <div style={{ flex: 1, height: 1, background: T.border, position: 'relative' }}>
+          {/* ── Center viewport ── */}
+          <main
+            className="ck-center"
+            style={{ opacity: transitioning ? 0 : 1 }}
+            aria-live="polite"
+            aria-atomic="true"
+          >
+            {/* Module header */}
+            <div style={{ marginBottom: 20 }}>
               <div style={{
-                position: 'absolute', top: 0, left: 0, bottom: 0,
-                background: accentColor,
-                width: `${progressPct}%`,
-                transition: 'width 250ms ease',
+                display: 'flex', alignItems: 'center', gap: 8,
+                marginBottom: 14,
+              }}>
+                <span style={{
+                  fontSize: 8, letterSpacing: '3px', color: groupColor,
+                  textTransform: 'uppercase', fontFamily: 'monospace', opacity: 0.7,
+                }}>
+                  {GROUPS.find(g => g.key === active.group)?.label}
+                </span>
+                <span style={{ color: C.border }}>·</span>
+                <span style={{
+                  fontSize: 8, letterSpacing: '2px', color: C.dimmer,
+                  fontFamily: 'monospace', textTransform: 'uppercase',
+                }}>
+                  {active.num}
+                </span>
+              </div>
+
+              {/* Module marker */}
+              <div style={{
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                width: 36, height: 36, marginBottom: 14,
+                border: `1px solid ${groupColor}33`,
+                fontFamily: 'monospace', fontSize: 11, letterSpacing: '1px',
+                color: groupColor,
+              }}>
+                {active.num}
+              </div>
+
+              <h1 style={{
+                fontSize: 'clamp(1.5rem, 2.8vw, 2.1rem)',
+                fontWeight: 700, color: C.textBright,
+                letterSpacing: '-0.03em', lineHeight: 1.0,
+                margin: '0 0 10px',
+              }}>
+                {active.title}
+              </h1>
+
+              {/* Subtitle — uppercase tagline */}
+              <div style={{
+                fontSize: 11, letterSpacing: '1.5px', color: groupColor,
+                textTransform: 'uppercase', marginBottom: 16, lineHeight: 1.4,
+                opacity: 0.8,
+              }}>
+                {active.subtitle}
+              </div>
+
+              <div style={{
+                height: 1,
+                background: `linear-gradient(90deg, ${groupColor}30, ${C.border} 50%, transparent)`,
               }} />
             </div>
-            <span style={{
-              fontSize: 9, color: T.dimmer, fontFamily: 'monospace',
-              letterSpacing: '1px', flexShrink: 0,
+
+            {/* ── Content block: THESIS ── */}
+            <ContentBlock
+              label="Thesis"
+              markerColor={C.gold}
+              borderColor={C.borderGold}
+              bg={C.panel}
+            >
+              <p style={{ fontSize: '0.9rem', color: C.text, lineHeight: 1.75, margin: 0 }}>
+                {active.thesis}
+              </p>
+
+              {/* Eight Laws grid (Immutable Laws module only) */}
+              {active.laws && (
+                <div className="ck-laws-grid">
+                  {active.laws.map(law => (
+                    <div key={law.numeral} className="ck-law-card">
+                      <div style={{
+                        fontSize: 8, color: C.gold, fontFamily: 'monospace',
+                        letterSpacing: '2px', textTransform: 'uppercase', marginBottom: 5,
+                      }}>
+                        Law {law.numeral}
+                      </div>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: C.text, marginBottom: 4 }}>
+                        {law.title}
+                      </div>
+                      <div style={{ fontSize: 10, color: C.dim, lineHeight: 1.5 }}>
+                        {law.description}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </ContentBlock>
+
+            {/* ── Content block: OPERATIONAL MEANING ── */}
+            <ContentBlock
+              label="Operational Meaning"
+              markerColor={C.muted}
+              borderColor={C.border}
+              bg={C.panel}
+            >
+              <p style={{ fontSize: '0.9rem', color: C.muted, lineHeight: 1.75, margin: 0 }}>
+                {active.operationalMeaning}
+              </p>
+            </ContentBlock>
+
+            {/* ── Content block: FAILURE PATTERN ── */}
+            <ContentBlock
+              label="Failure Pattern"
+              markerColor={C.warnText}
+              borderColor={`rgba(160,90,30,0.22)`}
+              bg={`rgba(120,65,20,0.07)`}
+            >
+              <p style={{ fontSize: '0.88rem', color: C.warnText, lineHeight: 1.75, margin: 0 }}>
+                {active.failurePattern}
+              </p>
+            </ContentBlock>
+
+            {/* ── Content block: OPERATOR QUESTION ── */}
+            <ContentBlock
+              label="Operator Question"
+              markerColor={C.gold}
+              borderColor={C.borderGold}
+              bg={C.goldSoft}
+            >
+              <p style={{ fontSize: '0.9rem', color: C.text, lineHeight: 1.7, margin: 0, fontStyle: 'italic' }}>
+                {active.operatorQuestion}
+              </p>
+            </ContentBlock>
+
+            {/* ── Content block: OPERATOR MOVE ── */}
+            <ContentBlock
+              label="Operator Move"
+              markerColor={C.actionText}
+              borderColor={C.borderAction}
+              bg={C.actionBg}
+            >
+              <p style={{ fontSize: '0.9rem', color: C.actionText, lineHeight: 1.7, margin: 0 }}>
+                {active.operatorMove}
+              </p>
+            </ContentBlock>
+
+            {/* Progress + counter */}
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 14, marginTop: 28,
             }}>
-              {String(activeIdx + 1).padStart(2, '0')} / {ALL_MODULES.length}
-            </span>
-          </div>
+              <div className="ck-progress-track">
+                <div
+                  className="ck-progress-fill"
+                  style={{ width: `${((idx + 1) / MODULES.length) * 100}%` }}
+                />
+              </div>
+              <span style={{
+                fontSize: 9, color: C.dimmer, fontFamily: 'monospace',
+                letterSpacing: '1px', flexShrink: 0,
+              }}>
+                {String(idx + 1).padStart(2, '0')} / {MODULES.length}
+              </span>
+            </div>
 
-          {/* Prev / Next */}
-          <div style={{
-            marginTop: 20,
-            display: 'flex', justifyContent: 'space-between', gap: 12,
-          }}>
-            {prev ? (
-              <button
-                className="ok-prev-next"
-                onClick={() => goTo(prev.id)}
-                style={{ color: T.dim }}
-              >
-                <div style={{
-                  fontSize: 8, letterSpacing: '2px', color: T.dimmer,
-                  fontFamily: 'monospace', textTransform: 'uppercase', marginBottom: 4,
-                }}>
-                  ← Previous
+            {/* Keyboard hint */}
+            <div style={{
+              marginTop: 10, fontSize: 9, color: C.dimmer,
+              fontFamily: 'monospace', letterSpacing: '0.5px',
+            }}>
+              ← → navigate
+            </div>
+          </main>
+
+          {/* ── Right context panel ── */}
+          <aside className="ck-right" aria-label="Module context">
+
+            {/* Module brief */}
+            <div className="ck-rp-section">
+              <span className="ck-rp-label">Module Brief</span>
+              <p style={{ fontSize: 12, color: C.muted, lineHeight: 1.65, margin: 0 }}>
+                {active.subtitle}
+              </p>
+              <div style={{
+                marginTop: 10, fontSize: 9, color: C.dimmer,
+                fontFamily: 'monospace', letterSpacing: '1.5px',
+                textTransform: 'uppercase',
+              }}>
+                {active.route}
+              </div>
+            </div>
+
+            {/* Related modules */}
+            <div className="ck-rp-section">
+              <span className="ck-rp-label">Related Modules</span>
+              {active.relatedModules.map(relId => {
+                const rel = MODULES.find(m => m.id === relId)
+                if (!rel) return null
+                return (
+                  <button
+                    key={relId}
+                    className="ck-rp-btn"
+                    onClick={() => goTo(relId)}
+                  >
+                    <span style={{
+                      fontSize: 8, fontFamily: 'monospace', letterSpacing: '1px',
+                      opacity: 0.4, marginRight: 6,
+                    }}>
+                      {rel.num}
+                    </span>
+                    {rel.title}
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* Canon links */}
+            <div className="ck-rp-section">
+              <span className="ck-rp-label">Canon Links</span>
+              {active.canonLinks.map(link => (
+                <div
+                  key={link.label}
+                  style={{
+                    fontSize: 11, color: C.dim, padding: '4px 0', lineHeight: 1.4,
+                    borderLeft: `2px solid ${C.border}`, paddingLeft: 8, marginBottom: 5,
+                  }}
+                >
+                  {link.label}
                 </div>
-                {prev.title}
-              </button>
-            ) : <div />}
+              ))}
+            </div>
 
-            {next ? (
-              <button
-                className="ok-prev-next"
-                onClick={() => goTo(next.id)}
-                style={{ color: T.dim, textAlign: 'right' }}
-              >
-                <div style={{
-                  fontSize: 8, letterSpacing: '2px', color: T.dimmer,
-                  fontFamily: 'monospace', textTransform: 'uppercase', marginBottom: 4,
-                  textAlign: 'right',
-                }}>
+            {/* Navigation */}
+            <div className="ck-rp-section">
+              <span className="ck-rp-label">Navigate</span>
+              <div className="ck-nav-next-prev" style={{ padding: 0, marginBottom: 5 }}>
+                <button
+                  className="ck-dir-btn"
+                  onClick={() => prev && goTo(prev.id)}
+                  disabled={!prev}
+                >
+                  ← Prev
+                </button>
+                <button
+                  className="ck-dir-btn"
+                  onClick={() => next && goTo(next.id)}
+                  disabled={!next}
+                >
                   Next →
+                </button>
+              </div>
+              {prev && (
+                <div style={{
+                  fontSize: 10, color: C.dimmer, lineHeight: 1.3,
+                  fontFamily: 'monospace', marginBottom: 2, letterSpacing: '0.3px',
+                }}>
+                  ← {prev.title}
                 </div>
-                {next.title}
-              </button>
-            ) : <div />}
-          </div>
+              )}
+              {next && (
+                <div style={{
+                  fontSize: 10, color: C.dimmer, lineHeight: 1.3,
+                  fontFamily: 'monospace', letterSpacing: '0.3px',
+                }}>
+                  → {next.title}
+                </div>
+              )}
+            </div>
 
-          {/* Keyboard hint */}
-          <div style={{
-            marginTop: 24, fontSize: 9, color: T.dimmer,
-            letterSpacing: '1px', fontFamily: 'monospace',
-          }}>
-            ← → navigate modules
-          </div>
-        </main>
+            {/* Canon actions */}
+            <div className="ck-rp-section" style={{ borderBottom: 'none' }}>
+              <span className="ck-rp-label">Canon</span>
+              <a
+                href="/downloads/ce-public-kernel.pdf"
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '9px 12px', marginBottom: 5,
+                  border: `1px solid ${C.border}`,
+                  fontSize: 11, color: C.muted,
+                  textDecoration: 'none',
+                  transition: 'border-color 130ms, color 130ms',
+                }}
+                onMouseEnter={e => {
+                  const el = e.currentTarget as HTMLElement
+                  el.style.borderColor = C.borderGold; el.style.color = C.gold
+                }}
+                onMouseLeave={e => {
+                  const el = e.currentTarget as HTMLElement
+                  el.style.borderColor = C.border; el.style.color = C.muted
+                }}
+              >
+                Download PDF
+                <span style={{ opacity: 0.4, fontSize: 10 }}>↓</span>
+              </a>
+              <div style={{
+                padding: '7px 12px', fontSize: 10,
+                color: C.dimmer, letterSpacing: '0.5px', lineHeight: 1.4,
+                fontFamily: 'monospace',
+              }}>
+                Intelligence Is Abundant.<br />Judgment Is Power.
+              </div>
+            </div>
+
+          </aside>
+        </div>
       </div>
     </>
   )
 }
 
-/* ── Sub-components ──────────────────────────────────────── */
-
-function ZoneLabel({ label, style: sx }: {
-  label: string
-  style?: React.CSSProperties
+/* ── ContentBlock sub-component ─────────────────────────── */
+function ContentBlock({
+  label, markerColor, borderColor, bg, children,
+}: {
+  label:       string
+  markerColor: string
+  borderColor: string
+  bg:          string
+  children:    React.ReactNode
 }) {
   return (
     <div
-      className="ok-section-label"
-      style={{ color: '#2A3548', marginBottom: 6, ...sx }}
+      className="ck-block"
+      style={{ borderColor, background: bg }}
     >
-      {label}
-    </div>
-  )
-}
-
-function Field({ label, children, accent }: {
-  label: string
-  children: ReactNode
-  accent?: boolean
-}) {
-  return (
-    <div style={{ marginTop: 26 }}>
-      <div
-        className="ok-field-label"
-        style={{ color: accent ? 'rgba(180,100,40,0.55)' : '#2A3548' }}
-      >
+      <div className="ck-block-label" style={{ color: markerColor }}>
+        <span
+          className="ck-block-marker"
+          style={{ background: markerColor, borderRadius: 1 }}
+        />
         {label}
       </div>
-      {accent ? (
-        <div style={{
-          padding: '12px 14px',
-          background: 'rgba(160,80,30,0.07)',
-          border: '1px solid rgba(160,80,30,0.18)',
-          borderLeft: '2px solid rgba(160,80,30,0.45)',
-        }}>
-          {children}
-        </div>
-      ) : children}
+      {children}
     </div>
   )
 }
