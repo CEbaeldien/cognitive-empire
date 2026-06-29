@@ -3,30 +3,34 @@
 import { useState, useEffect, useCallback } from 'react'
 
 /* ── Design tokens ───────────────────────────────────────── */
-const C = {
-  bg:           '#03050A',
-  surface:      '#06090F',
-  panel:        '#090E18',
-  panelRaised:  '#0C1220',
-  border:       'rgba(255,255,255,0.07)',
-  borderGold:   'rgba(197,162,111,0.28)',
-  borderCyan:   'rgba(0,216,255,0.16)',
-  borderWarn:   'rgba(160,90,30,0.28)',
-  borderAction: 'rgba(55,120,85,0.28)',
-  text:         '#D8E2EF',
-  textBright:   '#EEF4FA',
-  muted:        '#7A8DA6',
-  dim:          '#3E5068',
-  dimmer:       '#243040',
-  gold:         '#C5A26F',
-  goldSoft:     'rgba(197,162,111,0.06)',
-  cyan:         '#00D8FF',
-  cyanSoft:     'rgba(0,216,255,0.04)',
-  warnText:     '#8A5520',
-  warnBg:       'rgba(130,70,20,0.08)',
-  actionText:   '#3D7A58',
-  actionBg:     'rgba(45,110,70,0.07)',
-} as const
+const BG         = '#03050A'
+const SURFACE    = '#05080E'
+const PANEL      = '#08101C'
+const PANEL_ALT  = '#0A1422'
+const RAIL_BG    = '#04070C'
+const HDR_BG     = '#040810'
+
+const BORDER     = 'rgba(255,255,255,0.08)'
+const BORDER_HI  = 'rgba(255,255,255,0.13)'
+
+const TEXT       = '#D0DAEA'
+const TEXT_DIM   = '#6A7D96'
+const TEXT_DIMMER= '#2E3E52'
+
+const GOLD       = '#C5A26F'
+const GOLD_SOFT  = 'rgba(197,162,111,0.07)'
+
+const CYAN       = '#00D8FF'
+const CYAN_SOFT  = 'rgba(0,216,255,0.06)'
+const CYAN_EDGE  = 'rgba(0,216,255,0.30)'
+
+const AMBER      = '#8A5520'
+const AMBER_SOFT = 'rgba(130,70,20,0.10)'
+const AMBER_EDGE = 'rgba(160,90,30,0.30)'
+
+const GREEN      = '#357A55'
+const GREEN_SOFT = 'rgba(45,110,70,0.08)'
+const GREEN_EDGE = 'rgba(50,120,80,0.30)'
 
 /* ── Types ──────────────────────────────────────────────── */
 type GroupKey = 'core-doctrine' | 'operational-reality' | 'horizon-constraints'
@@ -66,8 +70,12 @@ const MODULES: OpsModule[] = [
     operatorQuestion:   'Where is the real bottleneck in my system right now?',
     operatorMove:       'Audit where you are spending effort. Is it at the production layer or the judgment layer? Move resources to judgment.',
     relatedModules:     ['bottleneck-migration', 'decision-half-life', 'governance-abundance'],
-    canonLinks:         [{ label: 'CE Public Canon — Prime Doctrine' }],
-    route:              'Ops Kernel / Core Doctrine',
+    canonLinks:         [
+      { label: 'Law I: Intelligence Abundance' },
+      { label: 'Law II: Bottleneck Migration' },
+      { label: 'Law VI: Escalation Preservation' },
+    ],
+    route:              'Ops Kernel › Core Doctrine',
   },
   {
     id:                 'immutable-laws',
@@ -81,8 +89,12 @@ const MODULES: OpsModule[] = [
     operatorQuestion:   'Which law is currently most active in my system?',
     operatorMove:       'Name the law that is currently most active in your primary system. Act from that identification — not from the visible symptom.',
     relatedModules:     ['prime-doctrine', 'bottleneck-migration', 'governance-abundance'],
-    canonLinks:         [{ label: 'CE Public Canon — The Eight Laws' }],
-    route:              'Ops Kernel / Core Doctrine',
+    canonLinks:         [
+      { label: 'Law I through VIII — Full Reference' },
+      { label: 'Law V: Decision Half-Life' },
+      { label: 'Law VII: Optimization Fragility' },
+    ],
+    route:              'Ops Kernel › Core Doctrine',
     laws: [
       { numeral: 'I',    title: 'Intelligence Abundance',   description: 'When intelligence becomes abundant, output inflates and value migrates upstream.' },
       { numeral: 'II',   title: 'Bottleneck Migration',     description: 'When one constraint collapses, another becomes dominant. Optimizing the wrong layer amplifies instability.' },
@@ -106,8 +118,11 @@ const MODULES: OpsModule[] = [
     operatorQuestion:   'What am I treating as signal that is actually noise?',
     operatorMove:       'Audit your top 5 information inputs. For each, ask: is this structural evidence or a distribution event? Cut at least one noise input.',
     relatedModules:     ['bottleneck-migration', 'diagnostic-questions', 'second-order-effects'],
-    canonLinks:         [{ label: 'CE Public Canon — Signal vs Noise' }],
-    route:              'Ops Kernel / Core Doctrine',
+    canonLinks:         [
+      { label: 'Law I: Intelligence Abundance' },
+      { label: 'Law IV: Output Inflation' },
+    ],
+    route:              'Ops Kernel › Core Doctrine',
   },
   {
     id:                 'bottleneck-migration',
@@ -121,8 +136,11 @@ const MODULES: OpsModule[] = [
     operatorQuestion:   'What bottleneck am I still optimizing for that has already moved?',
     operatorMove:       'Identify the current dominant constraint. Confirm it has not migrated. Stop optimizing anything that is not the current bottleneck.',
     relatedModules:     ['prime-doctrine', 'immutable-laws', 'maintenance-gravity'],
-    canonLinks:         [{ label: 'CE Public Canon — Bottleneck Migration' }],
-    route:              'Ops Kernel / Core Doctrine',
+    canonLinks:         [
+      { label: 'Law II: Bottleneck Migration' },
+      { label: 'Law VII: Optimization Fragility' },
+    ],
+    route:              'Ops Kernel › Core Doctrine',
   },
   {
     id:                 'modular-cognition',
@@ -136,8 +154,11 @@ const MODULES: OpsModule[] = [
     operatorQuestion:   'What is the governing architecture of my intelligence stack?',
     operatorMove:       'Map your intelligence stack. Identify which components have a governing architecture and which are accumulated tools. Retire at least one ungoverned tool.',
     relatedModules:     ['governance-abundance', 'complexity-accumulation', 'decision-half-life'],
-    canonLinks:         [{ label: 'CE Public Canon — Modular Cognition' }],
-    route:              'Ops Kernel / Core Doctrine',
+    canonLinks:         [
+      { label: 'Law III: Responsibility Migration' },
+      { label: 'Law VII: Optimization Fragility' },
+    ],
+    route:              'Ops Kernel › Core Doctrine',
   },
   {
     id:                 'decision-half-life',
@@ -151,8 +172,11 @@ const MODULES: OpsModule[] = [
     operatorQuestion:   'Which of my current commitments need defense, and which need revision?',
     operatorMove:       'List your top 3 current commitments. Assign each a half-life: high (must defend) or low (must update). Act accordingly before the next decision point.',
     relatedModules:     ['governance-abundance', 'operator-moves', 'survivable-systems'],
-    canonLinks:         [{ label: 'CE Public Canon — Decision Half-Life' }],
-    route:              'Ops Kernel / Core Doctrine',
+    canonLinks:         [
+      { label: 'Law V: Decision Half-Life' },
+      { label: 'Law VI: Escalation Preservation' },
+    ],
+    route:              'Ops Kernel › Core Doctrine',
   },
   {
     id:                 'governance-abundance',
@@ -166,8 +190,11 @@ const MODULES: OpsModule[] = [
     operatorQuestion:   'Who owns the consequence in every system I am running?',
     operatorMove:       'For each system you run, confirm: who owns the consequence? If unowned, assign ownership explicitly or retire the system.',
     relatedModules:     ['modular-cognition', 'decision-half-life', 'survivable-systems'],
-    canonLinks:         [{ label: 'CE Public Canon — Governance Under Abundance' }],
-    route:              'Ops Kernel / Core Doctrine',
+    canonLinks:         [
+      { label: 'Law III: Responsibility Migration' },
+      { label: 'Law VI: Escalation Preservation' },
+    ],
+    route:              'Ops Kernel › Core Doctrine',
   },
 
   /* ── OPERATIONAL REALITY ─── */
@@ -183,8 +210,11 @@ const MODULES: OpsModule[] = [
     operatorQuestion:   'What have I created that I can no longer maintain cleanly?',
     operatorMove:       'List every system, tool, and workflow created in the last 6 months. For each: can you maintain it cleanly? Retire or explicitly assign everything you cannot.',
     relatedModules:     ['complexity-accumulation', 'survivable-systems', 'bottleneck-migration'],
-    canonLinks:         [{ label: 'CE Public Canon — Maintenance Gravity' }],
-    route:              'Maintenance Gravity / Operational Reality',
+    canonLinks:         [
+      { label: 'Law VII: Optimization Fragility' },
+      { label: 'Law III: Responsibility Migration' },
+    ],
+    route:              'Maintenance Gravity › Operational Reality',
   },
   {
     id:                 'complexity-accumulation',
@@ -198,8 +228,11 @@ const MODULES: OpsModule[] = [
     operatorQuestion:   'What complexity have I accumulated that I have not audited in 90 days?',
     operatorMove:       'Select one system you manage. List every integration, exception, and workaround added in the last 12 months. Retire at least one this week.',
     relatedModules:     ['maintenance-gravity', 'survivable-systems', 'metrics-that-matter'],
-    canonLinks:         [{ label: 'CE Public Canon — Complexity Accumulation' }],
-    route:              'Maintenance Gravity / Operational Reality',
+    canonLinks:         [
+      { label: 'Law II: Bottleneck Migration' },
+      { label: 'Law VII: Optimization Fragility' },
+    ],
+    route:              'Maintenance Gravity › Operational Reality',
   },
   {
     id:                 'survivable-systems',
@@ -213,8 +246,11 @@ const MODULES: OpsModule[] = [
     operatorQuestion:   'If I removed 40% of my current capabilities, would what remained be more survivable?',
     operatorMove:       'Identify 40% of your current capability surface that could be removed. If you cannot identify it, treat this as a governance emergency.',
     relatedModules:     ['maintenance-gravity', 'governance-abundance', 'metrics-that-matter'],
-    canonLinks:         [{ label: 'CE Public Canon — Survivable Systems' }],
-    route:              'Maintenance Gravity / Operational Reality',
+    canonLinks:         [
+      { label: 'Law VII: Optimization Fragility' },
+      { label: 'Law VIII: Human Differentiation' },
+    ],
+    route:              'Maintenance Gravity › Operational Reality',
   },
   {
     id:                 'metrics-that-matter',
@@ -228,8 +264,11 @@ const MODULES: OpsModule[] = [
     operatorQuestion:   'Am I measuring what will determine my survivability in the next 18 months?',
     operatorMove:       'Replace one production metric with a structural governance metric this week. Measure ownership clarity, decision half-life, or escalation integrity instead.',
     relatedModules:     ['diagnostic-questions', 'complexity-accumulation', 'governance-abundance'],
-    canonLinks:         [{ label: 'CE Public Canon — Metrics Under Abundance' }],
-    route:              'Maintenance Gravity / Operational Reality',
+    canonLinks:         [
+      { label: 'Law IV: Output Inflation' },
+      { label: 'Law VII: Optimization Fragility' },
+    ],
+    route:              'Maintenance Gravity › Operational Reality',
   },
   {
     id:                 'diagnostic-questions',
@@ -243,8 +282,11 @@ const MODULES: OpsModule[] = [
     operatorQuestion:   'Apply all four questions to the most significant decision you made this week.',
     operatorMove:       'Take the most significant recent event. Write one-line answers to all four questions. Act from the structural direction they identify, not from the immediate symptom.',
     relatedModules:     ['signal-vs-noise', 'second-order-effects', 'operator-moves'],
-    canonLinks:         [{ label: 'CE Public Canon — The Four Questions' }],
-    route:              'Maintenance Gravity / Operational Reality',
+    canonLinks:         [
+      { label: 'Law II: Bottleneck Migration' },
+      { label: 'Law V: Decision Half-Life' },
+    ],
+    route:              'Maintenance Gravity › Operational Reality',
   },
   {
     id:                 'operator-moves',
@@ -258,8 +300,11 @@ const MODULES: OpsModule[] = [
     operatorQuestion:   'What is the one structural move available to me right now that I have been avoiding?',
     operatorMove:       'Identify the current dominant constraint. Select the one structural move that directly addresses it. Execute before analysis is complete.',
     relatedModules:     ['diagnostic-questions', 'bottleneck-migration', 'maintenance-gravity'],
-    canonLinks:         [{ label: 'CE Public Canon — Direction Without Prediction' }],
-    route:              'Maintenance Gravity / Operational Reality',
+    canonLinks:         [
+      { label: 'Law II: Bottleneck Migration' },
+      { label: 'Law VI: Escalation Preservation' },
+    ],
+    route:              'Maintenance Gravity › Operational Reality',
   },
 
   /* ── HORIZON & CONSTRAINTS ─── */
@@ -275,8 +320,11 @@ const MODULES: OpsModule[] = [
     operatorQuestion:   'What physical constraints bound my digital intelligence stack?',
     operatorMove:       'Map the physical dependencies of your digital intelligence stack. Identify the single physical constraint that could most rapidly limit your capability.',
     relatedModules:     ['bottleneck-migration', 'survivable-systems', 'second-order-effects'],
-    canonLinks:         [{ label: 'CE Public Canon — Physical Constraints' }],
-    route:              'Constraints / Horizon',
+    canonLinks:         [
+      { label: 'Law I: Intelligence Abundance' },
+      { label: 'Law VII: Optimization Fragility' },
+    ],
+    route:              'Constraints › Horizon',
   },
   {
     id:                 'second-order-effects',
@@ -290,24 +338,27 @@ const MODULES: OpsModule[] = [
     operatorQuestion:   'What second-order effects am I generating that I have not yet evaluated?',
     operatorMove:       'For your most recent significant decision: write the second-order effects. If you have not done this, do it before the second-order consequences arrive uninvited.',
     relatedModules:     ['physical-constraints', 'diagnostic-questions', 'governance-abundance'],
-    canonLinks:         [{ label: 'CE Public Canon — Second-Order Effects' }],
-    route:              'Constraints / Horizon',
+    canonLinks:         [
+      { label: 'Law V: Decision Half-Life' },
+      { label: 'Law VIII: Human Differentiation' },
+    ],
+    route:              'Constraints › Horizon',
   },
 ]
 
 /* ── Nav group config ─────────────────────────────────────── */
-const GROUPS: { key: GroupKey; label: string; color: string }[] = [
-  { key: 'core-doctrine',       label: 'Core Doctrine',       color: '#C5A26F' },
-  { key: 'operational-reality', label: 'Operational Reality', color: '#00D8FF' },
-  { key: 'horizon-constraints', label: 'Horizon & Constraints', color: '#8B9AB3' },
+const GROUPS: { key: GroupKey; label: string }[] = [
+  { key: 'core-doctrine',       label: 'Core Doctrine'         },
+  { key: 'operational-reality', label: 'Operational Reality'   },
+  { key: 'horizon-constraints', label: 'Horizon & Constraints' },
 ]
 
 /* ── Tab config ───────────────────────────────────────────── */
 const TABS: { key: TabKey; label: string; firstModule: string }[] = [
-  { key: 'ops-kernel',         label: 'Ops Kernel',          firstModule: 'prime-doctrine'    },
-  { key: 'maintenance-gravity',label: 'Maintenance Gravity', firstModule: 'maintenance-gravity' },
-  { key: 'physical',           label: 'Physical',            firstModule: 'physical-constraints' },
-  { key: 'metrics',            label: 'Metrics',             firstModule: 'metrics-that-matter' },
+  { key: 'ops-kernel',          label: 'Ops Kernel',          firstModule: 'prime-doctrine'     },
+  { key: 'maintenance-gravity', label: 'Maintenance Gravity', firstModule: 'maintenance-gravity' },
+  { key: 'physical',            label: 'Physical',            firstModule: 'physical-constraints'},
+  { key: 'metrics',             label: 'Metrics',             firstModule: 'metrics-that-matter' },
 ]
 
 const TAB_FOR_GROUP: Record<GroupKey, TabKey> = {
@@ -318,24 +369,24 @@ const TAB_FOR_GROUP: Record<GroupKey, TabKey> = {
 
 /* ── Main component ──────────────────────────────────────── */
 export function OpsKernelConsole() {
-  const [activeId, setActiveId]     = useState('prime-doctrine')
-  const [activeTab, setActiveTab]   = useState<TabKey>('ops-kernel')
-  const [transitioning, setTrans]   = useState(false)
+  const [activeId, setActiveId]   = useState('prime-doctrine')
+  const [activeTab, setActiveTab] = useState<TabKey>('ops-kernel')
+  const [fading, setFading]       = useState(false)
 
-  const idx     = MODULES.findIndex(m => m.id === activeId)
-  const active  = MODULES[idx]!
-  const prev    = idx > 0 ? MODULES[idx - 1] : null
-  const next    = idx < MODULES.length - 1 ? MODULES[idx + 1] : null
+  const idx    = MODULES.findIndex(m => m.id === activeId)
+  const active = MODULES[idx]!
+  const prev   = idx > 0 ? MODULES[idx - 1] : null
+  const next   = idx < MODULES.length - 1 ? MODULES[idx + 1] : null
 
   const goTo = useCallback((id: string) => {
     if (id === activeId) return
-    setTrans(true)
+    setFading(true)
     setTimeout(() => {
       setActiveId(id)
       const m = MODULES.find(m => m.id === id)
       if (m) setActiveTab(TAB_FOR_GROUP[m.group])
-      setTrans(false)
-    }, 160)
+      setFading(false)
+    }, 140)
   }, [activeId])
 
   const goToTab = useCallback((tab: TabKey) => {
@@ -346,11 +397,12 @@ export function OpsKernelConsole() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if ((e.target as HTMLElement).tagName === 'INPUT') return
+      const tag = (e.target as HTMLElement).tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return
       if ((e.key === 'ArrowRight' || e.key === 'ArrowDown') && next) {
         e.preventDefault(); goTo(next.id)
       }
-      if ((e.key === 'ArrowLeft' || e.key === 'ArrowUp') && prev) {
+      if ((e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   && prev) {
         e.preventDefault(); goTo(prev.id)
       }
     }
@@ -358,287 +410,50 @@ export function OpsKernelConsole() {
     return () => window.removeEventListener('keydown', onKey)
   }, [goTo, prev, next])
 
-  const groupColor = GROUPS.find(g => g.key === active.group)?.color ?? C.gold
+  const groupName = GROUPS.find(g => g.key === active.group)?.label ?? ''
 
   return (
     <>
-      <style>{`
-        /* ── Shell ── */
-        .ck-shell {
-          display: flex; flex-direction: column;
-          height: calc(100vh - 80px);
-          background: ${C.bg}; overflow: hidden;
-          position: relative;
-        }
-        /* subtle dot grid */
-        .ck-shell::before {
-          content: '';
-          position: absolute; inset: 0; pointer-events: none;
-          background-image:
-            radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px);
-          background-size: 28px 28px;
-          z-index: 0;
-        }
-
-        /* ── Zone tabs ── */
-        .ck-tabs {
-          display: flex; align-items: stretch; gap: 0;
-          height: 36px; flex-shrink: 0;
-          border-bottom: 1px solid ${C.border};
-          background: ${C.surface};
-          position: relative; z-index: 1;
-          padding: 0 12px;
-          overflow-x: auto; scrollbar-width: none;
-        }
-        .ck-tabs::-webkit-scrollbar { display: none; }
-        .ck-tab-btn {
-          display: flex; align-items: center; gap: 5px;
-          padding: 0 14px; height: 36px;
-          font-size: 9px; letter-spacing: 2.5px;
-          text-transform: uppercase; font-family: monospace;
-          cursor: pointer; border: none; background: none;
-          border-bottom: 2px solid transparent;
-          color: ${C.dim}; white-space: nowrap; flex-shrink: 0;
-          transition: color 130ms ease, border-color 130ms ease;
-          margin-bottom: -1px;
-        }
-        .ck-tab-btn:hover:not([data-active]) { color: ${C.muted}; }
-        .ck-tab-btn[data-active] { color: ${C.gold}; border-bottom-color: ${C.gold}; }
-        .ck-tab-dot {
-          width: 4px; height: 4px; border-radius: 50%; flex-shrink: 0;
-          background: currentColor; opacity: 0.6;
-        }
-
-        /* ── Three-column body ── */
-        .ck-body {
-          display: grid;
-          grid-template-columns: 272px 1fr 272px;
-          flex: 1; min-height: 0; overflow: hidden;
-          position: relative; z-index: 1;
-        }
-
-        /* ── Left rail ── */
-        .ck-left {
-          border-right: 1px solid ${C.border};
-          overflow-y: auto; padding: 14px 0 48px;
-          background: ${C.surface};
-          scrollbar-width: thin;
-          scrollbar-color: rgba(255,255,255,0.05) transparent;
-        }
-        .ck-left::-webkit-scrollbar { width: 3px; }
-        .ck-left::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); border-radius: 2px; }
-
-        /* ── Center viewport ── */
-        .ck-center {
-          overflow-y: auto; padding: 28px 36px 64px;
-          scrollbar-width: thin;
-          scrollbar-color: rgba(255,255,255,0.05) transparent;
-          transition: opacity 160ms ease;
-        }
-        .ck-center::-webkit-scrollbar { width: 3px; }
-        .ck-center::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); border-radius: 2px; }
-
-        /* ── Right panel ── */
-        .ck-right {
-          border-left: 1px solid ${C.border};
-          overflow-y: auto; padding: 20px 0 48px;
-          background: ${C.surface};
-          scrollbar-width: thin;
-          scrollbar-color: rgba(255,255,255,0.05) transparent;
-        }
-        .ck-right::-webkit-scrollbar { width: 3px; }
-        .ck-right::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); border-radius: 2px; }
-
-        /* ── Nav group header ── */
-        .ck-group-hd {
-          font-size: 8px; letter-spacing: 2.5px;
-          text-transform: uppercase; font-family: monospace;
-          padding: 0 14px; margin: 14px 0 5px;
-          user-select: none; color: ${C.dimmer};
-        }
-        .ck-group-hd:first-child { margin-top: 4px; }
-
-        /* ── Nav item ── */
-        .ck-nav-item {
-          display: flex; align-items: center; gap: 8px;
-          width: 100%; text-align: left;
-          background: none; border: none;
-          border-left: 2px solid transparent;
-          cursor: pointer; padding: 5px 14px 5px 12px;
-          font-size: 11px; line-height: 1.35; color: ${C.dim};
-          transition: color 120ms, background 120ms, border-color 120ms;
-        }
-        .ck-nav-item:hover:not([data-active]) {
-          background: rgba(255,255,255,0.02); color: ${C.muted};
-        }
-        .ck-nav-item[data-active] {
-          border-left-color: ${C.gold};
-          background: rgba(197,162,111,0.05);
-          color: ${C.gold};
-        }
-        .ck-nav-num {
-          font-size: 8px; font-family: monospace;
-          letter-spacing: 1px; opacity: 0.4; flex-shrink: 0;
-        }
-
-        /* ── Content blocks ── */
-        .ck-block {
-          background: ${C.panel};
-          border: 1px solid ${C.border};
-          border-radius: 2px;
-          padding: 14px 16px; margin-bottom: 7px;
-        }
-        .ck-block-label {
-          display: flex; align-items: center; gap: 7px;
-          font-size: 8px; letter-spacing: 2.5px;
-          text-transform: uppercase; font-family: monospace;
-          margin-bottom: 9px;
-        }
-        .ck-block-marker {
-          width: 5px; height: 5px; flex-shrink: 0;
-        }
-
-        /* ── Right panel sections ── */
-        .ck-rp-section {
-          padding: 12px 16px 14px;
-          border-bottom: 1px solid ${C.border};
-        }
-        .ck-rp-label {
-          font-size: 8px; letter-spacing: 2.5px;
-          text-transform: uppercase; font-family: monospace;
-          color: ${C.dimmer}; margin-bottom: 8px; display: block;
-        }
-        .ck-rp-btn {
-          display: block; width: 100%;
-          background: none; border: 1px solid ${C.border};
-          cursor: pointer; text-align: left;
-          padding: 9px 12px; font-size: 11px;
-          color: ${C.muted}; line-height: 1.35;
-          transition: border-color 130ms, color 130ms, background 130ms;
-          margin-bottom: 5px;
-        }
-        .ck-rp-btn:hover {
-          border-color: ${C.borderGold}; color: ${C.gold};
-          background: rgba(197,162,111,0.04);
-        }
-        .ck-rp-btn:last-child { margin-bottom: 0; }
-        .ck-nav-next-prev {
-          display: flex; gap: 5px; padding: 0 16px;
-        }
-        .ck-dir-btn {
-          flex: 1; border: 1px solid ${C.border};
-          background: none; cursor: pointer;
-          padding: 8px 10px; font-size: 10px;
-          font-family: monospace; letter-spacing: 1px;
-          color: ${C.dim}; text-align: center;
-          transition: border-color 130ms, color 130ms, background 130ms;
-        }
-        .ck-dir-btn:hover:not(:disabled) {
-          border-color: ${C.borderGold}; color: ${C.gold};
-          background: rgba(197,162,111,0.04);
-        }
-        .ck-dir-btn:disabled { opacity: 0.2; cursor: default; }
-
-        /* ── Mobile: horizontal strip ── */
-        .ck-mobile-strip {
-          display: none;
-          overflow-x: auto; gap: 4px;
-          padding: 8px 12px;
-          border-bottom: 1px solid ${C.border};
-          background: ${C.surface};
-          position: sticky; top: 80px; z-index: 20;
-          scrollbar-width: none;
-        }
-        .ck-mobile-strip::-webkit-scrollbar { display: none; }
-        .ck-mobile-chip {
-          border: 1px solid ${C.border};
-          background: none; cursor: pointer;
-          padding: 4px 10px; font-size: 10px;
-          white-space: nowrap; flex-shrink: 0;
-          color: ${C.dim};
-          transition: border-color 120ms, color 120ms, background 120ms;
-        }
-        .ck-mobile-chip[data-active] {
-          border-color: ${C.borderGold}; color: ${C.gold};
-          background: rgba(197,162,111,0.05);
-        }
-
-        /* ── Laws grid ── */
-        .ck-laws-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-          gap: 6px; margin-top: 12px;
-        }
-        .ck-law-card {
-          background: ${C.panelRaised};
-          border: 1px solid ${C.border};
-          padding: 10px 12px;
-          transition: border-color 130ms;
-        }
-        .ck-law-card:hover { border-color: rgba(197,162,111,0.20); }
-
-        /* ── Progress bar ── */
-        .ck-progress-track {
-          height: 1px; background: ${C.border};
-          position: relative; flex: 1;
-        }
-        .ck-progress-fill {
-          position: absolute; top: 0; left: 0; bottom: 0;
-          background: ${C.gold};
-          transition: width 240ms ease;
-        }
-
-        /* ── Responsive ── */
-        @media (max-width: 1279px) {
-          .ck-body { grid-template-columns: 252px 1fr; }
-          .ck-right { display: none; }
-        }
-        @media (max-width: 1023px) {
-          .ck-shell { height: auto; min-height: calc(100vh - 80px); overflow: visible; }
-          .ck-body { grid-template-columns: 1fr; }
-          .ck-left { display: none; }
-          .ck-center { overflow-y: visible; padding: 24px 20px 60px; }
-          .ck-tabs { display: none; }
-          .ck-mobile-strip { display: flex; }
-        }
-        @media (max-width: 639px) {
-          .ck-center { padding: 20px 14px 56px; }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .ck-center, .ck-tab-btn, .ck-nav-item, .ck-mobile-chip,
-          .ck-block, .ck-rp-btn, .ck-dir-btn, .ck-progress-fill,
-          .ck-law-card { transition: none !important; }
-        }
-      `}</style>
+      <style>{CSS(BORDER, BORDER_HI, BG, SURFACE, PANEL, PANEL_ALT,
+                   RAIL_BG, HDR_BG, TEXT, TEXT_DIM, TEXT_DIMMER,
+                   GOLD, GOLD_SOFT, CYAN, CYAN_SOFT, CYAN_EDGE,
+                   AMBER, AMBER_SOFT, AMBER_EDGE, GREEN, GREEN_SOFT, GREEN_EDGE)}</style>
 
       <div className="ck-shell">
 
+        {/* ── Command header ── */}
+        <div className="ck-cmd-hdr">
+          <div className="ck-cmd-left">
+            <span className="ck-cmd-title">Ops Kernel Command Center</span>
+            <span className="ck-cmd-doctrine">Intelligence is abundant. Judgment is power.</span>
+          </div>
+          <div className="ck-pills">
+            <span className="ck-pill">Public Command Surface</span>
+            <span className="ck-pill">Canon + Operations</span>
+            <span className="ck-pill ck-pill-dim">Read-Only V1</span>
+          </div>
+        </div>
+
         {/* ── Zone tabs ── */}
-        <div className="ck-tabs" role="tablist" aria-label="Content zones">
+        <div className="ck-zone-tabs" role="tablist">
           {TABS.map(tab => (
             <button
               key={tab.key}
-              className="ck-tab-btn"
+              className="ck-ztab"
               role="tab"
+              aria-selected={activeTab === tab.key}
               data-active={activeTab === tab.key ? '' : undefined}
               onClick={() => goToTab(tab.key)}
             >
-              <span className="ck-tab-dot" />
               {tab.label}
             </button>
           ))}
           <div style={{ flex: 1 }} />
-          <span style={{
-            fontSize: 8, letterSpacing: '2px', color: C.dimmer,
-            fontFamily: 'monospace', textTransform: 'uppercase',
-            alignSelf: 'center', paddingRight: 4,
-          }}>
-            {MODULES.length} Modules
-          </span>
+          <span className="ck-module-count">{String(idx + 1).padStart(2,'0')} / {MODULES.length}</span>
         </div>
 
         {/* ── Mobile strip ── */}
-        <div className="ck-mobile-strip">
+        <div className="ck-mobile-strip" aria-hidden="true">
           {MODULES.map(m => (
             <button
               key={m.id}
@@ -646,8 +461,7 @@ export function OpsKernelConsole() {
               data-active={activeId === m.id ? '' : undefined}
               onClick={() => goTo(m.id)}
             >
-              <span style={{ opacity: 0.4, marginRight: 4, fontSize: 8, fontFamily: 'monospace' }}>{m.num}</span>
-              {m.title}
+              <span className="ck-chip-num">{m.num}</span>{m.title}
             </button>
           ))}
         </div>
@@ -655,354 +469,196 @@ export function OpsKernelConsole() {
         {/* ── Three-column body ── */}
         <div className="ck-body">
 
-          {/* ── Left rail ── */}
+          {/* ── Left command rail ── */}
           <nav className="ck-left" aria-label="Module navigation">
             {GROUPS.map(group => (
-              <div key={group.key}>
-                <div
-                  className="ck-group-hd"
-                  style={{ color: group.color + '55' }}
-                >
-                  {group.label}
-                </div>
+              <div key={group.key} className="ck-grp">
+                <div className="ck-grp-label">{group.label}</div>
                 {MODULES.filter(m => m.group === group.key).map(m => (
                   <button
                     key={m.id}
                     className="ck-nav-item"
                     data-active={activeId === m.id ? '' : undefined}
                     onClick={() => goTo(m.id)}
-                    style={activeId === m.id ? { color: group.color, borderLeftColor: group.color + '88', background: group.color + '09' } : undefined}
                   >
                     <span className="ck-nav-num">{m.num}</span>
-                    {m.title}
+                    <span className="ck-nav-label">{m.title}</span>
+                    {activeId === m.id && <span className="ck-nav-pip" />}
                   </button>
                 ))}
               </div>
             ))}
-
-            {/* Canon footer */}
-            <div style={{
-              margin: '20px 12px 0', padding: '14px 2px 0',
-              borderTop: `1px solid ${C.border}`,
-            }}>
-              <div className="ck-group-hd" style={{ marginTop: 0, color: C.dimmer }}>
-                Canon
-              </div>
-              <a
-                href="/downloads/ce-public-kernel.pdf"
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 6,
-                  padding: '5px 14px', fontSize: 11,
-                  color: C.dim, textDecoration: 'none',
-                  transition: 'color 120ms',
-                }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = C.gold }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = C.dim }}
-              >
-                <span style={{ opacity: 0.6 }}>↓</span> Download PDF
-              </a>
-            </div>
           </nav>
 
-          {/* ── Center viewport ── */}
-          <main
-            className="ck-center"
-            style={{ opacity: transitioning ? 0 : 1 }}
-            aria-live="polite"
-            aria-atomic="true"
-          >
-            {/* Module header */}
-            <div style={{ marginBottom: 20 }}>
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: 8,
-                marginBottom: 14,
-              }}>
-                <span style={{
-                  fontSize: 8, letterSpacing: '3px', color: groupColor,
-                  textTransform: 'uppercase', fontFamily: 'monospace', opacity: 0.7,
-                }}>
-                  {GROUPS.find(g => g.key === active.group)?.label}
-                </span>
-                <span style={{ color: C.border }}>·</span>
-                <span style={{
-                  fontSize: 8, letterSpacing: '2px', color: C.dimmer,
-                  fontFamily: 'monospace', textTransform: 'uppercase',
-                }}>
-                  {active.num}
-                </span>
-              </div>
+          {/* ── Center: active module viewport ── */}
+          <main className="ck-center" aria-live="polite" aria-atomic="true">
+            <div className="ck-mod-panel" style={{ opacity: fading ? 0 : 1 }}>
 
-              {/* Module marker */}
-              <div style={{
-                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                width: 36, height: 36, marginBottom: 14,
-                border: `1px solid ${groupColor}33`,
-                fontFamily: 'monospace', fontSize: 11, letterSpacing: '1px',
-                color: groupColor,
-              }}>
-                {active.num}
-              </div>
-
-              <h1 style={{
-                fontSize: 'clamp(1.5rem, 2.8vw, 2.1rem)',
-                fontWeight: 700, color: C.textBright,
-                letterSpacing: '-0.03em', lineHeight: 1.0,
-                margin: '0 0 10px',
-              }}>
-                {active.title}
-              </h1>
-
-              {/* Subtitle — uppercase tagline */}
-              <div style={{
-                fontSize: 11, letterSpacing: '1.5px', color: groupColor,
-                textTransform: 'uppercase', marginBottom: 16, lineHeight: 1.4,
-                opacity: 0.8,
-              }}>
-                {active.subtitle}
-              </div>
-
-              <div style={{
-                height: 1,
-                background: `linear-gradient(90deg, ${groupColor}30, ${C.border} 50%, transparent)`,
-              }} />
-            </div>
-
-            {/* ── Content block: THESIS ── */}
-            <ContentBlock
-              label="Thesis"
-              markerColor={C.gold}
-              borderColor={C.borderGold}
-              bg={C.panel}
-            >
-              <p style={{ fontSize: '0.9rem', color: C.text, lineHeight: 1.75, margin: 0 }}>
-                {active.thesis}
-              </p>
-
-              {/* Eight Laws grid (Immutable Laws module only) */}
-              {active.laws && (
-                <div className="ck-laws-grid">
-                  {active.laws.map(law => (
-                    <div key={law.numeral} className="ck-law-card">
-                      <div style={{
-                        fontSize: 8, color: C.gold, fontFamily: 'monospace',
-                        letterSpacing: '2px', textTransform: 'uppercase', marginBottom: 5,
-                      }}>
-                        Law {law.numeral}
-                      </div>
-                      <div style={{ fontSize: 11, fontWeight: 600, color: C.text, marginBottom: 4 }}>
-                        {law.title}
-                      </div>
-                      <div style={{ fontSize: 10, color: C.dim, lineHeight: 1.5 }}>
-                        {law.description}
-                      </div>
-                    </div>
-                  ))}
+              {/* Module identity header */}
+              <div className="ck-mod-head">
+                <div className="ck-mod-meta">
+                  <span className="ck-mod-num">{active.num}</span>
+                  <span className="ck-mod-sep">·</span>
+                  <span className="ck-mod-group">{groupName}</span>
                 </div>
-              )}
-            </ContentBlock>
-
-            {/* ── Content block: OPERATIONAL MEANING ── */}
-            <ContentBlock
-              label="Operational Meaning"
-              markerColor={C.muted}
-              borderColor={C.border}
-              bg={C.panel}
-            >
-              <p style={{ fontSize: '0.9rem', color: C.muted, lineHeight: 1.75, margin: 0 }}>
-                {active.operationalMeaning}
-              </p>
-            </ContentBlock>
-
-            {/* ── Content block: FAILURE PATTERN ── */}
-            <ContentBlock
-              label="Failure Pattern"
-              markerColor={C.warnText}
-              borderColor={`rgba(160,90,30,0.22)`}
-              bg={`rgba(120,65,20,0.07)`}
-            >
-              <p style={{ fontSize: '0.88rem', color: C.warnText, lineHeight: 1.75, margin: 0 }}>
-                {active.failurePattern}
-              </p>
-            </ContentBlock>
-
-            {/* ── Content block: OPERATOR QUESTION ── */}
-            <ContentBlock
-              label="Operator Question"
-              markerColor={C.gold}
-              borderColor={C.borderGold}
-              bg={C.goldSoft}
-            >
-              <p style={{ fontSize: '0.9rem', color: C.text, lineHeight: 1.7, margin: 0, fontStyle: 'italic' }}>
-                {active.operatorQuestion}
-              </p>
-            </ContentBlock>
-
-            {/* ── Content block: OPERATOR MOVE ── */}
-            <ContentBlock
-              label="Operator Move"
-              markerColor={C.actionText}
-              borderColor={C.borderAction}
-              bg={C.actionBg}
-            >
-              <p style={{ fontSize: '0.9rem', color: C.actionText, lineHeight: 1.7, margin: 0 }}>
-                {active.operatorMove}
-              </p>
-            </ContentBlock>
-
-            {/* Progress + counter */}
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 14, marginTop: 28,
-            }}>
-              <div className="ck-progress-track">
-                <div
-                  className="ck-progress-fill"
-                  style={{ width: `${((idx + 1) / MODULES.length) * 100}%` }}
-                />
+                <h2 className="ck-mod-title">{active.title}</h2>
+                <div className="ck-mod-subtitle">{active.subtitle}</div>
               </div>
-              <span style={{
-                fontSize: 9, color: C.dimmer, fontFamily: 'monospace',
-                letterSpacing: '1px', flexShrink: 0,
-              }}>
-                {String(idx + 1).padStart(2, '0')} / {MODULES.length}
-              </span>
-            </div>
 
-            {/* Keyboard hint */}
-            <div style={{
-              marginTop: 10, fontSize: 9, color: C.dimmer,
-              fontFamily: 'monospace', letterSpacing: '0.5px',
-            }}>
-              ← → navigate
+              {/* ── Sections ── */}
+              <div className="ck-mod-sections">
+
+                <ModSection
+                  label="Thesis"
+                  dotColor={GOLD}
+                  edgeColor={GOLD}
+                  textColor={TEXT}
+                >
+                  <p className="ck-sec-text">{active.thesis}</p>
+                  {active.laws && (
+                    <div className="ck-laws-grid">
+                      {active.laws.map(law => (
+                        <div key={law.numeral} className="ck-law">
+                          <div className="ck-law-num">Law {law.numeral}</div>
+                          <div className="ck-law-title">{law.title}</div>
+                          <div className="ck-law-desc">{law.description}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </ModSection>
+
+                <ModSection
+                  label="Operational Meaning"
+                  dotColor={TEXT_DIM}
+                  edgeColor="rgba(100,130,160,0.25)"
+                  textColor={TEXT_DIM}
+                >
+                  <p className="ck-sec-text">{active.operationalMeaning}</p>
+                </ModSection>
+
+                <ModSection
+                  label="Failure Pattern"
+                  dotColor={AMBER}
+                  edgeColor={AMBER_EDGE}
+                  bg={AMBER_SOFT}
+                  textColor={AMBER}
+                >
+                  <p className="ck-sec-text">{active.failurePattern}</p>
+                </ModSection>
+
+                <ModSection
+                  label="Operator Question"
+                  dotColor={GOLD}
+                  edgeColor={GOLD_SOFT}
+                  bg="rgba(197,162,111,0.05)"
+                  textColor={TEXT}
+                  italic
+                >
+                  <p className="ck-sec-text">{active.operatorQuestion}</p>
+                </ModSection>
+
+                <ModSection
+                  label="Operator Move"
+                  dotColor={GREEN}
+                  edgeColor={GREEN_EDGE}
+                  bg={GREEN_SOFT}
+                  textColor={GREEN}
+                >
+                  <p className="ck-sec-text">{active.operatorMove}</p>
+                </ModSection>
+
+              </div>
+
+              {/* Module footer */}
+              <div className="ck-mod-foot">
+                <span className="ck-foot-route">{active.route}</span>
+                <span className="ck-foot-kb">← → navigate modules</span>
+              </div>
             </div>
           </main>
 
           {/* ── Right context panel ── */}
           <aside className="ck-right" aria-label="Module context">
 
-            {/* Module brief */}
-            <div className="ck-rp-section">
+            {/* Brief */}
+            <div className="ck-rp-sec">
               <span className="ck-rp-label">Module Brief</span>
-              <p style={{ fontSize: 12, color: C.muted, lineHeight: 1.65, margin: 0 }}>
-                {active.subtitle}
-              </p>
-              <div style={{
-                marginTop: 10, fontSize: 9, color: C.dimmer,
-                fontFamily: 'monospace', letterSpacing: '1.5px',
-                textTransform: 'uppercase',
-              }}>
-                {active.route}
-              </div>
+              <p className="ck-rp-body">{active.subtitle}</p>
             </div>
 
             {/* Related modules */}
-            <div className="ck-rp-section">
+            <div className="ck-rp-sec">
               <span className="ck-rp-label">Related Modules</span>
-              {active.relatedModules.map(relId => {
-                const rel = MODULES.find(m => m.id === relId)
-                if (!rel) return null
-                return (
-                  <button
-                    key={relId}
-                    className="ck-rp-btn"
-                    onClick={() => goTo(relId)}
-                  >
-                    <span style={{
-                      fontSize: 8, fontFamily: 'monospace', letterSpacing: '1px',
-                      opacity: 0.4, marginRight: 6,
-                    }}>
-                      {rel.num}
-                    </span>
-                    {rel.title}
-                  </button>
-                )
-              })}
+              <div className="ck-rp-list">
+                {active.relatedModules.map(relId => {
+                  const rel = MODULES.find(m => m.id === relId)
+                  if (!rel) return null
+                  return (
+                    <button
+                      key={relId}
+                      className="ck-rp-link"
+                      onClick={() => goTo(relId)}
+                    >
+                      <span className="ck-rp-link-num">{rel.num}</span>
+                      {rel.title}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
 
             {/* Canon links */}
-            <div className="ck-rp-section">
+            <div className="ck-rp-sec">
               <span className="ck-rp-label">Canon Links</span>
-              {active.canonLinks.map(link => (
-                <div
-                  key={link.label}
-                  style={{
-                    fontSize: 11, color: C.dim, padding: '4px 0', lineHeight: 1.4,
-                    borderLeft: `2px solid ${C.border}`, paddingLeft: 8, marginBottom: 5,
-                  }}
-                >
-                  {link.label}
-                </div>
-              ))}
+              <div className="ck-rp-list">
+                {active.canonLinks.map(cl => (
+                  <div key={cl.label} className="ck-canon-link">
+                    <span className="ck-canon-diamond">◆</span>
+                    {cl.label}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Route */}
+            <div className="ck-rp-sec">
+              <span className="ck-rp-label">Route</span>
+              <div className="ck-route-path">{active.route}</div>
             </div>
 
             {/* Navigation */}
-            <div className="ck-rp-section">
-              <span className="ck-rp-label">Navigate</span>
-              <div className="ck-nav-next-prev" style={{ padding: 0, marginBottom: 5 }}>
+            <div className="ck-rp-sec">
+              <div className="ck-nav-pair">
                 <button
-                  className="ck-dir-btn"
+                  className="ck-dir"
                   onClick={() => prev && goTo(prev.id)}
                   disabled={!prev}
+                  title={prev?.title}
                 >
                   ← Prev
                 </button>
                 <button
-                  className="ck-dir-btn"
+                  className="ck-dir"
                   onClick={() => next && goTo(next.id)}
                   disabled={!next}
+                  title={next?.title}
                 >
                   Next →
                 </button>
               </div>
-              {prev && (
-                <div style={{
-                  fontSize: 10, color: C.dimmer, lineHeight: 1.3,
-                  fontFamily: 'monospace', marginBottom: 2, letterSpacing: '0.3px',
-                }}>
-                  ← {prev.title}
-                </div>
-              )}
-              {next && (
-                <div style={{
-                  fontSize: 10, color: C.dimmer, lineHeight: 1.3,
-                  fontFamily: 'monospace', letterSpacing: '0.3px',
-                }}>
-                  → {next.title}
-                </div>
-              )}
+              {prev && <div className="ck-dir-hint">← {prev.title}</div>}
+              {next && <div className="ck-dir-hint ck-dir-hint-next">→ {next.title}</div>}
             </div>
 
-            {/* Canon actions */}
-            <div className="ck-rp-section" style={{ borderBottom: 'none' }}>
-              <span className="ck-rp-label">Canon</span>
-              <a
-                href="/downloads/ce-public-kernel.pdf"
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '9px 12px', marginBottom: 5,
-                  border: `1px solid ${C.border}`,
-                  fontSize: 11, color: C.muted,
-                  textDecoration: 'none',
-                  transition: 'border-color 130ms, color 130ms',
-                }}
-                onMouseEnter={e => {
-                  const el = e.currentTarget as HTMLElement
-                  el.style.borderColor = C.borderGold; el.style.color = C.gold
-                }}
-                onMouseLeave={e => {
-                  const el = e.currentTarget as HTMLElement
-                  el.style.borderColor = C.border; el.style.color = C.muted
-                }}
-              >
-                Download PDF
-                <span style={{ opacity: 0.4, fontSize: 10 }}>↓</span>
+            {/* Actions */}
+            <div className="ck-rp-sec ck-rp-sec-actions">
+              <a href="/downloads/ce-public-kernel.pdf" className="ck-action-btn ck-action-primary">
+                Read Full Canon
               </a>
-              <div style={{
-                padding: '7px 12px', fontSize: 10,
-                color: C.dimmer, letterSpacing: '0.5px', lineHeight: 1.4,
-                fontFamily: 'monospace',
-              }}>
-                Intelligence Is Abundant.<br />Judgment Is Power.
-              </div>
+              <a href="/downloads/ce-public-kernel.pdf" className="ck-action-btn" download>
+                Download PDF ↓
+              </a>
             </div>
 
           </aside>
@@ -1012,29 +668,418 @@ export function OpsKernelConsole() {
   )
 }
 
-/* ── ContentBlock sub-component ─────────────────────────── */
-function ContentBlock({
-  label, markerColor, borderColor, bg, children,
+/* ── ModSection sub-component ────────────────────────────── */
+function ModSection({
+  label, dotColor, edgeColor, bg, textColor, italic, children,
 }: {
-  label:       string
-  markerColor: string
-  borderColor: string
-  bg:          string
-  children:    React.ReactNode
+  label:      string
+  dotColor:   string
+  edgeColor:  string
+  bg?:        string
+  textColor:  string
+  italic?:    boolean
+  children:   React.ReactNode
 }) {
   return (
     <div
-      className="ck-block"
-      style={{ borderColor, background: bg }}
+      className="ck-section"
+      style={{
+        borderLeftColor: edgeColor,
+        background:      bg ?? 'transparent',
+        '--sec-text':    textColor,
+        '--sec-italic':  italic ? 'italic' : 'normal',
+      } as React.CSSProperties}
     >
-      <div className="ck-block-label" style={{ color: markerColor }}>
-        <span
-          className="ck-block-marker"
-          style={{ background: markerColor, borderRadius: 1 }}
-        />
+      <div className="ck-sec-label">
+        <span className="ck-sec-dot" style={{ background: dotColor }} />
         {label}
       </div>
       {children}
     </div>
   )
+}
+
+/* ── CSS factory ──────────────────────────────────────────── */
+function CSS(
+  BORDER: string, BORDER_HI: string, BG: string, SURFACE: string, PANEL: string,
+  PANEL_ALT: string, RAIL_BG: string, HDR_BG: string,
+  TEXT: string, TEXT_DIM: string, TEXT_DIMMER: string,
+  GOLD: string, GOLD_SOFT: string, CYAN: string, CYAN_SOFT: string, CYAN_EDGE: string,
+  AMBER: string, AMBER_SOFT: string, AMBER_EDGE: string,
+  GREEN: string, GREEN_SOFT: string, GREEN_EDGE: string,
+) {
+  return `
+/* ─── Shell ───────────────────────────────────────────── */
+.ck-shell {
+  display: flex; flex-direction: column;
+  height: calc(100vh - 80px);
+  background: ${BG}; overflow: hidden;
+}
+
+/* ─── Command header ──────────────────────────────────── */
+.ck-cmd-hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0; padding: 0 18px 0 14px; height: 52px;
+  background: ${HDR_BG};
+  border-bottom: 1px solid ${BORDER};
+  gap: 12px;
+}
+.ck-cmd-left { display: flex; flex-direction: column; gap: 2px; }
+.ck-cmd-title {
+  font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+  font-family: monospace; font-weight: 600; color: ${TEXT};
+}
+.ck-cmd-doctrine {
+  font-size: 8.5px; letter-spacing: 1px; text-transform: uppercase;
+  font-family: monospace; color: ${TEXT_DIMMER};
+}
+.ck-pills { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+.ck-pill {
+  font-size: 7.5px; letter-spacing: 1.5px; text-transform: uppercase;
+  font-family: monospace; padding: 3px 8px; white-space: nowrap;
+  border: 1px solid ${BORDER}; color: ${TEXT_DIM};
+  background: rgba(255,255,255,0.02);
+}
+.ck-pill-dim { color: ${TEXT_DIMMER}; border-color: rgba(255,255,255,0.04); }
+
+/* ─── Zone tabs ───────────────────────────────────────── */
+.ck-zone-tabs {
+  display: flex; align-items: stretch; flex-shrink: 0;
+  height: 34px; padding: 0 12px;
+  border-bottom: 1px solid ${BORDER};
+  background: ${SURFACE};
+  overflow-x: auto; scrollbar-width: none;
+}
+.ck-zone-tabs::-webkit-scrollbar { display: none; }
+.ck-ztab {
+  display: flex; align-items: center; padding: 0 16px;
+  height: 34px; flex-shrink: 0;
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  font-family: monospace; cursor: pointer;
+  border: none; background: none; color: ${TEXT_DIMMER};
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+  transition: color 130ms, border-color 130ms;
+}
+.ck-ztab:hover:not([data-active]) { color: ${TEXT_DIM}; }
+.ck-ztab[data-active] { color: ${CYAN}; border-bottom-color: ${CYAN}; }
+.ck-module-count {
+  align-self: center; font-size: 8px; letter-spacing: 2px;
+  font-family: monospace; color: ${TEXT_DIMMER}; padding-right: 4px;
+}
+
+/* ─── Mobile strip ────────────────────────────────────── */
+.ck-mobile-strip {
+  display: none; overflow-x: auto; gap: 4px;
+  padding: 8px 12px; flex-shrink: 0;
+  border-bottom: 1px solid ${BORDER}; background: ${SURFACE};
+  scrollbar-width: none;
+}
+.ck-mobile-strip::-webkit-scrollbar { display: none; }
+.ck-mobile-chip {
+  display: flex; align-items: center; gap: 5px;
+  flex-shrink: 0; border: 1px solid ${BORDER};
+  background: none; cursor: pointer; padding: 4px 10px;
+  font-size: 10px; color: ${TEXT_DIM}; white-space: nowrap;
+  transition: border-color 120ms, color 120ms, background 120ms;
+}
+.ck-mobile-chip[data-active] {
+  border-color: ${CYAN_EDGE}; color: ${CYAN}; background: ${CYAN_SOFT};
+}
+.ck-chip-num {
+  font-size: 8px; font-family: monospace; opacity: 0.4; letter-spacing: 1px;
+}
+
+/* ─── Body grid ───────────────────────────────────────── */
+.ck-body {
+  display: grid;
+  grid-template-columns: 264px 1fr 300px;
+  flex: 1; min-height: 0; overflow: hidden;
+}
+
+/* ─── Left command rail ───────────────────────────────── */
+.ck-left {
+  background: ${RAIL_BG};
+  border-right: 1px solid ${BORDER};
+  overflow-y: auto; padding: 12px 0 48px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.04) transparent;
+}
+.ck-left::-webkit-scrollbar { width: 2px; }
+.ck-left::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); }
+
+.ck-grp { margin-bottom: 4px; }
+.ck-grp-label {
+  font-size: 7.5px; letter-spacing: 2.5px; text-transform: uppercase;
+  font-family: monospace; padding: 10px 14px 4px;
+  color: ${TEXT_DIMMER}; user-select: none;
+  border-top: 1px solid rgba(255,255,255,0.04);
+  margin-top: 4px;
+}
+.ck-grp:first-child .ck-grp-label {
+  border-top: none; margin-top: 0; padding-top: 4px;
+}
+
+.ck-nav-item {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; text-align: left; background: none;
+  border: none; border-left: 2px solid transparent;
+  cursor: pointer; padding: 5.5px 14px 5.5px 12px;
+  font-size: 11px; color: ${TEXT_DIMMER};
+  transition: color 120ms, background 120ms, border-color 120ms;
+  position: relative;
+}
+.ck-nav-item:hover:not([data-active]) {
+  background: rgba(255,255,255,0.025); color: ${TEXT_DIM};
+}
+.ck-nav-item[data-active] {
+  border-left-color: ${CYAN};
+  background: ${CYAN_SOFT};
+  color: ${TEXT};
+}
+.ck-nav-num {
+  font-size: 8px; font-family: monospace; letter-spacing: 1px;
+  opacity: 0.35; flex-shrink: 0; min-width: 28px;
+}
+.ck-nav-label { flex: 1; }
+.ck-nav-pip {
+  width: 4px; height: 4px; border-radius: 50%;
+  background: ${CYAN}; flex-shrink: 0;
+}
+
+/* ─── Center viewport ─────────────────────────────────── */
+.ck-center {
+  overflow-y: auto; padding: 14px 12px 32px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.04) transparent;
+}
+.ck-center::-webkit-scrollbar { width: 2px; }
+.ck-center::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); }
+
+/* Module panel — the main framed card */
+.ck-mod-panel {
+  border: 1px solid ${BORDER_HI};
+  background: ${PANEL};
+  transition: opacity 140ms ease;
+  overflow: hidden;
+}
+
+/* Module header strip */
+.ck-mod-head {
+  padding: 16px 20px 14px;
+  border-bottom: 1px solid ${BORDER};
+  background: ${PANEL_ALT};
+}
+.ck-mod-meta {
+  display: flex; align-items: center; gap: 7px;
+  margin-bottom: 8px;
+}
+.ck-mod-num {
+  font-size: 8.5px; font-family: monospace; letter-spacing: 2px;
+  color: ${CYAN}; font-weight: 600;
+}
+.ck-mod-sep { color: rgba(255,255,255,0.12); font-size: 9px; }
+.ck-mod-group {
+  font-size: 8px; letter-spacing: 2px; text-transform: uppercase;
+  font-family: monospace; color: ${TEXT_DIMMER};
+}
+.ck-mod-title {
+  font-size: clamp(1.25rem, 2.2vw, 1.75rem);
+  font-weight: 700; color: #EEF4FA;
+  letter-spacing: -0.025em; line-height: 1.05;
+  margin: 0 0 8px;
+}
+.ck-mod-subtitle {
+  font-size: 10.5px; letter-spacing: 1px; text-transform: uppercase;
+  font-family: monospace; color: ${GOLD}; opacity: 0.80; line-height: 1.4;
+}
+
+/* Module sections */
+.ck-mod-sections { display: flex; flex-direction: column; }
+
+.ck-section {
+  padding: 12px 20px;
+  border-left: 2px solid transparent;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  transition: background 200ms;
+}
+.ck-section:last-child { border-bottom: none; }
+
+.ck-sec-label {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 7.5px; letter-spacing: 2.5px; text-transform: uppercase;
+  font-family: monospace; color: ${TEXT_DIMMER};
+  margin-bottom: 8px;
+}
+.ck-sec-dot {
+  width: 5px; height: 5px; border-radius: 1px; flex-shrink: 0;
+}
+.ck-sec-text {
+  font-size: 12.5px; line-height: 1.65; margin: 0;
+  color: var(--sec-text);
+  font-style: var(--sec-italic, normal);
+}
+
+/* Laws grid */
+.ck-laws-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+  gap: 5px; margin-top: 12px;
+}
+.ck-law {
+  background: rgba(255,255,255,0.025);
+  border: 1px solid ${BORDER};
+  padding: 9px 11px;
+  transition: border-color 130ms;
+}
+.ck-law:hover { border-color: rgba(197,162,111,0.18); }
+.ck-law-num {
+  font-size: 7.5px; color: ${GOLD}; font-family: monospace;
+  letter-spacing: 2px; text-transform: uppercase; margin-bottom: 4px;
+}
+.ck-law-title { font-size: 10.5px; font-weight: 600; color: ${TEXT}; margin-bottom: 3px; }
+.ck-law-desc { font-size: 10px; color: ${TEXT_DIM}; line-height: 1.5; }
+
+/* Module footer */
+.ck-mod-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 20px; border-top: 1px solid ${BORDER};
+  background: ${PANEL_ALT};
+}
+.ck-foot-route {
+  font-size: 8px; letter-spacing: 1.5px; text-transform: uppercase;
+  font-family: monospace; color: ${TEXT_DIMMER};
+}
+.ck-foot-kb {
+  font-size: 8px; letter-spacing: 1px; font-family: monospace;
+  color: rgba(46,62,82,0.6);
+}
+
+/* ─── Right context panel ─────────────────────────────── */
+.ck-right {
+  background: ${RAIL_BG};
+  border-left: 1px solid ${BORDER};
+  overflow-y: auto; display: flex; flex-direction: column;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.04) transparent;
+}
+.ck-right::-webkit-scrollbar { width: 2px; }
+.ck-right::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); }
+
+.ck-rp-sec {
+  padding: 12px 16px 10px;
+  border-bottom: 1px solid ${BORDER};
+}
+.ck-rp-sec-actions { border-bottom: none; margin-top: auto; }
+
+.ck-rp-label {
+  display: block; font-size: 7.5px; letter-spacing: 2px;
+  text-transform: uppercase; font-family: monospace;
+  color: ${TEXT_DIMMER}; margin-bottom: 8px;
+}
+.ck-rp-body {
+  font-size: 11.5px; color: ${TEXT_DIM}; line-height: 1.6; margin: 0;
+}
+.ck-rp-list { display: flex; flex-direction: column; gap: 3px; }
+
+.ck-rp-link {
+  display: flex; align-items: center; gap: 6px;
+  background: none; border: 1px solid ${BORDER};
+  cursor: pointer; padding: 6px 10px;
+  font-size: 11px; color: ${TEXT_DIM}; text-align: left;
+  transition: border-color 120ms, color 120ms, background 120ms;
+}
+.ck-rp-link:hover {
+  border-color: ${CYAN_EDGE}; color: ${CYAN}; background: ${CYAN_SOFT};
+}
+.ck-rp-link-num {
+  font-size: 8px; font-family: monospace; letter-spacing: 1px;
+  opacity: 0.35; flex-shrink: 0;
+}
+
+.ck-canon-link {
+  display: flex; align-items: baseline; gap: 7px;
+  font-size: 11px; color: ${TEXT_DIM}; padding: 3px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+.ck-canon-link:last-child { border-bottom: none; }
+.ck-canon-diamond {
+  font-size: 6px; color: ${GOLD}; opacity: 0.6; flex-shrink: 0;
+}
+
+.ck-route-path {
+  font-size: 10.5px; font-family: monospace; letter-spacing: 0.5px;
+  color: ${TEXT_DIMMER}; line-height: 1.5;
+}
+
+.ck-nav-pair {
+  display: flex; gap: 5px; margin-bottom: 6px;
+}
+.ck-dir {
+  flex: 1; border: 1px solid ${BORDER}; background: none;
+  cursor: pointer; padding: 7px 6px;
+  font-size: 9px; font-family: monospace; letter-spacing: 1px;
+  color: ${TEXT_DIMMER}; text-align: center;
+  transition: all 120ms;
+}
+.ck-dir:not(:disabled):hover {
+  border-color: ${CYAN_EDGE}; color: ${CYAN}; background: ${CYAN_SOFT};
+}
+.ck-dir:disabled { opacity: 0.15; cursor: default; }
+.ck-dir-hint {
+  font-size: 9.5px; color: ${TEXT_DIMMER}; font-family: monospace;
+  letter-spacing: 0.3px; line-height: 1.4;
+}
+.ck-dir-hint-next { text-align: right; }
+
+.ck-action-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; padding: 9px 12px; margin-bottom: 5px;
+  border: 1px solid ${BORDER}; background: none;
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  font-family: monospace; color: ${TEXT_DIM};
+  text-decoration: none; cursor: pointer;
+  transition: border-color 130ms, color 130ms, background 130ms;
+}
+.ck-action-btn:last-child { margin-bottom: 0; }
+.ck-action-btn:hover {
+  border-color: ${CYAN_EDGE}; color: ${CYAN}; background: ${CYAN_SOFT};
+}
+.ck-action-primary {
+  border-color: rgba(197,162,111,0.18); color: ${GOLD};
+  background: ${GOLD_SOFT};
+}
+.ck-action-primary:hover {
+  border-color: rgba(197,162,111,0.45); color: ${GOLD};
+  background: rgba(197,162,111,0.10);
+}
+
+/* ─── Responsive ──────────────────────────────────────── */
+@media (max-width: 1380px) {
+  .ck-body { grid-template-columns: 240px 1fr 270px; }
+}
+@media (max-width: 1199px) {
+  .ck-body { grid-template-columns: 228px 1fr; }
+  .ck-right { display: none; }
+  .ck-pills { display: none; }
+}
+@media (max-width: 1023px) {
+  .ck-shell { height: auto; min-height: calc(100vh - 80px); overflow: visible; }
+  .ck-body { grid-template-columns: 1fr; }
+  .ck-left { display: none; }
+  .ck-center { overflow-y: visible; padding: 12px 8px 48px; }
+  .ck-zone-tabs { display: none; }
+  .ck-mobile-strip { display: flex; }
+  .ck-cmd-hdr { padding: 0 12px; height: 44px; }
+  .ck-cmd-doctrine { display: none; }
+}
+@media (max-width: 639px) {
+  .ck-mod-head { padding: 12px 14px 10px; }
+  .ck-section { padding: 10px 14px; }
+  .ck-mod-foot { padding: 7px 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ck-mod-panel, .ck-ztab, .ck-nav-item, .ck-rp-link, .ck-dir, .ck-action-btn,
+  .ck-mobile-chip { transition: none !important; }
+}
+`
 }
