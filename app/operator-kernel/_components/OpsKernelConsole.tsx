@@ -13,9 +13,9 @@ const HDR_BG     = '#040810'
 const BORDER     = 'rgba(255,255,255,0.08)'
 const BORDER_HI  = 'rgba(255,255,255,0.13)'
 
-const TEXT       = '#D0DAEA'
-const TEXT_DIM   = '#6A7D96'
-const TEXT_DIMMER= '#2E3E52'
+const TEXT       = '#EBF1FA'
+const TEXT_DIM   = '#9BAECD'
+const TEXT_DIMMER= '#4A5E72'
 
 const GOLD       = '#C5A26F'
 const GOLD_SOFT  = 'rgba(197,162,111,0.07)'
@@ -713,208 +713,281 @@ function CSS(
 .ck-shell {
   display: flex; flex-direction: column;
   height: calc(100vh - 80px);
-  background: ${BG}; overflow: hidden;
+  overflow: hidden; isolation: isolate; position: relative;
+  background:
+    linear-gradient(180deg, rgba(5,10,18,0.97), rgba(2,6,12,0.985)),
+    radial-gradient(circle at 50% 0%, rgba(18,36,62,0.20), transparent 45%);
 }
+
+/* ─── Star-dot atmospheric background ─────────────────── */
+.ck-shell::before {
+  content: ''; position: absolute; inset: 0;
+  pointer-events: none; z-index: 0;
+  opacity: 0.17;
+  background-image:
+    radial-gradient(circle, rgba(130,180,255,0.28) 0.7px, transparent 1px),
+    radial-gradient(circle, rgba(255,215,140,0.18) 0.8px, transparent 1.2px),
+    radial-gradient(circle, rgba(180,220,255,0.15) 0.6px, transparent 1px);
+  background-size: 140px 140px, 220px 220px, 180px 180px;
+  background-position: 0 0, 40px 70px, 100px 20px;
+  mask-image: linear-gradient(
+    to bottom,
+    rgba(0,0,0,0.85),
+    rgba(0,0,0,0.50) 20%,
+    rgba(0,0,0,0.28) 50%,
+    rgba(0,0,0,0.50) 80%,
+    rgba(0,0,0,0.85)
+  );
+  animation: ceStarDriftA 38s linear infinite, ceStarFadeA 9s ease-in-out infinite alternate;
+}
+.ck-shell::after {
+  content: ''; position: absolute; inset: 0;
+  pointer-events: none; z-index: 0;
+  opacity: 0.10;
+  background-image:
+    radial-gradient(circle, rgba(255,255,255,0.22) 1px, transparent 1.3px),
+    radial-gradient(circle, rgba(120,180,255,0.14) 0.8px, transparent 1.2px);
+  background-size: 260px 260px, 320px 320px;
+  background-position: 20px 30px, 140px 120px;
+  mask-image: linear-gradient(
+    to bottom,
+    rgba(0,0,0,0.80),
+    rgba(0,0,0,0.40) 25%,
+    rgba(0,0,0,0.20) 50%,
+    rgba(0,0,0,0.40) 75%,
+    rgba(0,0,0,0.80)
+  );
+  animation: ceStarDriftB 54s linear infinite reverse, ceStarFadeB 12s ease-in-out infinite alternate;
+}
+.ck-shell > * { position: relative; z-index: 1; }
+
+@keyframes ceStarDriftA {
+  from { transform: translateY(0px); }
+  to   { transform: translateY(10px); }
+}
+@keyframes ceStarDriftB {
+  from { transform: translateY(0px) translateX(0px); }
+  to   { transform: translateY(-12px) translateX(6px); }
+}
+@keyframes ceStarFadeA {
+  from { opacity: 0.11; } to { opacity: 0.21; }
+}
+@keyframes ceStarFadeB {
+  from { opacity: 0.06; } to { opacity: 0.13; }
+}
+
+/* ─── Scrollbars (shell-scoped) ────────────────────────── */
+.ck-shell *::-webkit-scrollbar { width: 6px; height: 6px; }
+.ck-shell *::-webkit-scrollbar-track { background: rgba(255,255,255,0.018); }
+.ck-shell *::-webkit-scrollbar-thumb {
+  background: rgba(120,145,180,0.20);
+  border-radius: 999px;
+  border: 2px solid rgba(3,6,12,0.88);
+}
+.ck-shell *::-webkit-scrollbar-thumb:hover { background: rgba(197,162,111,0.30); }
 
 /* ─── Command header ──────────────────────────────────── */
 .ck-cmd-hdr {
   display: flex; align-items: center; justify-content: space-between;
-  flex-shrink: 0; padding: 0 18px 0 14px; height: 52px;
-  background: ${HDR_BG};
+  flex-shrink: 0; padding: 0 20px 0 18px; height: 60px;
+  background: rgba(4,8,16,0.90);
   border-bottom: 1px solid ${BORDER};
-  gap: 12px;
+  gap: 16px; backdrop-filter: blur(2px);
 }
-.ck-cmd-left { display: flex; flex-direction: column; gap: 2px; }
+.ck-cmd-left { display: flex; flex-direction: column; gap: 3px; }
 .ck-cmd-title {
-  font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+  font-size: 14px; letter-spacing: 0.14em; text-transform: uppercase;
   font-family: monospace; font-weight: 600; color: ${TEXT};
+  line-height: 1;
 }
 .ck-cmd-doctrine {
-  font-size: 8.5px; letter-spacing: 1px; text-transform: uppercase;
-  font-family: monospace; color: ${TEXT_DIMMER};
+  font-size: 13px; letter-spacing: 0.02em;
+  font-family: inherit; color: ${TEXT_DIMMER};
+  line-height: 1;
 }
-.ck-pills { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+.ck-pills { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .ck-pill {
-  font-size: 7.5px; letter-spacing: 1.5px; text-transform: uppercase;
-  font-family: monospace; padding: 3px 8px; white-space: nowrap;
+  font-size: 11px; letter-spacing: 0.10em; text-transform: uppercase;
+  font-family: monospace; padding: 4px 10px; white-space: nowrap;
   border: 1px solid ${BORDER}; color: ${TEXT_DIM};
-  background: rgba(255,255,255,0.02);
+  background: rgba(255,255,255,0.025);
+  line-height: 1;
 }
 .ck-pill-dim { color: ${TEXT_DIMMER}; border-color: rgba(255,255,255,0.04); }
 
 /* ─── Zone tabs ───────────────────────────────────────── */
 .ck-zone-tabs {
   display: flex; align-items: stretch; flex-shrink: 0;
-  height: 34px; padding: 0 12px;
+  height: 40px; padding: 0 14px;
   border-bottom: 1px solid ${BORDER};
-  background: ${SURFACE};
+  background: rgba(5,8,14,0.80);
   overflow-x: auto; scrollbar-width: none;
 }
 .ck-zone-tabs::-webkit-scrollbar { display: none; }
 .ck-ztab {
-  display: flex; align-items: center; padding: 0 16px;
-  height: 34px; flex-shrink: 0;
-  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
-  font-family: monospace; cursor: pointer;
+  display: flex; align-items: center; padding: 0 18px;
+  height: 40px; flex-shrink: 0;
+  font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase;
+  font-family: monospace; font-weight: 500; cursor: pointer;
   border: none; background: none; color: ${TEXT_DIMMER};
   border-bottom: 2px solid transparent; margin-bottom: -1px;
   transition: color 130ms, border-color 130ms;
 }
 .ck-ztab:hover:not([data-active]) { color: ${TEXT_DIM}; }
-.ck-ztab[data-active] { color: ${CYAN}; border-bottom-color: ${CYAN}; }
+.ck-ztab[data-active] {
+  color: ${CYAN}; border-bottom-color: ${CYAN};
+}
 .ck-module-count {
-  align-self: center; font-size: 8px; letter-spacing: 2px;
+  align-self: center; font-size: 12px; letter-spacing: 0.12em;
   font-family: monospace; color: ${TEXT_DIMMER}; padding-right: 4px;
 }
 
 /* ─── Mobile strip ────────────────────────────────────── */
 .ck-mobile-strip {
-  display: none; overflow-x: auto; gap: 4px;
-  padding: 8px 12px; flex-shrink: 0;
+  display: none; overflow-x: auto; gap: 5px;
+  padding: 10px 14px; flex-shrink: 0;
   border-bottom: 1px solid ${BORDER}; background: ${SURFACE};
   scrollbar-width: none;
 }
 .ck-mobile-strip::-webkit-scrollbar { display: none; }
 .ck-mobile-chip {
-  display: flex; align-items: center; gap: 5px;
-  flex-shrink: 0; border: 1px solid ${BORDER};
-  background: none; cursor: pointer; padding: 4px 10px;
-  font-size: 10px; color: ${TEXT_DIM}; white-space: nowrap;
+  display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+  border: 1px solid ${BORDER}; background: none; cursor: pointer;
+  padding: 6px 12px; font-size: 13px; color: ${TEXT_DIM};
+  white-space: nowrap;
   transition: border-color 120ms, color 120ms, background 120ms;
 }
 .ck-mobile-chip[data-active] {
   border-color: ${CYAN_EDGE}; color: ${CYAN}; background: ${CYAN_SOFT};
 }
 .ck-chip-num {
-  font-size: 8px; font-family: monospace; opacity: 0.4; letter-spacing: 1px;
+  font-size: 10px; font-family: monospace; opacity: 0.40; letter-spacing: 0.08em;
 }
 
 /* ─── Body grid ───────────────────────────────────────── */
 .ck-body {
   display: grid;
-  grid-template-columns: 264px 1fr 300px;
+  grid-template-columns: 270px 1fr 300px;
   flex: 1; min-height: 0; overflow: hidden;
 }
 
 /* ─── Left command rail ───────────────────────────────── */
 .ck-left {
-  background: ${RAIL_BG};
+  background: rgba(4,7,12,0.75);
   border-right: 1px solid ${BORDER};
-  overflow-y: auto; padding: 12px 0 48px;
+  overflow-y: auto; padding: 14px 0 56px;
   scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,0.04) transparent;
+  scrollbar-color: rgba(120,145,180,0.16) rgba(255,255,255,0.018);
 }
-.ck-left::-webkit-scrollbar { width: 2px; }
-.ck-left::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); }
 
-.ck-grp { margin-bottom: 4px; }
+.ck-grp { margin-bottom: 6px; }
 .ck-grp-label {
-  font-size: 7.5px; letter-spacing: 2.5px; text-transform: uppercase;
-  font-family: monospace; padding: 10px 14px 4px;
+  font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
+  font-family: monospace; padding: 14px 16px 6px;
   color: ${TEXT_DIMMER}; user-select: none;
-  border-top: 1px solid rgba(255,255,255,0.04);
-  margin-top: 4px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  margin-top: 6px;
 }
 .ck-grp:first-child .ck-grp-label {
-  border-top: none; margin-top: 0; padding-top: 4px;
+  border-top: none; margin-top: 0; padding-top: 6px;
 }
 
 .ck-nav-item {
-  display: flex; align-items: center; gap: 8px;
+  display: flex; align-items: center; gap: 10px; min-height: 44px;
   width: 100%; text-align: left; background: none;
   border: none; border-left: 2px solid transparent;
-  cursor: pointer; padding: 5.5px 14px 5.5px 12px;
-  font-size: 11px; color: ${TEXT_DIMMER};
+  cursor: pointer; padding: 0 16px 0 14px;
+  font-size: 15px; color: ${TEXT_DIMMER};
   transition: color 120ms, background 120ms, border-color 120ms;
   position: relative;
 }
 .ck-nav-item:hover:not([data-active]) {
-  background: rgba(255,255,255,0.025); color: ${TEXT_DIM};
+  background: rgba(255,255,255,0.028); color: ${TEXT_DIM};
 }
 .ck-nav-item[data-active] {
   border-left-color: ${CYAN};
-  background: ${CYAN_SOFT};
+  background: rgba(0,216,255,0.07);
   color: ${TEXT};
 }
 .ck-nav-num {
-  font-size: 8px; font-family: monospace; letter-spacing: 1px;
-  opacity: 0.35; flex-shrink: 0; min-width: 28px;
+  font-size: 11px; font-family: monospace; letter-spacing: 0.08em;
+  opacity: 0.38; flex-shrink: 0; min-width: 34px;
 }
-.ck-nav-label { flex: 1; }
+.ck-nav-label { flex: 1; line-height: 1.35; }
 .ck-nav-pip {
-  width: 4px; height: 4px; border-radius: 50%;
+  width: 5px; height: 5px; border-radius: 50%;
   background: ${CYAN}; flex-shrink: 0;
 }
 
 /* ─── Center viewport ─────────────────────────────────── */
 .ck-center {
-  overflow-y: auto; padding: 14px 12px 32px;
+  overflow-y: auto; padding: 16px 14px 36px;
   scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,0.04) transparent;
+  scrollbar-color: rgba(120,145,180,0.16) rgba(255,255,255,0.018);
 }
-.ck-center::-webkit-scrollbar { width: 2px; }
-.ck-center::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); }
 
-/* Module panel — the main framed card */
+/* Module panel — single framed card */
 .ck-mod-panel {
-  border: 1px solid ${BORDER_HI};
-  background: ${PANEL};
+  border: 1px solid rgba(131,162,206,0.15);
+  background: linear-gradient(180deg, rgba(9,19,36,0.90), rgba(6,14,26,0.94));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.03),
+    0 2px 24px rgba(0,0,0,0.40);
   transition: opacity 140ms ease;
   overflow: hidden;
 }
 
 /* Module header strip */
 .ck-mod-head {
-  padding: 16px 20px 14px;
+  padding: 22px 26px 18px;
   border-bottom: 1px solid ${BORDER};
-  background: ${PANEL_ALT};
+  background: linear-gradient(180deg, rgba(10,20,38,0.95), rgba(8,16,30,0.90));
 }
 .ck-mod-meta {
-  display: flex; align-items: center; gap: 7px;
-  margin-bottom: 8px;
+  display: flex; align-items: center; gap: 9px; margin-bottom: 10px;
 }
 .ck-mod-num {
-  font-size: 8.5px; font-family: monospace; letter-spacing: 2px;
-  color: ${CYAN}; font-weight: 600;
+  font-size: 12px; font-family: monospace; letter-spacing: 0.16em;
+  color: ${CYAN}; font-weight: 700; opacity: 0.90;
 }
-.ck-mod-sep { color: rgba(255,255,255,0.12); font-size: 9px; }
+.ck-mod-sep { color: rgba(255,255,255,0.14); font-size: 11px; }
 .ck-mod-group {
-  font-size: 8px; letter-spacing: 2px; text-transform: uppercase;
+  font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
   font-family: monospace; color: ${TEXT_DIMMER};
 }
 .ck-mod-title {
-  font-size: clamp(1.25rem, 2.2vw, 1.75rem);
-  font-weight: 700; color: #EEF4FA;
-  letter-spacing: -0.025em; line-height: 1.05;
-  margin: 0 0 8px;
+  font-size: clamp(2.6rem, 4.2vw, 3.5rem);
+  font-weight: 700; color: #F0F5FB;
+  letter-spacing: -0.03em; line-height: 1.02;
+  margin: 0 0 10px;
 }
 .ck-mod-subtitle {
-  font-size: 10.5px; letter-spacing: 1px; text-transform: uppercase;
-  font-family: monospace; color: ${GOLD}; opacity: 0.80; line-height: 1.4;
+  font-size: 16px; letter-spacing: 0.06em; text-transform: uppercase;
+  font-family: monospace; color: ${GOLD}; opacity: 0.82; line-height: 1.45;
 }
 
 /* Module sections */
 .ck-mod-sections { display: flex; flex-direction: column; }
 
 .ck-section {
-  padding: 12px 20px;
+  padding: 20px 26px;
   border-left: 2px solid transparent;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
   transition: background 200ms;
 }
 .ck-section:last-child { border-bottom: none; }
 
 .ck-sec-label {
-  display: flex; align-items: center; gap: 7px;
-  font-size: 7.5px; letter-spacing: 2.5px; text-transform: uppercase;
-  font-family: monospace; color: ${TEXT_DIMMER};
-  margin-bottom: 8px;
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px; letter-spacing: 0.20em; text-transform: uppercase;
+  font-family: monospace; color: rgba(213,169,92,0.82);
+  margin-bottom: 11px;
 }
 .ck-sec-dot {
   width: 5px; height: 5px; border-radius: 1px; flex-shrink: 0;
 }
 .ck-sec-text {
-  font-size: 12.5px; line-height: 1.65; margin: 0;
+  font-size: 19px; line-height: 1.70; margin: 0;
   color: var(--sec-text);
   font-style: var(--sec-italic, normal);
 }
@@ -922,120 +995,117 @@ function CSS(
 /* Laws grid */
 .ck-laws-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
-  gap: 5px; margin-top: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
+  gap: 6px; margin-top: 16px;
 }
 .ck-law {
-  background: rgba(255,255,255,0.025);
+  background: rgba(255,255,255,0.022);
   border: 1px solid ${BORDER};
-  padding: 9px 11px;
+  padding: 11px 13px;
   transition: border-color 130ms;
 }
-.ck-law:hover { border-color: rgba(197,162,111,0.18); }
+.ck-law:hover { border-color: rgba(197,162,111,0.22); }
 .ck-law-num {
-  font-size: 7.5px; color: ${GOLD}; font-family: monospace;
-  letter-spacing: 2px; text-transform: uppercase; margin-bottom: 4px;
+  font-size: 9px; color: ${GOLD}; font-family: monospace;
+  letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 5px;
 }
-.ck-law-title { font-size: 10.5px; font-weight: 600; color: ${TEXT}; margin-bottom: 3px; }
-.ck-law-desc { font-size: 10px; color: ${TEXT_DIM}; line-height: 1.5; }
+.ck-law-title { font-size: 12px; font-weight: 600; color: ${TEXT}; margin-bottom: 4px; line-height: 1.3; }
+.ck-law-desc { font-size: 11.5px; color: ${TEXT_DIM}; line-height: 1.55; }
 
 /* Module footer */
 .ck-mod-foot {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 9px 20px; border-top: 1px solid ${BORDER};
-  background: ${PANEL_ALT};
+  padding: 10px 26px; border-top: 1px solid ${BORDER};
+  background: rgba(8,16,30,0.90);
 }
 .ck-foot-route {
-  font-size: 8px; letter-spacing: 1.5px; text-transform: uppercase;
+  font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
   font-family: monospace; color: ${TEXT_DIMMER};
 }
 .ck-foot-kb {
-  font-size: 8px; letter-spacing: 1px; font-family: monospace;
-  color: rgba(46,62,82,0.6);
+  font-size: 11px; letter-spacing: 0.06em; font-family: monospace;
+  color: rgba(74,94,114,0.55);
 }
 
 /* ─── Right context panel ─────────────────────────────── */
 .ck-right {
-  background: ${RAIL_BG};
+  background: rgba(4,7,12,0.75);
   border-left: 1px solid ${BORDER};
   overflow-y: auto; display: flex; flex-direction: column;
   scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,0.04) transparent;
+  scrollbar-color: rgba(120,145,180,0.16) rgba(255,255,255,0.018);
 }
-.ck-right::-webkit-scrollbar { width: 2px; }
-.ck-right::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); }
 
 .ck-rp-sec {
-  padding: 12px 16px 10px;
+  padding: 14px 18px 12px;
   border-bottom: 1px solid ${BORDER};
 }
-.ck-rp-sec-actions { border-bottom: none; margin-top: auto; }
+.ck-rp-sec-actions { border-bottom: none; margin-top: auto; padding-top: 18px; }
 
 .ck-rp-label {
-  display: block; font-size: 7.5px; letter-spacing: 2px;
+  display: block; font-size: 11px; letter-spacing: 0.18em;
   text-transform: uppercase; font-family: monospace;
-  color: ${TEXT_DIMMER}; margin-bottom: 8px;
+  color: ${TEXT_DIMMER}; margin-bottom: 10px;
 }
 .ck-rp-body {
-  font-size: 11.5px; color: ${TEXT_DIM}; line-height: 1.6; margin: 0;
+  font-size: 16px; color: ${TEXT_DIM}; line-height: 1.58; margin: 0;
 }
-.ck-rp-list { display: flex; flex-direction: column; gap: 3px; }
+.ck-rp-list { display: flex; flex-direction: column; gap: 4px; }
 
 .ck-rp-link {
-  display: flex; align-items: center; gap: 6px;
+  display: flex; align-items: center; gap: 8px; min-height: 40px;
   background: none; border: 1px solid ${BORDER};
-  cursor: pointer; padding: 6px 10px;
-  font-size: 11px; color: ${TEXT_DIM}; text-align: left;
+  cursor: pointer; padding: 8px 12px;
+  font-size: 14px; color: ${TEXT_DIM}; text-align: left;
   transition: border-color 120ms, color 120ms, background 120ms;
 }
 .ck-rp-link:hover {
   border-color: ${CYAN_EDGE}; color: ${CYAN}; background: ${CYAN_SOFT};
 }
 .ck-rp-link-num {
-  font-size: 8px; font-family: monospace; letter-spacing: 1px;
+  font-size: 10px; font-family: monospace; letter-spacing: 0.08em;
   opacity: 0.35; flex-shrink: 0;
 }
 
 .ck-canon-link {
-  display: flex; align-items: baseline; gap: 7px;
-  font-size: 11px; color: ${TEXT_DIM}; padding: 3px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.03);
+  display: flex; align-items: baseline; gap: 8px;
+  font-size: 13.5px; color: ${TEXT_DIM}; padding: 5px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  line-height: 1.4;
 }
 .ck-canon-link:last-child { border-bottom: none; }
 .ck-canon-diamond {
-  font-size: 6px; color: ${GOLD}; opacity: 0.6; flex-shrink: 0;
+  font-size: 7px; color: ${GOLD}; opacity: 0.65; flex-shrink: 0;
 }
 
 .ck-route-path {
-  font-size: 10.5px; font-family: monospace; letter-spacing: 0.5px;
+  font-size: 13px; font-family: monospace; letter-spacing: 0.04em;
   color: ${TEXT_DIMMER}; line-height: 1.5;
 }
 
-.ck-nav-pair {
-  display: flex; gap: 5px; margin-bottom: 6px;
-}
+.ck-nav-pair { display: flex; gap: 6px; margin-bottom: 8px; }
 .ck-dir {
   flex: 1; border: 1px solid ${BORDER}; background: none;
-  cursor: pointer; padding: 7px 6px;
-  font-size: 9px; font-family: monospace; letter-spacing: 1px;
+  cursor: pointer; padding: 9px 8px;
+  font-size: 12px; font-family: monospace; letter-spacing: 0.10em;
   color: ${TEXT_DIMMER}; text-align: center;
   transition: all 120ms;
 }
 .ck-dir:not(:disabled):hover {
   border-color: ${CYAN_EDGE}; color: ${CYAN}; background: ${CYAN_SOFT};
 }
-.ck-dir:disabled { opacity: 0.15; cursor: default; }
+.ck-dir:disabled { opacity: 0.14; cursor: default; }
 .ck-dir-hint {
-  font-size: 9.5px; color: ${TEXT_DIMMER}; font-family: monospace;
-  letter-spacing: 0.3px; line-height: 1.4;
+  font-size: 11px; color: ${TEXT_DIMMER}; font-family: monospace;
+  letter-spacing: 0.02em; line-height: 1.4;
 }
 .ck-dir-hint-next { text-align: right; }
 
 .ck-action-btn {
   display: flex; align-items: center; justify-content: center;
-  width: 100%; padding: 9px 12px; margin-bottom: 5px;
+  width: 100%; padding: 11px 14px; margin-bottom: 6px;
   border: 1px solid ${BORDER}; background: none;
-  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase;
   font-family: monospace; color: ${TEXT_DIM};
   text-decoration: none; cursor: pointer;
   transition: border-color 130ms, color 130ms, background 130ms;
@@ -1045,20 +1115,20 @@ function CSS(
   border-color: ${CYAN_EDGE}; color: ${CYAN}; background: ${CYAN_SOFT};
 }
 .ck-action-primary {
-  border-color: rgba(197,162,111,0.18); color: ${GOLD};
-  background: ${GOLD_SOFT};
+  border-color: rgba(197,162,111,0.22); color: ${GOLD};
+  background: rgba(197,162,111,0.05);
 }
 .ck-action-primary:hover {
-  border-color: rgba(197,162,111,0.45); color: ${GOLD};
+  border-color: rgba(197,162,111,0.48); color: ${GOLD};
   background: rgba(197,162,111,0.10);
 }
 
 /* ─── Responsive ──────────────────────────────────────── */
-@media (max-width: 1380px) {
-  .ck-body { grid-template-columns: 240px 1fr 270px; }
+@media (max-width: 1440px) {
+  .ck-body { grid-template-columns: 252px 1fr 284px; }
 }
-@media (max-width: 1199px) {
-  .ck-body { grid-template-columns: 228px 1fr; }
+@media (max-width: 1259px) {
+  .ck-body { grid-template-columns: 236px 1fr; }
   .ck-right { display: none; }
   .ck-pills { display: none; }
 }
@@ -1066,20 +1136,29 @@ function CSS(
   .ck-shell { height: auto; min-height: calc(100vh - 80px); overflow: visible; }
   .ck-body { grid-template-columns: 1fr; }
   .ck-left { display: none; }
-  .ck-center { overflow-y: visible; padding: 12px 8px 48px; }
+  .ck-center { overflow-y: visible; padding: 12px 10px 56px; }
   .ck-zone-tabs { display: none; }
   .ck-mobile-strip { display: flex; }
-  .ck-cmd-hdr { padding: 0 12px; height: 44px; }
+  .ck-cmd-hdr { padding: 0 14px; height: 52px; }
   .ck-cmd-doctrine { display: none; }
+  .ck-mod-title { font-size: clamp(2rem, 6vw, 2.6rem); }
+  .ck-sec-text { font-size: 17px; }
+  .ck-mod-subtitle { font-size: 14px; }
 }
 @media (max-width: 639px) {
-  .ck-mod-head { padding: 12px 14px 10px; }
-  .ck-section { padding: 10px 14px; }
-  .ck-mod-foot { padding: 7px 14px; }
+  .ck-mod-head { padding: 16px 18px 14px; }
+  .ck-section { padding: 14px 18px; }
+  .ck-mod-foot { padding: 8px 18px; }
+  .ck-mod-title { font-size: clamp(1.8rem, 7vw, 2.2rem); }
+  .ck-sec-text { font-size: 16px; }
+  .ck-mod-subtitle { font-size: 12px; }
 }
+
+/* ─── Reduced motion ──────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
+  .ck-shell::before, .ck-shell::after { animation: none; }
   .ck-mod-panel, .ck-ztab, .ck-nav-item, .ck-rp-link, .ck-dir, .ck-action-btn,
-  .ck-mobile-chip { transition: none !important; }
+  .ck-mobile-chip, .ck-law { transition: none !important; }
 }
 `
 }
