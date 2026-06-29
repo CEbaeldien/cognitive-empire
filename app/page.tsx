@@ -95,29 +95,29 @@ function SystemCard({
 
 const SYSTEMS = [
   {
-    n: "n:01", title: "Drift Intelligence",
-    body: "Revenue decay detection. Upload CSV free.",
-    href: "/drift", status: "LIVE", entry: "Upload CSV",
-  },
-  {
-    n: "n:02", title: "CE Signals",
+    n: "n:01", title: "CE Signals",
     body: "Structural intelligence. 2026–2031.",
     href: "/signals", status: "LIVE", entry: "Browse Signals",
   },
   {
-    n: "n:03", title: "The Orchestrator",
+    n: "n:02", title: "Maintenance Gravity",
+    body: "The doctrine of operational debt.",
+    href: "/maintenance-gravity", status: "LIVE", entry: "Read Research",
+  },
+  {
+    n: "n:03", title: "Drift Intelligence",
+    body: "Revenue decay detection. Upload CSV free.",
+    href: "/drift", status: "LIVE", entry: "Upload CSV",
+  },
+  {
+    n: "n:04", title: "The Orchestrator",
     body: "Multi-model MMCP. Beta access.",
     href: "/orchestrator", status: "BETA", entry: "Open Session",
   },
   {
-    n: "n:04", title: "Maintenance Gravity",
-    body: "Research. The doctrine of operational debt.",
-    href: "/maintenance-gravity", status: "LIVE", entry: "Read Research",
-  },
-  {
-    n: "n:05", title: "Work",
-    body: "Request a Maintenance Gravity Audit.",
-    href: "/work", status: "OPEN", entry: "Request Audit",
+    n: "n:05", title: "CE Research",
+    body: "Structural doctrine and field research.",
+    href: "/ce-research", status: "LIVE", entry: "Browse Research",
   },
   {
     n: "n:06", title: "Connect",
@@ -231,7 +231,7 @@ export default function HomePage() {
                 CE — Public Systems
               </p>
               <p style={{ fontSize: "0.85rem", color: P.dim, margin: 0 }}>
-                Six surfaces. One doctrine.
+                Six systems. One doctrine.
               </p>
             </div>
 
