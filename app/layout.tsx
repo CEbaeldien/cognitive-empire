@@ -16,6 +16,18 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Cognitive Empire",
   description: "Operational intelligence systems for an AI-native world.",
+  openGraph: {
+    title: "Cognitive Empire",
+    description: "Operational intelligence systems for an AI-native world.",
+    siteName: "Cognitive Empire",
+    images: [{ url: "/og-architecture.png", width: 1536, height: 1024 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Cognitive Empire",
+    description: "Operational intelligence systems for an AI-native world.",
+    images: ["/og-architecture.png"],
+  },
   icons: {
     icon: [
       { url: "/brand/ce-favicon.svg", type: "image/svg+xml" },
