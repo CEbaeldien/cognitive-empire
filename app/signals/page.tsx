@@ -630,7 +630,7 @@ function DirectionalCommandLayer({ signals }: { signals: V2Signal[] }) {
           fontSize: 18, fontWeight: 600, color: CE_WHITE,
           margin: "0 0 14px",
         }}>
-          Dominant Signals — 2026–2031
+          Dominant Signals
         </p>
         <div style={{ height: 1, background: "rgba(239,68,68,0.18)" }} />
       </div>
