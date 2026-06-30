@@ -151,9 +151,37 @@ export default function HomePage() {
           .hp-sec-wrap  { padding: 32px 20px 48px !important; }
         }
 
+        /* ── Hero image + glow ── */
+        @keyframes starGlow {
+          0%,100% { opacity: 0.3; transform: scale(0.85); }
+          50%      { opacity: 1;   transform: scale(1.15); }
+        }
+        .hero-glow-dot {
+          position: absolute;
+          border-radius: 50%;
+          pointer-events: none;
+          animation: starGlow var(--dur,6s) ease-in-out var(--delay,0s) infinite;
+        }
+        .hero-glow-dot--gold {
+          width: 10px; height: 10px;
+          background: #C9A961;
+          box-shadow: 0 0 8px 3px rgba(201,169,97,0.7), 0 0 18px 7px rgba(201,169,97,0.28);
+          margin-left: -5px; margin-top: -5px;
+        }
+        .hero-glow-dot--white {
+          width: 5px; height: 5px;
+          background: rgba(255,255,255,0.85);
+          box-shadow: 0 0 5px 2px rgba(255,255,255,0.45);
+          margin-left: -2.5px; margin-top: -2.5px;
+        }
+        @media (max-width: 768px) {
+          .ce-hero-img, .ce-hero-glow { display: none !important; }
+        }
+
         @media (prefers-reduced-motion: reduce) {
           *, *::before, *::after { animation: none !important; transition: none !important; }
           .ce-hero, .hp-r1, .hp-r2 { opacity: 1; transform: none; }
+          .hero-glow-dot { animation: none !important; opacity: 0.6; }
         }
       `}</style>
 
@@ -162,8 +190,32 @@ export default function HomePage() {
         <CENav />
 
         {/* ══════ HERO ══════ */}
-        <section style={{ borderBottom: `1px solid ${P.border}`, background: "linear-gradient(180deg, #020713 0%, #03050A 100%)" }}>
-          <div className="ce-hero-wrap ce-hero" style={{ maxWidth: 1280, margin: "0 auto", padding: "72px 48px 60px" }}>
+        <section style={{ borderBottom: `1px solid ${P.border}`, background: "linear-gradient(180deg, #020713 0%, #03050A 100%)", position: "relative", overflow: "hidden" }}>
+          {/* Architecture image — right side, full section height */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            className="ce-hero-img"
+            src="/images/hero-architecture.webp"
+            alt=""
+            aria-hidden="true"
+            style={{
+              position: "absolute", right: 0, top: 0, bottom: 0,
+              height: "100%", width: "auto",
+              opacity: 0.85, zIndex: 0, pointerEvents: "none",
+            }}
+          />
+          {/* Glow overlay — dots sit on top of the image nodes */}
+          <div className="ce-hero-glow" aria-hidden="true" style={{ position: "absolute", inset: 0, zIndex: 1, pointerEvents: "none" }}>
+            <span className="hero-glow-dot hero-glow-dot--gold" style={{ left: "68%", top: "12%", "--dur": "7s",   "--delay": "0s"   } as React.CSSProperties} />
+            <span className="hero-glow-dot hero-glow-dot--gold" style={{ left: "68%", top: "50%", "--dur": "5.5s", "--delay": "1.8s" } as React.CSSProperties} />
+            <span className="hero-glow-dot hero-glow-dot--gold" style={{ left: "88%", top: "68%", "--dur": "6.5s", "--delay": "3.4s" } as React.CSSProperties} />
+            <span className="hero-glow-dot hero-glow-dot--white" style={{ left: "57%", top: "30%", "--dur": "5s",   "--delay": "2.2s" } as React.CSSProperties} />
+            <span className="hero-glow-dot hero-glow-dot--white" style={{ left: "74%", top: "32%", "--dur": "6s",   "--delay": "0.9s" } as React.CSSProperties} />
+            <span className="hero-glow-dot hero-glow-dot--white" style={{ left: "79%", top: "56%", "--dur": "7s",   "--delay": "4.1s" } as React.CSSProperties} />
+            <span className="hero-glow-dot hero-glow-dot--white" style={{ left: "63%", top: "63%", "--dur": "5.5s", "--delay": "3.0s" } as React.CSSProperties} />
+            <span className="hero-glow-dot hero-glow-dot--white" style={{ left: "83%", top: "43%", "--dur": "6.5s", "--delay": "4.9s" } as React.CSSProperties} />
+          </div>
+          <div className="ce-hero-wrap ce-hero" style={{ maxWidth: 1280, margin: "0 auto", padding: "72px 48px 60px", position: "relative", zIndex: 2 }}>
             <p style={{
               fontSize: "0.58rem", fontWeight: 700, letterSpacing: "0.44em",
               textTransform: "uppercase", color: P.gold, margin: "0 0 22px",
