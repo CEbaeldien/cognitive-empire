@@ -15,6 +15,18 @@ const nextConfig: NextConfig = {
         destination: "https://orchestrator.cognitiveempire.com/:path*",
         permanent: false,
       },
+      {
+        source: "/orchestrator",
+        has: [{ type: "host", value: "www.cognitiveempire.com" }],
+        destination: "https://orchestrator.cognitiveempire.com",
+        permanent: false,
+      },
+      {
+        source: "/orchestrator/:path*",
+        has: [{ type: "host", value: "www.cognitiveempire.com" }],
+        destination: "https://orchestrator.cognitiveempire.com/:path*",
+        permanent: false,
+      },
     ];
   },
   async rewrites() {
