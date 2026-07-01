@@ -29,10 +29,20 @@ const PROCESS_STAGES: ProcessStage[] = [
 
 export function JudgmentProcessStrip() {
   return (
-    <div className="ce-judgment-strip">
-      {PROCESS_STAGES.map((stage) => (
+    <div className="ce-judgment-strip" style={{ marginBottom: "0.85rem" }}>
+      {PROCESS_STAGES.map((stage, i) => (
         <div className="ce-judgment-stage" key={stage.label}>
-          <p className="ce-judgment-eyebrow ce-judgment-eyebrow--gold">{stage.label}</p>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: "0.45rem" }}>
+            <span style={{
+              fontSize: 8, fontWeight: 700, color: "rgba(201,169,97,0.35)",
+              fontFamily: "ui-monospace, monospace", letterSpacing: "0.08em",
+            }}>
+              {String(i + 1).padStart(2, "0")}
+            </span>
+            <p className="ce-judgment-eyebrow ce-judgment-eyebrow--gold" style={{ margin: 0 }}>
+              {stage.label}
+            </p>
+          </div>
           <p className="ce-stage-copy">{stage.description}</p>
         </div>
       ))}
