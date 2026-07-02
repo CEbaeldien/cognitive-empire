@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { Playfair_Display } from "next/font/google";
 import Link from "next/link";
 import type { SignalCategory } from "@/types/signals";
+import { GridOverlay } from "./_components/GridOverlay";
 
 export const dynamic = "force-dynamic";
 
@@ -85,7 +86,7 @@ const CATEGORY_ORDER: SignalCategory[] = [
   "infrastructure",
 ];
 
-void CATEGORY_ORDER; // referenced for categorized views
+void CATEGORY_ORDER;
 
 function fmtCategory(cat: SignalCategory): string {
   return CATEGORY_LABELS[cat] ?? cat.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -316,12 +317,13 @@ function ConvergenceCard({ c }: { c: ConvergenceResult }) {
 
 // ── V2 design tokens ──────────────────────────────────────────────────────────
 
-const GOLD      = "#C9A961";
-const GOLD_DIM  = "rgba(201,169,97,0.28)";
+const GOLD      = "#C5A46E";
+const GOLD_DIM  = "rgba(197,164,110,0.28)";
 const CE_WHITE  = "#EEF3FA";
 const CE_MUTED  = "#7A8DA6";
 const CE_DIM    = "#46566A";
-const PANEL_BG  = "rgba(3,7,16,0.82)";
+const CYAN      = "#00E5FF";
+const PANEL_BG  = "rgba(3,7,16,0.85)";
 const PANEL_BD  = "rgba(14,26,46,0.90)";
 const CHIP_BG   = "rgba(8, 16, 34, 0.82)";
 const CHIP_BD   = "rgba(55, 85, 125, 0.22)";
@@ -457,9 +459,9 @@ function V2TagChip({ tag }: { tag: V2Tag }) {
 type StateConfig = { bg: string; color: string; border: string; label: string; pulse?: boolean };
 
 const STATE_MAP: Record<string, StateConfig> = {
-  act_now:     { bg: "rgba(201,169,97,0.13)", color: "#D4AF6A", border: "rgba(201,169,97,0.32)", label: "ACT NOW",     pulse: true },
-  directional: { bg: "rgba(56,139,253,0.10)", color: "#7AAEE0", border: "rgba(56,139,253,0.22)", label: "DIRECTIONAL" },
-  growing:     { bg: "rgba(56,189,248,0.09)", color: "#5BBFD8", border: "rgba(56,189,248,0.18)", label: "GROWING"     },
+  act_now:     { bg: "rgba(197,164,110,0.14)", color: "#C5A46E", border: "rgba(197,164,110,0.36)", label: "ACT NOW",     pulse: true },
+  directional: { bg: "rgba(0,229,255,0.07)",  color: "#00E5FF", border: "rgba(0,229,255,0.22)",  label: "DIRECTIONAL" },
+  growing:     { bg: "rgba(0,229,255,0.05)",  color: "rgba(0,229,255,0.72)", border: "rgba(0,229,255,0.15)", label: "GROWING" },
   watch:       { bg: "rgba(80,100,125,0.10)", color: "#5C6E84", border: "rgba(80,100,125,0.18)", label: "WATCH"       },
 };
 
@@ -740,7 +742,7 @@ function FeaturedForcePanel({ force, pf }: { force: V2Signal | null; pf: string 
   const move     = force.operator_move ?? null;
 
   return (
-    <div id="sg-featured" className="sg-panel sg-c7">
+    <div id="sg-featured" className="sg-panel sg-panel--gold sg-c7">
       <PanelHdr label="Featured Force" meta={fmtCategory(force.category)} gold />
 
       <div className="sg-panel-body sg-featured-body">
@@ -785,16 +787,17 @@ function FeaturedForcePanel({ force, pf }: { force: V2Signal | null; pf: string 
         {/* Operator move */}
         {move && (
           <div style={{
-            display: "flex", alignItems: "flex-start", gap: 10,
+            display: "flex", alignItems: "flex-start", gap: 12,
             borderTop: `1px solid rgba(14,26,46,0.85)`, paddingTop: 14,
           }}>
             <span style={{
-              fontSize: 9, fontWeight: 800, letterSpacing: "0.22em", textTransform: "uppercase" as const,
-              color: GOLD, flexShrink: 0, paddingTop: 2,
+              fontSize: 10, fontWeight: 800, letterSpacing: "0.20em", textTransform: "uppercase" as const,
+              color: GOLD, flexShrink: 0, paddingTop: 1,
+              fontFamily: "ui-monospace, monospace",
             }}>
               MOVE →
             </span>
-            <p style={{ fontSize: 12, color: CE_WHITE, margin: 0, lineHeight: 1.6, opacity: 0.90 }}>
+            <p style={{ fontSize: 12.5, color: CE_WHITE, margin: 0, lineHeight: 1.65, opacity: 0.92 }}>
               {move}
             </p>
           </div>
@@ -820,9 +823,9 @@ function FeaturedForcePanel({ force, pf }: { force: V2Signal | null; pf: string 
 
 function StateDistWidget({ signals }: { signals: V2Signal[] }) {
   const STATES = [
-    { key: "act_now",     label: "ACT NOW",     color: "#D4AF6A" },
-    { key: "directional", label: "DIRECTIONAL", color: "#7AAEE0" },
-    { key: "growing",     label: "GROWING",     color: "#5BBFD8" },
+    { key: "act_now",     label: "ACT NOW",     color: "#C5A46E" },
+    { key: "directional", label: "DIRECTIONAL", color: "#00E5FF" },
+    { key: "growing",     label: "GROWING",     color: "rgba(0,229,255,0.60)" },
     { key: "watch",       label: "WATCH",       color: "#5C6E84" },
   ] as const;
 
@@ -875,8 +878,9 @@ function DominantSignalsWidget({ signals, pf }: { signals: V2Signal[]; pf: strin
         ) : signals.map((s) => {
           const urgency = getUrgency(s);
           const path    = s.dominant_path ?? s.directional_thesis ?? null;
+          const isLive  = s.signal_state === "act_now" || s.is_featured;
           return (
-            <div key={s.id} className="sg-dominant-card">
+            <div key={s.id} className={`sg-dominant-card${isLive ? " sg-dominant-card--live" : ""}`}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap" as const }}>
                   {s.signal_state && <StateBadge state={s.signal_state} />}
@@ -937,7 +941,7 @@ function OperatorMovesQueue({ signals }: { signals: V2Signal[] }) {
           <p style={{ fontSize: 12, color: CE_MUTED }}>No operator moves available.</p>
         ) : moves.map(({ move, force }, i) => (
           <div key={i} className="sg-move-item">
-            <span style={{ fontSize: 12, color: GOLD, flexShrink: 0 }}>→</span>
+            <span className="sg-move-arrow">→</span>
             <div>
               <p style={{ fontSize: 11.5, color: "#C5D2E0", margin: "0 0 3px", lineHeight: 1.55 }}>
                 {move}
@@ -1118,6 +1122,7 @@ function SignalsDashboard({
       }}
     >
       <StarField />
+      <GridOverlay />
 
       <style>{`
         html { scroll-behavior: smooth; }
@@ -1125,7 +1130,11 @@ function SignalsDashboard({
         /* ── Keyframes ── */
         @keyframes sgPulseAct {
           0%, 100% { box-shadow: none; }
-          50%       { box-shadow: 0 0 10px rgba(201,169,97,0.38); }
+          50%       { box-shadow: 0 0 10px rgba(197,164,110,0.42); }
+        }
+        @keyframes sgCyanPulse {
+          0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 5px rgba(0,229,255,0.55); }
+          50%       { opacity: 0.65; transform: scale(1.18); box-shadow: 0 0 10px rgba(0,229,255,0.85); }
         }
         @keyframes sgStarW {
           0%, 100% { opacity: 0.55; }
@@ -1173,7 +1182,7 @@ function SignalsDashboard({
           top: 0;
           height: 100vh;
           overflow-y: auto;
-          background: rgba(1,3,8,0.97);
+          background: rgba(1,3,8,0.98);
           border-right: 1px solid rgba(14,26,46,0.92);
           display: flex;
           flex-direction: column;
@@ -1191,7 +1200,7 @@ function SignalsDashboard({
           font-size: 9px;
           font-weight: 700;
           letter-spacing: 0.28em;
-          color: rgba(46,62,82,0.8);
+          color: rgba(46,62,82,0.75);
           padding: 14px 20px 6px;
           margin: 0;
           flex-shrink: 0;
@@ -1207,13 +1216,13 @@ function SignalsDashboard({
           align-items: center;
           gap: 10px;
           padding: 9px 12px;
-          border-radius: 5px;
+          border-radius: 3px;
           color: rgba(90,110,135,0.75);
           font-size: 12px;
           font-weight: 500;
           text-decoration: none;
           border-left: 2px solid transparent;
-          transition: color 160ms, background 160ms;
+          transition: color 160ms, background 160ms, border-color 140ms;
           margin-bottom: 1px;
           position: relative;
         }
@@ -1221,7 +1230,7 @@ function SignalsDashboard({
         .sg-nav-item--active {
           color: #EEF3FA;
           background: rgba(10,20,38,0.9);
-          border-left-color: #C9A961;
+          border-left-color: #C5A46E;
         }
         .sg-sidebar-footer {
           padding: 14px 20px;
@@ -1256,10 +1265,10 @@ function SignalsDashboard({
           justify-content: space-between;
           padding: 0 20px;
           height: 52px;
-          background: rgba(2,6,12,0.88);
-          border-bottom: 1px solid rgba(14,26,46,0.88);
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
+          background: rgba(1,4,10,0.92);
+          border-bottom: 1px solid rgba(14,26,46,0.92);
+          backdrop-filter: blur(18px);
+          -webkit-backdrop-filter: blur(18px);
           flex-shrink: 0;
         }
         .sg-header-left {
@@ -1272,41 +1281,49 @@ function SignalsDashboard({
           font-size: 12px;
           font-weight: 700;
           color: #EEF3FA;
-          letter-spacing: 0.14em;
+          letter-spacing: 0.16em;
         }
-        .sg-header-sep { color: rgba(46,62,82,0.7); }
+        .sg-header-sep { color: rgba(46,62,82,0.6); }
         .sg-header-cycle { font-size: 11px; color: #7A8DA6; letter-spacing: 0.05em; }
         .sg-live-indicator {
           display: flex;
           align-items: center;
-          gap: 5px;
+          gap: 6px;
+          padding: 3px 8px;
+          border: 1px solid rgba(0,229,255,0.18);
+          border-radius: 2px;
+          background: rgba(0,229,255,0.04);
         }
         .sg-live-dot {
           display: inline-block;
           width: 5px;
           height: 5px;
           border-radius: 50%;
-          background: #4ADE80;
-          box-shadow: 0 0 6px rgba(74,222,128,0.6);
+          background: #00E5FF;
+          box-shadow: 0 0 6px rgba(0,229,255,0.70);
+          animation: sgCyanPulse 2.4s ease-in-out infinite;
+          flex-shrink: 0;
         }
         .sg-live-label {
           font-size: 9px;
           font-weight: 700;
-          color: #4ADE80;
-          letter-spacing: 0.16em;
+          color: #00E5FF;
+          letter-spacing: 0.22em;
+          opacity: 0.85;
         }
         .sg-header-sub {
           font-size: 11px;
-          color: rgba(46,62,82,0.9);
+          color: rgba(46,62,82,0.85);
           margin: 0;
           white-space: nowrap;
+          letter-spacing: 0.02em;
         }
 
         /* ── KPI strip ── */
         .sg-kpi-strip {
           display: flex;
-          border-bottom: 1px solid rgba(14,26,46,0.88);
-          background: rgba(2,5,12,0.55);
+          border-bottom: 1px solid rgba(14,26,46,0.92);
+          background: rgba(1,4,10,0.60);
           flex-shrink: 0;
         }
         .sg-kpi {
@@ -1316,14 +1333,18 @@ function SignalsDashboard({
           display: flex;
           flex-direction: column;
           gap: 4px;
+          transition: background 180ms;
+          cursor: default;
         }
         .sg-kpi:last-child { border-right: none; }
+        .sg-kpi:hover { background: rgba(5,12,24,0.70); }
         .sg-kpi-label {
           font-size: 9px;
           font-weight: 700;
-          letter-spacing: 0.24em;
+          letter-spacing: 0.26em;
           text-transform: uppercase;
-          color: #3A4D62;
+          color: #334458;
+          font-variant-numeric: tabular-nums;
         }
         .sg-kpi-value {
           font-size: 20px;
@@ -1331,8 +1352,9 @@ function SignalsDashboard({
           color: #EEF3FA;
           letter-spacing: -0.01em;
           line-height: 1;
+          font-variant-numeric: tabular-nums;
         }
-        .sg-kpi-gold { color: #C9A961; }
+        .sg-kpi-gold { color: #C5A46E; }
 
         /* ── Grid ── */
         .sg-scrollarea { flex: 1; padding: 14px; }
@@ -1352,32 +1374,42 @@ function SignalsDashboard({
 
         /* ── Panel base ── */
         .sg-panel {
-          background: rgba(3,7,16,0.82);
-          border: 1px solid rgba(14,26,46,0.90);
-          border-radius: 8px;
+          background: rgba(3,7,16,0.85);
+          border: 1px solid rgba(14,26,46,0.92);
+          border-radius: 4px;
           overflow: hidden;
           display: flex;
           flex-direction: column;
+          transition: border-color 220ms ease, box-shadow 220ms ease;
         }
+        .sg-panel:hover { border-color: rgba(197,164,110,0.22); }
+
+        /* Gold-accent variant: Featured Force */
+        .sg-panel--gold {
+          border-left: 3px solid rgba(197,164,110,0.55);
+          border-radius: 0 4px 4px 0;
+        }
+        .sg-panel--gold:hover { border-left-color: rgba(197,164,110,0.85); }
+
         .sg-panel-hdr {
           display: flex;
           align-items: center;
           justify-content: space-between;
           padding: 11px 16px 10px;
-          border-bottom: 1px solid rgba(14,26,46,0.85);
+          border-bottom: 1px solid rgba(14,26,46,0.88);
           flex-shrink: 0;
         }
         .sg-panel-label {
           font-size: 9px;
           font-weight: 700;
-          letter-spacing: 0.30em;
+          letter-spacing: 0.32em;
           text-transform: uppercase;
-          color: #3A4D62;
+          color: #334458;
         }
-        .sg-panel-label--gold { color: rgba(201,169,97,0.60); }
+        .sg-panel-label--gold { color: rgba(197,164,110,0.65); }
         .sg-panel-meta {
           font-size: 9px;
-          color: rgba(46,62,82,0.65);
+          color: rgba(46,62,82,0.60);
           letter-spacing: 0.05em;
         }
         .sg-panel-body { padding: 16px; flex: 1; overflow: auto; }
@@ -1407,14 +1439,14 @@ function SignalsDashboard({
         .sg-dist-row:last-child { border-bottom: none; }
         .sg-dist-track {
           flex: 1;
-          height: 3px;
+          height: 2px;
           background: rgba(14,26,46,0.9);
-          border-radius: 2px;
+          border-radius: 1px;
           overflow: hidden;
         }
         .sg-dist-fill {
           height: 100%;
-          border-radius: 2px;
+          border-radius: 1px;
           transition: width 700ms ease-out;
         }
 
@@ -1430,8 +1462,13 @@ function SignalsDashboard({
           display: flex;
           flex-direction: column;
           gap: 8px;
+          transition: background 150ms;
+          border-left: 2px solid transparent;
         }
         .sg-dominant-card:last-child { border-bottom: none; }
+        .sg-dominant-card:hover { background: rgba(4,10,22,0.60); }
+        .sg-dominant-card--live { border-left-color: rgba(0,229,255,0.38); }
+        .sg-dominant-card--live:hover { border-left-color: rgba(0,229,255,0.70); }
 
         /* ── Operator moves ── */
         .sg-moves-body {
@@ -1445,8 +1482,24 @@ function SignalsDashboard({
           align-items: flex-start;
           padding: 11px 16px;
           border-bottom: 1px solid rgba(14,26,46,0.6);
+          transition: background 150ms;
         }
         .sg-move-item:last-child { border-bottom: none; }
+        .sg-move-item:hover { background: rgba(4,10,22,0.60); }
+        .sg-move-arrow {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 16px;
+          height: 16px;
+          border-radius: 2px;
+          background: rgba(197,164,110,0.10);
+          border: 1px solid rgba(197,164,110,0.22);
+          color: #C5A46E;
+          font-size: 10px;
+          flex-shrink: 0;
+          margin-top: 1px;
+        }
 
         /* ── Force register table ── */
         .sg-table-wrap { overflow-x: auto; overflow-y: auto; max-height: 360px; }
@@ -1460,16 +1513,16 @@ function SignalsDashboard({
           font-weight: 700;
           letter-spacing: 0.30em;
           text-transform: uppercase;
-          color: #3A4D62;
-          background: rgba(2,5,10,0.97);
+          color: #334458;
+          background: rgba(2,5,10,0.98);
           white-space: nowrap;
-          border-bottom: 1px solid rgba(14,26,46,0.92);
+          border-bottom: 1px solid rgba(14,26,46,0.95);
         }
         .sg-tr {
           background: rgba(2,5,10,0.45);
-          transition: background 150ms ease;
+          transition: background 140ms ease;
         }
-        .sg-tr:hover { background: rgba(5,13,26,0.85); }
+        .sg-tr:hover { background: rgba(5,13,26,0.88); }
         .sg-td { padding: 12px 16px; vertical-align: top; }
         .sg-td-force { color: #EEF3FA; font-weight: 600; font-size: 13px; white-space: nowrap; }
         .sg-td-path  { color: #7A8DA6; max-width: 220px; font-size: 12px; line-height: 1.5; }
@@ -1484,7 +1537,9 @@ function SignalsDashboard({
           display: flex;
           gap: 12px;
           padding: 14px 16px;
+          transition: background 160ms;
         }
+        .sg-evidence-tile:hover { background: rgba(4,10,22,0.70); }
         @media (max-width: 860px) {
           .sg-evidence-strip { grid-template-columns: 1fr 1fr; }
           .sg-evidence-tile:nth-child(odd)  { border-right: 1px solid rgba(14,26,46,0.7) !important; }
@@ -1540,7 +1595,7 @@ function SignalsDashboard({
             margin-bottom: 0;
           }
           .sg-nav-item--active {
-            border-bottom-color: #C9A961;
+            border-bottom-color: #C5A46E;
             background: rgba(10,20,38,0.6);
           }
           .sg-sidebar-footer { display: none; }
@@ -1557,6 +1612,7 @@ function SignalsDashboard({
           .sg-star-w, .sg-star-b, .sg-star-p { animation: none !important; opacity: 0.4; }
           .sg-layer-w, .sg-layer-b { animation: none; }
           .sg-dist-fill { transition: none; }
+          .sg-live-dot { animation: none; box-shadow: none; }
         }
       `}</style>
 
