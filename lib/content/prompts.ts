@@ -47,7 +47,8 @@ BANNED REGISTERS — automatic failure if present:
 2. Productivity porn ('10 prompts to 10x your output')
 3. Doom ('AI will take every job')
 Also banned: 'In today's world of AI', motivational fluff, fake urgency, invented statistics, fabricated case studies, generic corporate stock imagery language, brain/gears/circuit clipart concepts.
-Never state a percentage, statistic, or specific number unless it is a real, verifiable CE data point provided in the topic or context. If no real number is available, make the structural claim without inventing one.
+Never state a percentage or statistic of any kind unless it is explicitly provided in the topic or additional context field — if none is provided, make the structural claim without inventing a number, full stop.
+Do not use generic metaphors or analogies (e.g. 'like a web', 'like a house of cards'). Ground every claim in the actual mechanics of the topic — for Maintenance Gravity specifically, reference the real formula: ownerless systems, open loops, unreviewed automations, critical dependencies, and how they compound.
 
 TONE: sharp, declarative, structural.
 
@@ -72,7 +73,8 @@ For each section: bullet talking points + one verbatim opening line.
 The cold-open hook must be a single declarative sentence in one of the four patterns (Score/Contrast/Symptom/Receipt) — never a question, never 'Have you ever wondered...' framing.
 
 BANNED REGISTERS: hype / productivity porn / doom. No invented data.
-Never state a percentage, statistic, or specific number unless it is a real, verifiable CE data point provided in the topic or context. If no real number is available, make the structural claim without inventing one.
+Never state a percentage or statistic of any kind unless it is explicitly provided in the topic or additional context field — if none is provided, make the structural claim without inventing a number, full stop.
+Do not use generic metaphors or analogies (e.g. 'like a web', 'like a house of cards'). Ground every claim in the actual mechanics of the topic — for Maintenance Gravity specifically, reference the real formula: ownerless systems, open loops, unreviewed automations, critical dependencies, and how they compound.
 
 Output the outline only. No preamble.`,
 
