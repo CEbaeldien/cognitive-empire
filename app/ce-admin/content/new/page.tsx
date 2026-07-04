@@ -30,8 +30,14 @@ type Row = {
   format: Format;
   title:  string | null;
   output: string | null;
-  status: string;
+  status: string; // DB status (always 'draft'); use effectiveStatus() for UI
 };
+
+function effectiveStatus(r: Row): "generating" | "draft" | "error" {
+  if (r.output === null && r.title === null) return "generating";
+  if (r.output?.startsWith("ERROR:"))        return "error";
+  return "draft";
+}
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -129,7 +135,7 @@ export default function ContentNewPage() {
         const res = await fetch(`/api/content/status?ids=${ids.join(",")}`);
         const json = await res.json() as { rows: Row[] };
         setRows(json.rows);
-        const allDone = json.rows.every(r => r.status === "draft" || r.status === "error");
+        const allDone = json.rows.every(r => effectiveStatus(r) !== "generating");
         if (allDone) {
           clearInterval(pollRef.current!);
           pollRef.current = null;
@@ -170,8 +176,8 @@ export default function ContentNewPage() {
     }
   }
 
-  const doneCount      = rows.filter(r => r.status === "draft").length;
-  const generatingCount = rows.filter(r => r.status === "generating").length;
+  const doneCount       = rows.filter(r => effectiveStatus(r) === "draft").length;
+  const generatingCount = rows.filter(r => effectiveStatus(r) === "generating").length;
 
   return (
     <div style={{ minHeight: "100vh", background: C.bg, color: C.text, padding: "40px 32px" }}>
@@ -283,7 +289,7 @@ export default function ContentNewPage() {
                     }}>
                       {r.format.replace(/_/g, " ").toUpperCase()}
                     </span>
-                    <StatusChip status={r.status} />
+                    <StatusChip status={effectiveStatus(r)} />
                     <span style={{ fontSize: 10, color: C.dim, marginLeft: "auto" }}>
                       {r.id.slice(0, 8)}
                     </span>
@@ -293,7 +299,7 @@ export default function ContentNewPage() {
                       {r.title}
                     </p>
                   )}
-                  {r.status === "generating" && !r.title && (
+                  {effectiveStatus(r) === "generating" && (
                     <p style={{ fontSize: 11, color: C.muted, margin: "6px 0 0" }}>
                       Generating content…
                     </p>

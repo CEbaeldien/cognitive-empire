@@ -15,6 +15,25 @@ function getServiceClient() {
   );
 }
 
+async function patchBrief(id: string, fields: Record<string, string | null>) {
+  const url  = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/content_briefs?id=eq.${id}`;
+  const key  = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+  const resp = await fetch(url, {
+    method:  "PATCH",
+    headers: {
+      "Content-Type":  "application/json",
+      "apikey":        key,
+      "Authorization": `Bearer ${key}`,
+      "Prefer":        "return=minimal",
+    },
+    body: JSON.stringify(fields),
+  });
+  if (!resp.ok) {
+    const txt = await resp.text();
+    throw new Error(`PATCH ${resp.status}: ${txt.slice(0, 200)}`);
+  }
+}
+
 export async function POST(req: NextRequest) {
   let body: { id?: string };
   try {
@@ -26,8 +45,7 @@ export async function POST(req: NextRequest) {
   const { id } = body;
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
-  // Respond immediately so the calling after() in /generate can complete quickly.
-  // The actual OpenAI call runs in this route's own after() — up to 30s on Edge.
+  // Respond immediately — actual work runs in after() within the 30s Edge window.
   after(async () => {
     const sb = getServiceClient();
 
@@ -47,30 +65,19 @@ export async function POST(req: NextRequest) {
     try {
       const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
       const completion = await openai.chat.completions.create({
-        model:      "gpt-4o-mini",
+        model:       "gpt-4o-mini",
         temperature: 0.7,
         max_tokens:  TOKEN_LIMITS[format],
-        messages:   [{ role: "system", content: buildPrompt(format, topic, notes ?? "") }],
+        messages:    [{ role: "system", content: buildPrompt(format, topic, notes ?? "") }],
       });
 
       const raw = completion.choices[0]?.message?.content ?? "";
       const { title, output } = parseTitleAndOutput(raw);
 
-      await sb.rpc("update_content_brief", {
-        p_id:     id,
-        p_title:  title,
-        p_output: output,
-        p_status: "draft",
-      });
+      await patchBrief(id, { title, output });
     } catch (err) {
       console.error(`Worker [${id}]: generation error`, (err as Error).message);
-      const updateErr = await sb.rpc("update_content_brief", {
-        p_id:     id,
-        p_title:  null,
-        p_output: `Error: ${(err as Error).message}`,
-        p_status: "error",
-      });
-      if (updateErr.error) console.error(`Worker [${id}]: status update failed`, updateErr.error.message);
+      await patchBrief(id, { output: `ERROR: ${(err as Error).message}` }).catch(() => {});
     }
   });
 

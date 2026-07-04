@@ -48,12 +48,11 @@ export async function POST(req: NextRequest) {
         p_format: fmt,
         p_title:  null,
         p_output: null,
-        p_status: "generating",
       })
     )
   );
 
-  const rows: { id: string; format: Format; status: string }[] = [];
+  const rows: { id: string; format: Format }[] = [];
   const workerIds: string[] = [];
 
   for (let i = 0; i < insertResults.length; i++) {
@@ -63,7 +62,7 @@ export async function POST(req: NextRequest) {
       continue;
     }
     const row = data as { id: string };
-    rows.push({ id: row.id, format: validFormats[i], status: "generating" });
+    rows.push({ id: row.id, format: validFormats[i] });
     workerIds.push(row.id);
   }
 
