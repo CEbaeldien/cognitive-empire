@@ -4,7 +4,7 @@ export const VALID_FORMATS = new Set<Format>(["short", "longform", "thumbnail_br
 
 export const TOKEN_LIMITS: Record<Format, number> = {
   short:           800,
-  longform:        1500,
+  longform:        2000,
   linkedin:        500,
   thumbnail_brief: 300,
 };

@@ -110,9 +110,10 @@ function ExpandedOutput({ row }: { row: Row }) {
 }
 
 export default function ContentNewPage() {
-  const [topic,   setTopic]   = useState("");
-  const [notes,   setNotes]   = useState("");
-  const [formats, setFormats] = useState<Set<Format>>(new Set(["short"]));
+  const [topic,          setTopic]          = useState("");
+  const [notes,          setNotes]          = useState("");
+  const [formats,        setFormats]        = useState<Set<Format>>(new Set(["short"]));
+  const [buildTheEmpire, setBuildTheEmpire] = useState(false);
   const [loading, setLoading] = useState(false);
   const [rows,    setRows]    = useState<Row[]>([]);
   const [err,     setErr]     = useState<string | null>(null);
@@ -149,6 +150,7 @@ export default function ContentNewPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!topic.trim()) { setErr("Topic is required."); return; }
+    if (buildTheEmpire && !notes.trim()) { setErr("Build the Empire requires real context in the Additional Context field."); return; }
     if (formats.size === 0) { setErr("Select at least one format."); return; }
     setErr(null);
     setLoading(true);
@@ -204,14 +206,45 @@ export default function ContentNewPage() {
             />
           </Field>
 
-          <Field label="Additional context (optional)">
+          <Field label={buildTheEmpire ? "Additional Context *" : "Additional context (optional)"}>
             <textarea
-              style={inputStyle(true)} value={notes}
+              style={{
+                ...inputStyle(true),
+                borderColor: buildTheEmpire ? "rgba(197,164,110,0.50)" : undefined,
+              }}
+              value={notes}
               onChange={e => setNotes(e.target.value)}
-              placeholder="Recent CE data, session outputs, convergence results, angle focus..."
-              rows={3}
+              placeholder={buildTheEmpire
+                ? "Required: what did you actually build, what broke, what decision changed, what ships next? Real facts only — this format never fabricates."
+                : "Recent CE data, session outputs, convergence results, angle focus..."}
+              rows={buildTheEmpire ? 5 : 3}
             />
           </Field>
+
+          {/* Build the Empire safeguard */}
+          <label style={{
+            display: "flex", alignItems: "flex-start", gap: 12,
+            padding: "12px 14px", borderRadius: 4, cursor: "pointer",
+            background: buildTheEmpire ? "rgba(197,164,110,0.06)" : "rgba(2,5,12,0.60)",
+            border: `1px solid ${buildTheEmpire ? "rgba(197,164,110,0.40)" : "rgba(14,26,46,0.70)"}`,
+            transition: "border-color 160ms, background 160ms",
+          }}>
+            <input
+              type="checkbox"
+              checked={buildTheEmpire}
+              onChange={e => setBuildTheEmpire(e.target.checked)}
+              style={{ accentColor: C.gold, width: 14, height: 14, flexShrink: 0, marginTop: 1 }}
+            />
+            <div>
+              <span style={{ fontSize: 12, fontWeight: 600, color: buildTheEmpire ? C.gold : C.muted }}>
+                This is a Build the Empire post
+              </span>
+              <p style={{ fontSize: 11, color: C.dim, margin: "3px 0 0", lineHeight: 1.5 }}>
+                Requires real context — locks Additional Context as required and blocks submit without it.
+                Signal Brief, Operator Law, Maintenance Gravity Clinic, and MMCP Sessions generate from doctrine alone.
+              </p>
+            </div>
+          </label>
 
           <Field label="Formats">
             <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 2 }}>
