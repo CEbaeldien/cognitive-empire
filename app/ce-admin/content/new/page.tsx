@@ -73,14 +73,19 @@ export default function ContentNewPage() {
     setLoading(true);
     setBriefs([]);
     try {
-      const res = await fetch("/api/content/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic: topic.trim(), notes: notes.trim() || undefined, formats: [...formats] }),
-      });
-      const json = await res.json();
-      if (!res.ok) { setErr(json.error ?? "Generation failed."); return; }
-      setBriefs(json.briefs ?? []);
+      // One request per format in parallel — each server call has one OpenAI call (fits Vercel 10s).
+      const results = await Promise.all(
+        [...formats].map(fmt =>
+          fetch("/api/content/generate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ topic: topic.trim(), notes: notes.trim() || undefined, format: fmt }),
+          }).then(r => r.json())
+        )
+      );
+      const errors = results.filter(r => r.error).map(r => r.error as string);
+      if (errors.length === formats.size) { setErr(errors[0]); return; }
+      setBriefs(results.filter(r => r.brief).map(r => r.brief as Brief));
     } catch {
       setErr("Network error.");
     } finally {

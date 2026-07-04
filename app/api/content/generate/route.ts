@@ -120,32 +120,30 @@ Then write the content starting on the very next line.`;
 // ── POST handler ──────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
-  let body: { topic?: string; notes?: string; formats?: string[] };
+  let body: { topic?: string; notes?: string; format?: string };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: "invalid JSON" }, { status: 400 });
   }
 
-  const { topic, notes, formats } = body;
+  const { topic, notes, format } = body;
 
   if (!topic?.trim()) {
     return NextResponse.json({ error: "topic is required" }, { status: 400 });
   }
-
-  const validFormats = (formats ?? []).filter((f): f is Format => VALID_FORMATS.has(f as Format));
-  if (validFormats.length === 0) {
-    return NextResponse.json({ error: "at least one valid format required" }, { status: 400 });
+  if (!format || !VALID_FORMATS.has(format as Format)) {
+    return NextResponse.json({ error: "valid format required (short|longform|thumbnail_brief|linkedin)" }, { status: 400 });
   }
 
-  const openai     = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-  const sb         = getServiceClient();
-  const notesText  = notes?.trim() || "none provided";
-  const topicText  = topic.trim();
+  const openai    = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  const sb        = getServiceClient();
+  const notesText = notes?.trim() || "none provided";
+  const topicText = topic.trim();
 
-  const generated = await Promise.all(
-    validFormats.map(async (format) => {
-      const systemContent = PROMPTS[format]
+  const generated = await (async () => {
+    {
+      const systemContent = PROMPTS[format as Format]
         .replace("{topic}", topicText)
         .replace("{notes}", notesText)
         + TITLE_INSTRUCTION;
@@ -153,7 +151,7 @@ export async function POST(req: NextRequest) {
       const completion = await openai.chat.completions.create({
         model: "gpt-4o-mini",
         temperature: 0.7,
-        max_tokens: 700,
+        max_tokens: 250,
         messages: [{ role: "system", content: systemContent }],
       });
 
@@ -175,28 +173,27 @@ export async function POST(req: NextRequest) {
       while (outputStart < lines.length && lines[outputStart].trim() === "") outputStart++;
 
       const output = lines.slice(outputStart).join("\n").trim();
-      return { format, title: title || null, output };
-    })
-  );
+      return { format: format as Format, title: title || null, output };
+    }
+  })();
 
   const { data, error } = await sb
     .from("content_briefs")
-    .insert(
-      generated.map((g) => ({
-        topic:  topicText,
-        notes:  notesText !== "none provided" ? notesText : null,
-        format: g.format,
-        title:  g.title,
-        output: g.output,
-        status: "draft",
-      }))
-    )
-    .select("id, topic, format, title, status, created_at");
+    .insert({
+      topic:  topicText,
+      notes:  notesText !== "none provided" ? notesText : null,
+      format: generated.format,
+      title:  generated.title,
+      output: generated.output,
+      status: "draft",
+    })
+    .select("id, topic, format, title, status, created_at")
+    .single();
 
   if (error) {
     console.error("content_briefs insert:", error);
     return NextResponse.json({ error: "db write failed", detail: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ briefs: data }, { status: 201 });
+  return NextResponse.json({ brief: data }, { status: 201 });
 }
