@@ -27,6 +27,7 @@ const FORMAT_OPTIONS: { value: Format; label: string; sub: string }[] = [
 ];
 
 type Brief = { id: string; topic: string; format: string; title: string | null; status: string; created_at: string };
+type FormatResult = { fmt: Format; brief?: Brief; error?: string };
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -54,7 +55,7 @@ export default function ContentNewPage() {
   const [notes,    setNotes]    = useState("");
   const [formats,  setFormats]  = useState<Set<Format>>(new Set(["short"]));
   const [loading,  setLoading]  = useState(false);
-  const [briefs,   setBriefs]   = useState<Brief[]>([]);
+  const [results,  setResults]  = useState<FormatResult[]>([]);
   const [err,      setErr]      = useState<string | null>(null);
 
   function toggleFormat(f: Format) {
@@ -71,21 +72,27 @@ export default function ContentNewPage() {
     if (formats.size === 0) { setErr("Select at least one format."); return; }
     setErr(null);
     setLoading(true);
-    setBriefs([]);
+    setResults([]);
     try {
-      // One request per format in parallel — each server call has one OpenAI call (fits Vercel 10s).
-      const results = await Promise.all(
-        [...formats].map(fmt =>
-          fetch("/api/content/generate", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ topic: topic.trim(), notes: notes.trim() || undefined, format: fmt }),
-          }).then(r => r.json())
-        )
+      // One request per format in parallel — each server call has one OpenAI call (fits Vercel 10s wall).
+      const settled = await Promise.all(
+        [...formats].map(async (fmt) => {
+          try {
+            const r = await fetch("/api/content/generate", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ topic: topic.trim(), notes: notes.trim() || undefined, format: fmt }),
+            });
+            const d = await r.json();
+            return d.brief ? { fmt, brief: d.brief as Brief } : { fmt, error: d.error ?? `HTTP ${r.status}` };
+          } catch {
+            return { fmt, error: "network error" };
+          }
+        })
       );
-      const errors = results.filter(r => r.error).map(r => r.error as string);
-      if (errors.length === formats.size) { setErr(errors[0]); return; }
-      setBriefs(results.filter(r => r.brief).map(r => r.brief as Brief));
+      setResults(settled);
+      const allFailed = settled.every(r => r.error);
+      if (allFailed) setErr(settled[0].error ?? "All formats failed.");
     } catch {
       setErr("Network error.");
     } finally {
@@ -188,50 +195,60 @@ export default function ContentNewPage() {
         </form>
 
         {/* Results */}
-        {briefs.length > 0 && (
+        {results.length > 0 && (
           <div style={{ marginTop: 40 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
               <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.28em", textTransform: "uppercase", color: C.dim, margin: 0 }}>
-                Queue — {briefs.length} draft{briefs.length !== 1 ? "s" : ""} added
+                Queue — {results.filter(r => r.brief).length}/{results.length} saved
               </p>
               <div style={{ flex: 1, height: 1, background: C.border }} />
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {briefs.map(b => (
+              {results.map(r => (
                 <div
-                  key={b.id}
+                  key={r.fmt}
                   style={{
                     padding: "14px 16px", borderRadius: 4,
-                    background: C.panel, border: `1px solid ${C.border}`,
+                    background: C.panel,
+                    border: `1px solid ${r.error ? "rgba(239,68,68,0.30)" : C.border}`,
                   }}
                 >
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: r.brief?.title ? 6 : 0 }}>
                     <span style={{
                       fontSize: 9, fontWeight: 700, letterSpacing: "0.20em",
                       background: "rgba(197,164,110,0.10)", border: `1px solid rgba(197,164,110,0.25)`,
                       color: C.gold, padding: "2px 8px", borderRadius: 3,
                     }}>
-                      {b.format.replace("_", " ").toUpperCase()}
+                      {r.fmt.replace(/_/g, " ").toUpperCase()}
                     </span>
-                    <span style={{
-                      fontSize: 9, fontWeight: 700, letterSpacing: "0.14em",
-                      background: "rgba(0,229,255,0.07)", border: `1px solid rgba(0,229,255,0.18)`,
-                      color: "#00E5FF", padding: "2px 8px", borderRadius: 3,
-                    }}>
-                      {b.status.toUpperCase()}
-                    </span>
-                    <span style={{ fontSize: 10, color: C.dim, marginLeft: "auto" }}>
-                      {b.id.slice(0, 8)}
-                    </span>
+                    {r.brief && (
+                      <span style={{
+                        fontSize: 9, fontWeight: 700, letterSpacing: "0.14em",
+                        background: "rgba(0,229,255,0.07)", border: `1px solid rgba(0,229,255,0.18)`,
+                        color: "#00E5FF", padding: "2px 8px", borderRadius: 3,
+                      }}>DRAFT</span>
+                    )}
+                    {r.error && (
+                      <span style={{
+                        fontSize: 9, fontWeight: 700, letterSpacing: "0.14em",
+                        background: "rgba(239,68,68,0.10)", border: `1px solid rgba(239,68,68,0.28)`,
+                        color: C.danger, padding: "2px 8px", borderRadius: 3,
+                      }}>FAILED</span>
+                    )}
+                    {r.brief && (
+                      <span style={{ fontSize: 10, color: C.dim, marginLeft: "auto" }}>
+                        {r.brief.id.slice(0, 8)}
+                      </span>
+                    )}
                   </div>
-                  {b.title && (
-                    <p style={{ fontSize: 13, fontWeight: 600, color: C.text, margin: "0 0 4px" }}>
-                      {b.title}
+                  {r.brief?.title && (
+                    <p style={{ fontSize: 13, fontWeight: 600, color: C.text, margin: "6px 0 0" }}>
+                      {r.brief.title}
                     </p>
                   )}
-                  <p style={{ fontSize: 11, color: C.dim, margin: 0 }}>
-                    {new Date(b.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                  </p>
+                  {r.error && (
+                    <p style={{ fontSize: 11, color: C.danger, margin: "6px 0 0" }}>{r.error}</p>
+                  )}
                 </div>
               ))}
             </div>
