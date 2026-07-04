@@ -177,18 +177,13 @@ export async function POST(req: NextRequest) {
     }
   })();
 
-  const { data, error } = await sb
-    .from("content_briefs")
-    .insert({
-      topic:  topicText,
-      notes:  notesText !== "none provided" ? notesText : null,
-      format: generated.format,
-      title:  generated.title,
-      output: generated.output,
-      status: "draft",
-    })
-    .select("id, topic, format, title, status, created_at")
-    .single();
+  const { data, error } = await sb.rpc("insert_content_brief", {
+    p_topic:  topicText,
+    p_notes:  notesText !== "none provided" ? notesText : null,
+    p_format: generated.format,
+    p_title:  generated.title,
+    p_output: generated.output,
+  });
 
   if (error) {
     console.error("content_briefs insert:", error);
