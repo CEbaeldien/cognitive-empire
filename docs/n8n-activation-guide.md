@@ -12,7 +12,7 @@ requirements, and how to do a manual test run of each.
 - The CE Signals app deployed at `https://cognitiveempire.com`
 - Supabase service role key
 - OpenAI API key
-- `MESODMA_API_KEY` value from `.env.local` (currently: `ce-mesodma-2026`)
+- `MESODMA_API_KEY` value — see `.env.local` (never commit the literal value)
 
 ---
 
@@ -22,12 +22,14 @@ Before activating any workflow, add these credentials in the n8n UI under **Sett
 
 | Credential Name | Type | Value |
 |---|---|---|
-| `CE Supabase Service Key` | HTTP Header Auth | Key: `apikey`, Value: `sb_secret_nGFx1BL5M8sreweA_…` |
-| `CE Mesodma Bearer` | HTTP Header Auth | Key: `Authorization`, Value: `Bearer ce-mesodma-2026` |
+| `CE Supabase Service Key` | HTTP Header Auth | Key: `apikey`, Value: see `SUPABASE_SERVICE_ROLE_KEY` in `.env.local` |
+| `CE Mesodma Bearer` | HTTP Header Auth | Key: `Authorization`, Value: `Bearer ` + `MESODMA_API_KEY` from `.env.local` |
 
 > The Decay, Review Alert, Source Health, Convergence Scanner, and Stale Cleanup workflows
-> call Supabase directly via HTTP Request nodes. Each has the service role key hardcoded —
-> replace with the credential reference after import so the key isn't exposed in workflow JSON.
+> call Supabase directly via HTTP Request nodes. Each ships with a `{{SUPABASE_SERVICE_KEY}}`
+> placeholder — replace it with the credential reference above after import. Never paste the
+> literal key into a node's `value` field; this repo is public and workflow JSON gets exported
+> verbatim with whatever is typed there.
 
 ---
 
@@ -46,7 +48,7 @@ runs GPT-4o-mini extraction, and writes extracted items to `raw_items`.
 **Steps to activate:**
 1. In n8n, go to Workflows → Import → paste `n8n/workflows/ce-signals-ingestion.json`
 2. Confirm the HTTP Request node targets `https://cognitiveempire.com/api/mesodma/ingest`
-3. Confirm the `Authorization` header is `Bearer ce-mesodma-2026`
+3. Confirm the `Authorization` header uses the `CE Mesodma Bearer` credential (not a literal value)
 4. Click **Active** toggle
 
 **Manual test:** Click **Execute Workflow** (without activating). The response body should
@@ -145,7 +147,7 @@ To run ingestion manually (e.g., before n8n is configured):
 
 ```bash
 curl -X POST https://cognitiveempire.com/api/mesodma/ingest \
-  -H "Authorization: Bearer ce-mesodma-2026" \
+  -H "Authorization: Bearer $MESODMA_API_KEY" \
   -H "Content-Type: application/json"
 ```
 
@@ -167,6 +169,7 @@ Or use the **Run Ingest Now** button in the Mesodma Cockpit at `/ce-admin/mesodm
    potentially creating duplicates if the same `external_id` appears under a different
    `source_id`. Monitor the first ingestion run carefully.
 
-3. **n8n workflows hardcode the service role key** in HTTP Request node headers. After
-   import, replace the hardcoded values with n8n Credential references to avoid exposing
-   the key in workflow JSON exports.
+3. ~~n8n workflows hardcode the service role key in HTTP Request node headers.~~ Fixed
+   2026-07-07 — workflows now ship with `{{SUPABASE_SERVICE_KEY}}` / `{{MESODMA_API_KEY}}`
+   placeholders. After import, replace each placeholder with the matching n8n Credential
+   reference (see `n8n/workflows/README.md`) rather than pasting a literal value.

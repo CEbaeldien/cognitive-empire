@@ -27,11 +27,11 @@
           "parameters": [
             {
               "name": "apikey",
-              "value": "sb_secret_nGFx1BL5M8sreweA_GZtCQ_usvvMF0S"
+              "value": "{{SUPABASE_SERVICE_KEY}}"
             },
             {
               "name": "Authorization",
-              "value": "Bearer sb_secret_nGFx1BL5M8sreweA_GZtCQ_usvvMF0S"
+              "value": "Bearer {{SUPABASE_SERVICE_KEY}}"
             }
           ]
         },
@@ -52,11 +52,11 @@
           "parameters": [
             {
               "name": "apikey",
-              "value": "sb_secret_nGFx1BL5M8sreweA_GZtCQ_usvvMF0S"
+              "value": "{{SUPABASE_SERVICE_KEY}}"
             },
             {
               "name": "Authorization",
-              "value": "Bearer sb_secret_nGFx1BL5M8sreweA_GZtCQ_usvvMF0S"
+              "value": "Bearer {{SUPABASE_SERVICE_KEY}}"
             }
           ]
         },
@@ -116,11 +116,11 @@
           "parameters": [
             {
               "name": "apikey",
-              "value": "sb_secret_nGFx1BL5M8sreweA_GZtCQ_usvvMF0S"
+              "value": "{{SUPABASE_SERVICE_KEY}}"
             },
             {
               "name": "Authorization",
-              "value": "Bearer sb_secret_nGFx1BL5M8sreweA_GZtCQ_usvvMF0S"
+              "value": "Bearer {{SUPABASE_SERVICE_KEY}}"
             },
             {
               "name": "Content-Type",

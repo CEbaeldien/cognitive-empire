@@ -29,6 +29,25 @@ MESODMA_API_KEY=             # secret Bearer token for POST /api/mesodma/ingest
 
 Note: `app/home/.env.local` is a stale file with an older Supabase project's credentials — the root `.env.local` is authoritative.
 
+### Credential hygiene
+
+This repo is **public on GitHub**. `.gitignore` covers `.env*` everywhere, but that only protects
+literal env files — it does nothing for secrets typed directly into tracked source or config.
+A service_role key was leaked exactly this way in 2026-05/06: hardcoded into 6 n8n workflow JSON
+exports (`n8n/workflows/*.json`) and two one-off scripts, both committed and pushed to `main`.
+
+- **Never** paste a real API key, service_role key, or bearer token as a literal value into an
+  n8n workflow JSON, a script, a migration, or any other tracked file — including "ephemeral"
+  scripts marked "do not commit." If it's ephemeral, don't `git add` it.
+- n8n workflow exports must use the placeholders `{{SUPABASE_SERVICE_KEY}}` / `{{MESODMA_API_KEY}}`
+  in header `value` fields, resolved to n8n Credential Store entries after import — never a literal.
+  See `n8n/workflows/README.md`.
+- Scripts that need Supabase access read `process.env.SUPABASE_SERVICE_ROLE_KEY` (via `.env.local`
+  or the shell), never a hardcoded string.
+- If a key does leak: rotate it in Supabase immediately, then grep the whole repo (source, docs,
+  n8n exports, scripts) for the old value before assuming rotation alone fixed it — rotation does
+  not remove the old value from git history, so any file still referencing it needs updating too.
+
 ## Architecture
 
 **Next.js 16 App Router** with React 19, TypeScript, Tailwind CSS v4, and Supabase as the only backend.
