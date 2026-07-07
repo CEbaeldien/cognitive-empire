@@ -19,7 +19,6 @@ export async function POST(request: Request) {
   try {
     founder = await requireFounder()
   } catch {
-    // In an API route never redirect — the browser would re-POST to /auth/signin → 405
     return jsonErr('Unauthorized', 401)
   }
 
@@ -32,7 +31,7 @@ export async function POST(request: Request) {
     return jsonErr('Invalid JSON body', 400)
   }
 
-  if (!key) return jsonErr('Claude API key required — add it in Settings.', 400)
+  if (!key) return jsonErr('ChatGPT API key required — add it in Settings.', 400)
   if (!messages.length || messages[messages.length - 1]?.role !== 'user') {
     return jsonErr('Missing user message', 400)
   }
@@ -45,31 +44,28 @@ export async function POST(request: Request) {
 
   const systemPrompt = await buildDrESystemPrompt(supabase, founder.id)
 
-  let anthropicRes: Response
+  let openaiRes: Response
   try {
-    anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
+    openaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'x-api-key': key,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
+        'Authorization': `Bearer ${key}`,
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1024,
+        model: 'gpt-4o',
         stream: true,
-        system: systemPrompt,
-        messages,
+        messages: [{ role: 'system', content: systemPrompt }, ...messages],
       }),
     })
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
-    return jsonErr(`Anthropic fetch failed: ${msg}`, 502)
+    return jsonErr(`OpenAI fetch failed: ${msg}`, 502)
   }
 
-  if (!anthropicRes.ok || !anthropicRes.body) {
-    const errBody = await anthropicRes.text().catch(() => '(no body)')
-    return jsonErr(`Anthropic ${anthropicRes.status} ${anthropicRes.statusText}: ${errBody}`, 502)
+  if (!openaiRes.ok || !openaiRes.body) {
+    const errBody = await openaiRes.text().catch(() => '(no body)')
+    return jsonErr(`OpenAI ${openaiRes.status} ${openaiRes.statusText}: ${errBody}`, 502)
   }
 
   const encoder = new TextEncoder()
@@ -79,7 +75,7 @@ export async function POST(request: Request) {
 
   const stream = new ReadableStream({
     async start(controller) {
-      const reader = anthropicRes.body!.getReader()
+      const reader = openaiRes.body!.getReader()
       let buffer = ''
 
       try {
@@ -97,12 +93,8 @@ export async function POST(request: Request) {
             if (!data || data === '[DONE]') continue
             try {
               const event = JSON.parse(data)
-              if (
-                event.type === 'content_block_delta' &&
-                event.delta?.type === 'text_delta' &&
-                event.delta?.text
-              ) {
-                const text: string = event.delta.text
+              const text: string | undefined = event.choices?.[0]?.delta?.content
+              if (text) {
                 fullResponse += text
                 controller.enqueue(encoder.encode(text))
               }
@@ -117,7 +109,7 @@ export async function POST(request: Request) {
             source_module: 'dr-e',
             risk_level: 'safe',
             status: 'executed',
-            payload: { model: 'claude', messages, response: fullResponse },
+            payload: { model: 'chatgpt', messages, response: fullResponse },
           })
         } catch { /* non-fatal */ }
 

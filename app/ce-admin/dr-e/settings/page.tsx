@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import type { DreGovernanceRule } from "@/types/dr-e";
+import { ApiKeysPanel } from "@/components/dre/ApiKeysPanel";
 
 const C = {
   bg:        "#09091c",
@@ -46,7 +47,9 @@ export default async function SettingsPage() {
 
   return (
     <div style={{ padding: "28px 32px", display: "flex", flexDirection: "column", gap: 28 }}>
-      <div>
+      <ApiKeysPanel />
+
+      <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 24 }}>
         <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.45em", textTransform: "uppercase", color: C.faint, marginBottom: 4 }}>Dr. E · Settings</p>
         <h1 style={{ fontSize: 22, fontWeight: 800, color: C.text, letterSpacing: "-0.02em", margin: 0 }}>Governance Rules</h1>
         <p style={{ fontSize: 12, color: C.faint, marginTop: 4 }}>Defines the operational boundaries of Dr. E. {rules.length} active rules.</p>
