@@ -39,6 +39,38 @@ function effectiveStatus(r: Row): "generating" | "draft" | "error" {
   return "draft";
 }
 
+type ReviewRow = {
+  id:                  string;
+  format:              Format;
+  title:               string | null;
+  output:              string | null;
+  status:              string;
+  created_at:          string;
+  rendered_video_path: string | null;
+  rendered_at:         string | null;
+  render_queued:       boolean;
+  error_note:          string | null;
+};
+
+function reviewStatusMeta(r: ReviewRow): { label: string; bg: string; border: string; color: string } {
+  if (r.status === "rendering") {
+    return { label: "RENDERING…", bg: "rgba(197,164,110,0.07)", border: "rgba(197,164,110,0.25)", color: C.gold };
+  }
+  if (r.status === "rendered") {
+    return { label: "RENDERED", bg: "rgba(74,222,128,0.08)", border: "rgba(74,222,128,0.25)", color: "#4ade80" };
+  }
+  if (r.status === "render_failed") {
+    return { label: "RENDER FAILED", bg: "rgba(239,68,68,0.10)", border: "rgba(239,68,68,0.28)", color: C.danger };
+  }
+  if (r.status === "approved" && r.render_queued) {
+    return { label: "QUEUED FOR RENDER", bg: "rgba(0,229,255,0.07)", border: "rgba(0,229,255,0.18)", color: C.cyan };
+  }
+  if (r.status === "approved") {
+    return { label: "APPROVED", bg: "rgba(0,229,255,0.07)", border: "rgba(0,229,255,0.18)", color: C.cyan };
+  }
+  return { label: r.status.toUpperCase(), bg: "rgba(122,141,166,0.08)", border: "rgba(122,141,166,0.20)", color: C.muted };
+}
+
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -104,6 +136,212 @@ function ExpandedOutput({ row }: { row: Row }) {
         }}>
           {row.output}
         </pre>
+      )}
+    </div>
+  );
+}
+
+function VideoQueueRow({ row, onAction }: { row: ReviewRow; onAction: (id: string, action: "approve" | "render") => void }) {
+  const [busy, setBusy] = useState(false);
+  const meta = reviewStatusMeta(row);
+
+  async function run(action: "approve" | "render") {
+    setBusy(true);
+    try {
+      await onAction(row.id, action);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div style={{
+      padding: "14px 16px", borderRadius: 4, background: C.panel,
+      border: `1px solid ${row.status === "render_failed" ? "rgba(239,68,68,0.30)" : C.border}`,
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <span style={{
+          fontSize: 9, fontWeight: 700, letterSpacing: "0.20em",
+          background: "rgba(197,164,110,0.10)", border: `1px solid rgba(197,164,110,0.25)`,
+          color: C.gold, padding: "2px 8px", borderRadius: 3, flexShrink: 0,
+        }}>
+          SHORT
+        </span>
+        <span style={{
+          fontSize: 9, fontWeight: 700, letterSpacing: "0.14em",
+          background: meta.bg, border: `1px solid ${meta.border}`, color: meta.color,
+          padding: "2px 8px", borderRadius: 3,
+        }}>
+          {meta.label}
+        </span>
+        <span style={{ fontSize: 10, color: C.dim, marginLeft: "auto" }}>{row.id.slice(0, 8)}</span>
+      </div>
+
+      {row.title && (
+        <p style={{ fontSize: 13, fontWeight: 600, color: C.text, margin: "8px 0 0" }}>{row.title}</p>
+      )}
+
+      {row.status === "render_failed" && row.error_note && (
+        <p style={{ fontSize: 11, color: C.danger, margin: "6px 0 0", lineHeight: 1.5 }}>{row.error_note}</p>
+      )}
+
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10 }}>
+        {(row.status === "draft" || row.status === "reviewed") && (
+          <button
+            onClick={() => run("approve")}
+            disabled={busy}
+            style={{
+              padding: "6px 14px", borderRadius: 4, background: "rgba(122,141,166,0.10)",
+              border: `1px solid ${C.border}`, color: C.muted, fontSize: 11, fontWeight: 700,
+              letterSpacing: "0.08em", cursor: busy ? "not-allowed" : "pointer",
+            }}
+          >
+            Approve for rendering
+          </button>
+        )}
+
+        {row.status === "approved" && !row.render_queued && (
+          <button
+            onClick={() => run("render")}
+            disabled={busy}
+            style={{
+              padding: "6px 14px", borderRadius: 4, background: C.goldDim,
+              border: `1px solid ${C.gold}`, color: C.gold, fontSize: 11, fontWeight: 700,
+              letterSpacing: "0.08em", cursor: busy ? "not-allowed" : "pointer",
+            }}
+          >
+            Generate Video →
+          </button>
+        )}
+
+        {row.status === "approved" && row.render_queued && (
+          <span style={{ fontSize: 11, color: C.dim, fontStyle: "italic" }}>Queued for render</span>
+        )}
+
+        {row.status === "rendering" && (
+          <span style={{ fontSize: 11, color: C.gold }}>⏳ Rendering…</span>
+        )}
+
+        {row.status === "rendered" && row.rendered_video_path && (
+          <>
+            <a
+              href={`/api/content/render/file?id=${row.id}`}
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                padding: "6px 14px", borderRadius: 4, background: "rgba(74,222,128,0.10)",
+                border: "1px solid rgba(74,222,128,0.30)", color: "#4ade80", fontSize: 11,
+                fontWeight: 700, letterSpacing: "0.08em", textDecoration: "none",
+              }}
+            >
+              ▶ View Video
+            </a>
+            <button
+              onClick={() => run("render")}
+              disabled={busy}
+              style={{
+                background: "none", border: "none", color: C.muted, fontSize: 11,
+                cursor: busy ? "not-allowed" : "pointer", textDecoration: "underline",
+              }}
+            >
+              Re-render
+            </button>
+          </>
+        )}
+
+        {row.status === "render_failed" && (
+          <button
+            onClick={() => run("render")}
+            disabled={busy}
+            style={{
+              padding: "6px 14px", borderRadius: 4, background: "rgba(239,68,68,0.08)",
+              border: "1px solid rgba(239,68,68,0.30)", color: C.danger, fontSize: 11,
+              fontWeight: 700, letterSpacing: "0.08em", cursor: busy ? "not-allowed" : "pointer",
+            }}
+          >
+            Retry
+          </button>
+        )}
+      </div>
+
+      {(row.status === "approved" || row.status === "rendering") && (
+        <p style={{ fontSize: 10, color: C.dim, margin: "8px 0 0", lineHeight: 1.5 }}>
+          Renders locally — run <code>node scripts/render-queue.mjs</code> on your machine to process the queue.
+        </p>
+      )}
+    </div>
+  );
+}
+
+function VideoQueueSection() {
+  const [reviewRows, setReviewRows] = useState<ReviewRow[]>([]);
+  const [reviewErr,  setReviewErr]  = useState<string | null>(null);
+  const [loaded,     setLoaded]     = useState(false);
+  const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  async function fetchRows() {
+    try {
+      const res = await fetch("/api/content/status?format=short");
+      const json = await res.json();
+      if (!res.ok) { setReviewErr(json.error ?? "Failed to load video queue."); return; }
+      setReviewErr(null);
+      const nextRows = json.rows as ReviewRow[];
+      setReviewRows(nextRows);
+
+      const needsPolling = nextRows.some(r => r.status === "rendering" || (r.status === "approved" && r.render_queued));
+      if (pollRef.current) clearTimeout(pollRef.current);
+      pollRef.current = setTimeout(fetchRows, needsPolling ? 4000 : 15000);
+    } catch {
+      setReviewErr("Network error loading video queue.");
+    } finally {
+      setLoaded(true);
+    }
+  }
+
+  useEffect(() => {
+    fetchRows();
+    return () => { if (pollRef.current) clearTimeout(pollRef.current); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function handleAction(id: string, action: "approve" | "render") {
+    const url = action === "approve" ? "/api/content/approve" : "/api/content/render";
+    try {
+      const res = await fetch(url, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ id }),
+      });
+      const json = await res.json();
+      if (!res.ok) { setReviewErr(json.error ?? "Action failed."); return; }
+    } catch {
+      setReviewErr("Network error.");
+    }
+    fetchRows();
+  }
+
+  if (!loaded) return null;
+
+  return (
+    <div style={{ marginTop: 40 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+        <p style={{
+          fontSize: 9, fontWeight: 700, letterSpacing: "0.28em",
+          textTransform: "uppercase", color: C.dim, margin: 0,
+        }}>
+          Video Rendering Queue — Short Briefs
+        </p>
+        <div style={{ flex: 1, height: 1, background: C.border }} />
+      </div>
+
+      {reviewErr && <p style={{ fontSize: 12, color: C.danger, margin: "0 0 12px" }}>{reviewErr}</p>}
+
+      {reviewRows.length === 0 ? (
+        <p style={{ fontSize: 12, color: C.muted }}>No Short-format briefs yet.</p>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {reviewRows.map(r => <VideoQueueRow key={r.id} row={r} onAction={handleAction} />)}
+        </div>
       )}
     </div>
   );
@@ -343,6 +581,8 @@ export default function ContentNewPage() {
             </div>
           </div>
         )}
+
+        <VideoQueueSection />
       </div>
     </div>
   );

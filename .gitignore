@@ -45,3 +45,6 @@ next-env.d.ts
 /*.log
 
 .vercel
+
+# content engine video renders (generated locally, not committed)
+/outputs/
