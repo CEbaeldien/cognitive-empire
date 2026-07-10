@@ -55,12 +55,13 @@ export async function POST(request: NextRequest) {
   }
 
   // ── Parse body ─────────────────────────────────────────────
-  let key: string, prompt: string, attachments: Attachment[]
+  let key: string, prompt: string, attachments: Attachment[], system: string | undefined
   try {
-    const body = await request.json() as { key?: string; prompt?: string; attachments?: Attachment[] }
+    const body = await request.json() as { key?: string; prompt?: string; attachments?: Attachment[]; system?: string }
     key         = body.key?.trim()    ?? ''
     prompt      = body.prompt?.trim() ?? ''
     attachments = body.attachments    ?? []
+    system      = body.system?.trim() || undefined
   } catch {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
   }
@@ -80,7 +81,10 @@ export async function POST(request: NextRequest) {
       },
       body: JSON.stringify({
         model:    MODEL,
-        messages: [{ role: 'user', content: buildContent(prompt, attachments) }],
+        messages: [
+          ...(system ? [{ role: 'system' as const, content: system }] : []),
+          { role: 'user' as const, content: buildContent(prompt, attachments) },
+        ],
       }),
     })
   } catch (err) {

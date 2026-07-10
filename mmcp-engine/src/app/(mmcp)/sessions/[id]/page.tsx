@@ -5,6 +5,7 @@ import { useParams, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { logEvent, assertR4HasApproval, AUDIT_EVENT, AUDIT_ENTITY } from '@/lib/mmcp/audit'
 import { getKey, setKey, hasKey } from '@/lib/mmcp/keys'
+import { synthesisSystemPrompt } from '@/lib/mmcp/doctrine'
 import { loadAttachments, saveAttachments, fileToAttachment, ACCEPTED_MIME, type Attachment } from '@/lib/mmcp/attachments'
 import { MemoryCapture, extractKeywords } from '@/components/mmcp/MemoryCapture'
 import { FocusSheet } from '@/components/mmcp/FocusSheet'
@@ -181,6 +182,7 @@ export default function SessionWorkspace() {
   const [synthAction,  setSynthAction]  = useState('')
   const [savingSynth,  setSavingSynth]  = useState(false)
   const [revisingWith, setRevisingWith] = useState<string | null>(null)
+  const [instanceScope, setInstanceScope] = useState<'principal' | 'public'>('public')
 
   // Approval
   const [apDecision,  setApDecision]  = useState<ApprovalDecision>('approve')
@@ -239,6 +241,8 @@ export default function SessionWorkspace() {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
       setUserId(user?.id ?? null)
+      const { data: sess } = await supabase.from('mmcp_sessions').select('instance_scope').eq('id', sessionId).single()
+      if (sess) setInstanceScope((sess as { instance_scope: 'principal' | 'public' }).instance_scope ?? 'public')
       const [mRes, oRes, cRes, sRes, aRes, actRes, memRes, logRes] = await Promise.all([
         supabase.from('mission_briefs').select('*').eq('session_id', sessionId).order('created_at', { ascending: false }).limit(1).single(),
         supabase.from('model_outputs').select('*').eq('session_id', sessionId),
@@ -417,8 +421,9 @@ export default function SessionWorkspace() {
     const key = getKey('claude'); if (!key || !synthText.trim()) return
     setRevisingWith(instruction.slice(0, 20))
     const prompt = `${instruction}\n\nCurrent synthesis:\n${synthText}\n\nReturn only the revised synthesis text.`
+    const system = synthesisSystemPrompt(instanceScope)
     try {
-      const res  = await fetch('/api/mmcp/run/claude', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key, prompt }) })
+      const res  = await fetch('/api/mmcp/run/claude', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key, prompt, system }) })
       const json = await res.json() as { output?: string; error?: string }
       if (res.ok && json.output) setSynthText(json.output.trim())
     } catch {}
@@ -656,6 +661,16 @@ export default function SessionWorkspace() {
       case 'comparison': return (
         <div style={{ padding: '24px', height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
           {autofillErr && <p style={{ fontSize: 13, color: '#f87171', margin: 0, flexShrink: 0 }}>{autofillErr}</p>}
+          {attachments.length > 0 && (
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', flexShrink: 0 }}>
+              <span style={{ fontSize: 11, color: T.faint, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Attached to outputs:</span>
+              {attachments.map(a => (
+                <span key={a.name} style={{ fontSize: 11, color: T.faint, padding: '3px 9px', background: T.ghost, border: `1px solid ${T.border}`, borderRadius: 20 }}>
+                  {a.name}
+                </span>
+              ))}
+            </div>
+          )}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, flex: 1, minHeight: 0 }}>
             {COMP_FIELDS.map(field => {
               const val    = compForm[field.key].trim()
@@ -689,6 +704,16 @@ export default function SessionWorkspace() {
       // SYNTHESIS
       case 'synthesis': return (
         <div style={{ padding: '24px', height: '100%', display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* CE Doctrine Frame — principal scope only */}
+          {instanceScope === 'principal' && (
+            <div style={{ padding: '12px 16px', border: `1px solid rgba(197,162,111,0.25)`, background: 'rgba(197,162,111,0.04)', borderRadius: 10, flexShrink: 0 }}>
+              <p style={{ fontSize: 10, color: 'rgba(197,162,111,0.6)', textTransform: 'uppercase', letterSpacing: '0.14em', margin: '0 0 6px' }}>CE Doctrine Frame · Dr. E</p>
+              <p style={{ fontSize: 11, color: 'rgba(197,162,111,0.5)', fontFamily: 'monospace', margin: 0, lineHeight: 1.7 }}>
+                Instance: Principal Operator · Framework: CE Operator Kernel · Eight Laws: Active<br />
+                Doctrine-first reasoning applied to AI revisions below. Uncertainty flags preserved.
+              </p>
+            </div>
+          )}
           {/* Synthesis preview card */}
           <button
             onClick={() => setOpenSheet('synthesis')}
