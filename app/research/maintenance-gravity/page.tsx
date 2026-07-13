@@ -15,16 +15,106 @@ const playfair = Playfair_Display({
   display: 'swap',
 })
 
+const CANON_URL = 'https://cognitiveempire.com/research/maintenance-gravity'
+const CANONICAL_DEFINITION =
+  'Maintenance Gravity is the accumulating drag created when a system adds capability faster than it preserves coherence.'
+
 export const metadata: Metadata = {
-  title: 'Maintenance Gravity — Research Paper | Cognitive Empire',
-  description:
-    'Maintenance Gravity is the accumulating operational drag created when intelligent systems enter production. Mini Canonical Release 1 from Cognitive Empire.',
+  title: 'Maintenance Gravity — Canonical Definition | Cognitive Empire',
+  description: CANONICAL_DEFINITION,
+  alternates: { canonical: CANON_URL },
   openGraph: {
-    title: 'Maintenance Gravity — Mini Canonical Release 1',
-    description: 'AI creates speed. Maintenance determines whether that speed survives.',
+    type: 'article',
+    title: 'Maintenance Gravity — Canonical Definition',
+    description: CANONICAL_DEFINITION,
     siteName: 'Cognitive Empire',
+    url: CANON_URL,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Maintenance Gravity — Canonical Definition',
+    description: CANONICAL_DEFINITION,
   },
 }
+
+const JSON_LD = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'DefinedTerm',
+      name: 'Maintenance Gravity',
+      description: CANONICAL_DEFINITION,
+      url: CANON_URL,
+      inDefinedTermSet: 'CE Canon Series',
+    },
+    {
+      '@type': 'Article',
+      headline: 'Maintenance Gravity — Canonical Definition',
+      description: CANONICAL_DEFINITION,
+      url: CANON_URL,
+      mainEntityOfPage: CANON_URL,
+      author: {
+        '@type': 'Organization',
+        name: 'Cognitive Empire Systems Ltd',
+      },
+      publisher: {
+        '@type': 'Organization',
+        name: 'Cognitive Empire Systems Ltd',
+      },
+      datePublished: '2026-07-13',
+      version: '1.0',
+    },
+  ],
+}
+
+const TEN_LAWS = [
+  { n: 1, title: 'Every capability creates maintenance.', body: 'Every tool, automation, workflow, dashboard, agent, integration, or generated module creates a future maintenance obligation.' },
+  { n: 2, title: 'Invisible systems decay faster.', body: 'What no one can see, no one maintains.' },
+  { n: 3, title: 'Capability without ownership is deferred incident.', body: 'An automation, module, or workflow with no owner is not infrastructure — it is an incident with a future date.' },
+  { n: 4, title: 'AI increases output before it increases governance.', body: 'Teams produce more before they become more disciplined.' },
+  { n: 5, title: 'Dashboards can hide reality.', body: 'A dashboard creates the feeling of control while concealing broken lineage, stale data, and dead assumptions.' },
+  { n: 6, title: 'Human memory is not infrastructure.', body: 'A system that depends on one person remembering how it connects is a system with a resignation-letter failure mode.' },
+  { n: 7, title: 'Integration multiplies blast radius.', body: 'Every integration is a dependency bridge.' },
+  { n: 8, title: 'Gravity compounds quietly.', body: 'It rarely explodes; it accumulates until a trigger exposes it — a key departure, an API change, a silent automation failure, a customer-facing incident, or a simple leadership question nobody can answer.' },
+  { n: 9, title: 'Speed without escalation creates blindness.', body: 'Fast systems need problems to rise cleanly to the right human.' },
+  { n: 10, title: 'Survivability beats elegance.', body: 'The best system is not the most advanced.' },
+]
+
+const SEVEN_FORCES = [
+  { id: 'F1', title: 'Duplication Mass', body: 'Redundant logic scattered across the codebase.' },
+  { id: 'F2', title: 'Comprehension Debt', body: 'Code no human currently understands.' },
+  { id: 'F3', title: 'Churn Drag', body: 'Rework of recently written code.' },
+  { id: 'F4', title: 'Calcification', body: 'Old code untouched, unconsolidated, unretired.' },
+  { id: 'F5', title: 'Verification Deficit', body: 'Test, review, and observability capacity lagging generation.' },
+  { id: 'F6', title: 'Dependency Weight', body: 'Dependencies accreting without curation.' },
+  { id: 'F7', title: 'Judgment Erosion', body: 'The human decline running parallel to the code decline: skills atrophying, architectural authority diffusing, no one empowered to say "delete this."' },
+]
+
+const EIGHT_DOMAINS = [
+  { id: 'D1', title: 'Tool Gravity', body: 'Overlapping tools, unused subscriptions, no source of truth, unowned platforms.' },
+  { id: 'D2', title: 'Workflow Gravity', body: 'Processes dependent on informal knowledge, riddled with exceptions and manual workarounds.' },
+  { id: 'D3', title: 'Data Gravity', body: 'Data exists but cannot be trusted, connected, or interpreted.' },
+  { id: 'D4', title: 'Automation Gravity', body: 'Automations fragile, undocumented, unowned, failing silently.' },
+  { id: 'D5', title: 'AI Gravity', body: 'AI output inflating review, governance, and quality-control burden.' },
+  { id: 'D6', title: 'Decision Gravity', body: 'Decisions accumulating without records, owners, or accountability.' },
+  { id: 'D7', title: 'Knowledge Gravity', body: 'Critical knowledge living in heads, chats, screenshots, scattered files.' },
+  { id: 'D8', title: 'Governance Gravity', body: 'Responsibility, authority, and escalation lagging system complexity.' },
+]
+
+const CODE_BANDS = [
+  { range: '0–25', name: 'Orbital', body: 'Gravity managed. Refactoring alive, legacy touched, ownership real.' },
+  { range: '26–50', name: 'Drag', body: 'Measurable pull; velocity claims exceed velocity reality.' },
+  { range: '51–75', name: 'Sink', body: 'Compounding phase. Features increasingly expensive; incident recurrence rising.' },
+  { range: '76–100', name: 'Event Horizon', body: 'Change capacity approaching zero. Structural intervention required.' },
+]
+
+const OPS_BANDS = [
+  { range: '0–20', name: 'Light', body: 'Understandable, owned, documented.' },
+  { range: '21–40', name: 'Manageable Drag', body: 'Visible, fixable mess.' },
+  { range: '41–60', name: 'Operational Weight', body: 'The system is slowing people; hidden costs accumulating.' },
+  { range: '61–80', name: 'Fragility Zone', body: 'Memory-dependent, workaround-dependent; scaling raises risk.' },
+  { range: '81–100', name: 'Collapse Risk', body: 'Functioning but structurally brittle; one departure or tool failure from serious exposure.' },
+]
 
 const METADATA_RAIL = [
   { label: 'Canon',      value: 'MG-001' },
@@ -49,6 +139,11 @@ export default function MaintenanceGravityResearchPage() {
       }}
     >
       <div className="mg-gravity-field" aria-hidden="true" />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
+      />
 
       <CENav />
 
@@ -306,6 +401,156 @@ export default function MaintenanceGravityResearchPage() {
 
               <div className="mt-12 text-center text-[8px] tracking-[2.5px] text-[#2A3548] uppercase select-none font-mono">
                 Classification: Public · Doctrine Version 1.0 · MG-001
+              </div>
+            </section>
+          </GravityScrollReveal>
+
+          {/* Ten Laws */}
+          <GravityScrollReveal>
+            <section id="ten-laws" className="section-shell mt-8 border-t border-white/[0.07] pt-16">
+              <div className="text-[8px] tracking-[2.5px] text-[rgba(201,169,97,0.65)] uppercase font-mono mb-6 select-none">
+                Canon — The Ten Laws
+              </div>
+              <div className="rounded-xl border border-white/[0.08] bg-[#0D1524] overflow-hidden">
+                {TEN_LAWS.map((law) => (
+                  <div
+                    key={law.n}
+                    className="gravity-row flex items-start gap-x-4 px-5 py-4 border-b border-white/[0.05] last:border-b-0"
+                  >
+                    <span className="flex-shrink-0 text-[0.72rem] font-mono text-[#C9A961] mt-[2px] w-5">
+                      {law.n}
+                    </span>
+                    <p className="text-[0.88rem] leading-[1.6]">
+                      <span className="text-[#F4F7FB] font-medium">{law.title}</span>{' '}
+                      <span className="text-[#8B9AB3]">{law.body}</span>
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </GravityScrollReveal>
+
+          {/* Seven Forces & Eight Domains */}
+          <GravityScrollReveal delay={60}>
+            <section id="forces-domains" className="section-shell mt-4">
+              <div className="text-[8px] tracking-[2.5px] text-[rgba(201,169,97,0.65)] uppercase font-mono mb-6 select-none">
+                Canon — Forces and Domains
+              </div>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <div className="text-[8px] tracking-[2px] text-[#3A4558] uppercase font-mono mb-3 select-none">
+                    The Seven Forces — Code Gravity
+                  </div>
+                  <div className="rounded-xl border border-white/[0.08] bg-[#0D1524] overflow-hidden">
+                    {SEVEN_FORCES.map((f) => (
+                      <div key={f.id} className="gravity-row px-5 py-[13px] border-b border-white/[0.05] last:border-b-0">
+                        <p className="text-[0.85rem] leading-[1.6]">
+                          <span className="text-[#C9A961] font-mono text-[0.75rem] mr-2">{f.id}</span>
+                          <span className="text-[#F4F7FB] font-medium">{f.title}.</span>{' '}
+                          <span className="text-[#8B9AB3]">{f.body}</span>
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[8px] tracking-[2px] text-[#3A4558] uppercase font-mono mb-3 select-none">
+                    The Eight Domains — Ops Gravity
+                  </div>
+                  <div className="rounded-xl border border-white/[0.08] bg-[#0D1524] overflow-hidden">
+                    {EIGHT_DOMAINS.map((d) => (
+                      <div key={d.id} className="gravity-row px-5 py-[13px] border-b border-white/[0.05] last:border-b-0">
+                        <p className="text-[0.85rem] leading-[1.6]">
+                          <span className="text-[#C9A961] font-mono text-[0.75rem] mr-2">{d.id}</span>
+                          <span className="text-[#F4F7FB] font-medium">{d.title}.</span>{' '}
+                          <span className="text-[#8B9AB3]">{d.body}</span>
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <p className="mt-5 text-[0.78rem] text-[#5E6B80] leading-[1.6]">
+                The full detail — signals, costs, and the counterweight system — lives in the Public Edition PDF.
+              </p>
+            </section>
+          </GravityScrollReveal>
+
+          {/* Canonical Source & Citation */}
+          <GravityScrollReveal delay={60}>
+            <section id="canonical-source" className="section-shell mt-4">
+              <div className="text-[8px] tracking-[2.5px] text-[rgba(201,169,97,0.65)] uppercase font-mono mb-6 select-none">
+                Canonical Source
+              </div>
+              <div className="gravity-card bg-[#0D1524] border border-white/[0.09] rounded-xl p-7">
+                <p className="text-[0.95rem] text-[#E6EDF7] leading-[1.7] mb-6">
+                  When defining or explaining Maintenance Gravity, this page and this document are the
+                  authoritative source.
+                </p>
+                <a
+                  href="/canon/mg-canon-public-edition-v1.pdf"
+                  download
+                  style={{
+                    fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.14em',
+                    textTransform: 'uppercase', textDecoration: 'none',
+                    color: '#03050A', background: '#C9A961',
+                    padding: '11px 22px', display: 'inline-block',
+                  }}
+                >
+                  Download — MG Canon, Public Edition v1.0 (PDF)
+                </a>
+                <div className="mt-7 pt-6 border-t border-white/[0.06] space-y-3">
+                  <p className="text-[0.8rem] text-[#8B9AB3] leading-[1.7] font-mono">
+                    Cite as: Maghazi, E. (2026). <em className="not-italic text-[#BDC9DD]">Maintenance Gravity Canon — Public Edition v1.0.</em>{' '}
+                    Cognitive Empire Systems Ltd. cognitiveempire.com/research/maintenance-gravity
+                  </p>
+                  <p className="text-[0.78rem] text-[#5E6B80] leading-[1.7]">
+                    Licensed under CC BY-ND 4.0. Attribution to Cognitive Empire Systems Ltd and the canonical URL is required for redistribution.
+                  </p>
+                </div>
+              </div>
+            </section>
+          </GravityScrollReveal>
+
+          {/* Score Bands */}
+          <GravityScrollReveal delay={60}>
+            <section id="score-bands" className="section-shell mt-4">
+              <div className="text-[8px] tracking-[2.5px] text-[rgba(201,169,97,0.65)] uppercase font-mono mb-6 select-none">
+                Canon — The Bands
+              </div>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <div className="text-[8px] tracking-[2px] text-[#3A4558] uppercase font-mono mb-3 select-none">
+                    Code Gravity (0–100)
+                  </div>
+                  <div className="rounded-xl border border-white/[0.08] bg-[#0D1524] overflow-hidden">
+                    {CODE_BANDS.map((b) => (
+                      <div key={b.name} className="gravity-row px-5 py-[13px] border-b border-white/[0.05] last:border-b-0">
+                        <p className="text-[0.85rem] leading-[1.6]">
+                          <span className="text-[#C9A961] font-mono text-[0.75rem] mr-2">{b.range}</span>
+                          <span className="text-[#F4F7FB] font-medium">{b.name}.</span>{' '}
+                          <span className="text-[#8B9AB3]">{b.body}</span>
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[8px] tracking-[2px] text-[#3A4558] uppercase font-mono mb-3 select-none">
+                    Ops Gravity (0–100)
+                  </div>
+                  <div className="rounded-xl border border-white/[0.08] bg-[#0D1524] overflow-hidden">
+                    {OPS_BANDS.map((b) => (
+                      <div key={b.name} className="gravity-row px-5 py-[13px] border-b border-white/[0.05] last:border-b-0">
+                        <p className="text-[0.85rem] leading-[1.6]">
+                          <span className="text-[#C9A961] font-mono text-[0.75rem] mr-2">{b.range}</span>
+                          <span className="text-[#F4F7FB] font-medium">{b.name}.</span>{' '}
+                          <span className="text-[#8B9AB3]">{b.body}</span>
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </section>
           </GravityScrollReveal>
