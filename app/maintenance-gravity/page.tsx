@@ -3,6 +3,9 @@ import Link from 'next/link'
 import CENav from '@/app/components/CENav'
 import CEFooter from '@/app/components/CEFooter'
 import { MGScoringTool } from './_components/MGScoringTool'
+import { getMgScoreCount } from '@/lib/maintenanceGravity/data'
+
+export const revalidate = 300
 
 export const metadata: Metadata = {
   title: 'Maintenance Gravity — Cognitive Empire',
@@ -73,7 +76,9 @@ const TIERS: Tier[] = [
   },
 ]
 
-export default function MaintenanceGravityPage() {
+export default async function MaintenanceGravityPage() {
+  const scoreCount = await getMgScoreCount().catch(() => null)
+
   return (
     <>
       <style>{`
@@ -135,7 +140,15 @@ export default function MaintenanceGravityPage() {
               AI creates speed. Maintenance Gravity determines whether that speed survives.
               Get your free operational debt score in three steps.
             </p>
-            <div style={{ width: 32, height: 1, background: P.goldBorder }} />
+            <div style={{ width: 32, height: 1, background: P.goldBorder, marginBottom: scoreCount !== null ? 16 : 0 }} />
+            {scoreCount !== null && (
+              <p style={{
+                fontSize: '0.72rem', color: P.dim, letterSpacing: '0.04em',
+                fontFamily: 'monospace',
+              }}>
+                Systems scored: <span style={{ color: P.gold }}>{scoreCount.toLocaleString()}</span>
+              </p>
+            )}
           </div>
         </section>
 

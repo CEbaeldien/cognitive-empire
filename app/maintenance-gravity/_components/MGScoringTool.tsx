@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 
 const T = {
@@ -17,16 +17,41 @@ const T = {
   input:     '#0D1828',
 } as const
 
-type Step     = 'input' | 'prompt' | 'result'
-type Severity = 'low' | 'moderate' | 'high' | 'critical'
+type Step = 'input' | 'prompt' | 'result'
+type SaveStatus = 'idle' | 'loading' | 'saved' | 'error'
 
 interface ScoreResult {
-  ownerless:  number
-  loops:      number
-  debtScore:  number
-  fastestWin: string
-  analysis:   string
-  severity:   Severity
+  ownerless:    number
+  loops:        number
+  gravityScore: number
+  fastestWin:   string
+  analysis:     string
+}
+
+interface Band {
+  key:   string
+  label: string
+  min:   number
+  max:   number
+  color: string
+  desc:  string
+}
+
+const BANDS: Band[] = [
+  { key: 'light',       label: 'Light',              min: 0,  max: 20,  color: '#2FB67E',
+    desc: 'Your operation carries minimal maintenance mass. Governance is clean.' },
+  { key: 'manageable',  label: 'Manageable Drag',    min: 21, max: 40,  color: '#9BB84A',
+    desc: 'Some operational debt is accumulating. Still manageable without intervention.' },
+  { key: 'operational', label: 'Operational Weight', min: 41, max: 60,  color: '#C9A961',
+    desc: 'Maintenance mass is becoming a real cost. Ownership gaps are starting to show.' },
+  { key: 'fragility',   label: 'Fragility Zone',     min: 61, max: 80,  color: '#E07640',
+    desc: 'Significant maintenance mass detected. Key systems lack clear ownership or oversight.' },
+  { key: 'collapse',    label: 'Collapse Risk',      min: 81, max: 100, color: '#E05050',
+    desc: 'Operation is under severe maintenance gravity. Immediate governance intervention required.' },
+]
+
+function getBand(score: number): Band {
+  return BANDS.find((b) => score >= b.min && score <= b.max) ?? BANDS[BANDS.length - 1]
 }
 
 function buildPrompt(headline: string, dump: string): string {
@@ -41,57 +66,51 @@ Respond ONLY in this exact format — no preamble, no explanation outside the fo
 
 OWNERLESS: [integer — count of processes, systems, or decisions with no clear single owner]
 LOOPS: [integer — count of unresolved recurring problems, repeated fires, or cyclic bottlenecks]
-DEBT_SCORE: [integer 0–100 — overall maintenance gravity score; 100 = maximum operational debt]
+GRAVITY_SCORE: [integer 0–100 — overall maintenance gravity score; 100 = maximum operational debt]
 FASTEST_WIN: [one specific, actionable step that would reduce maintenance gravity the fastest]
 
 ANALYSIS: [2–3 sentences identifying the primary source of maintenance gravity in this operation]`
 }
 
-function parseResult(raw: string): ScoreResult | null {
-  const ownerlessMatch = raw.match(/OWNERLESS:\s*(\d+)/i)
-  const loopsMatch     = raw.match(/LOOPS:\s*(\d+)/i)
-  const debtMatch      = raw.match(/DEBT_SCORE:\s*(\d+)/i)
-  const winMatch       = raw.match(/FASTEST_WIN:\s*(.+)/i)
-  const analysisMatch  = raw.match(/ANALYSIS:\s*([\s\S]+)/i)
+// Tolerant field matchers — models add preambles, markdown bold, and
+// inconsistent spacing, so fields are matched anywhere in the text rather
+// than anchored to a line start.
+function matchInt(raw: string, names: string[]): number | null {
+  for (const name of names) {
+    const re = new RegExp(`\\*{0,2}${name}\\*{0,2}\\s*:?\\s*\\*{0,2}\\s*(\\d+)`, 'i')
+    const m = raw.match(re)
+    if (m) return parseInt(m[1], 10)
+  }
+  return null
+}
 
-  if (!debtMatch) return null
+function matchLine(raw: string, name: string): string | null {
+  const re = new RegExp(`\\*{0,2}${name}\\*{0,2}\\s*:\\s*\\*{0,2}\\s*(.+)`, 'i')
+  const m = raw.match(re)
+  return m ? m[1].trim() : null
+}
 
-  const debtScore = Math.min(100, Math.max(0, parseInt(debtMatch[1], 10)))
-  const severity: Severity =
-    debtScore <= 35 ? 'low' :
-    debtScore <= 60 ? 'moderate' :
-    debtScore <= 80 ? 'high' :
-    'critical'
+function matchRest(raw: string, name: string): string | null {
+  const re = new RegExp(`\\*{0,2}${name}\\*{0,2}\\s*:\\s*\\*{0,2}\\s*([\\s\\S]+)`, 'i')
+  const m = raw.match(re)
+  return m ? m[1].trim() : null
+}
+
+type ParseOutcome = { result: ScoreResult } | { missingField: string }
+
+function parseResult(raw: string): ParseOutcome {
+  const score = matchInt(raw, ['GRAVITY_SCORE', 'DEBT_SCORE'])
+  if (score === null) return { missingField: 'GRAVITY_SCORE (or DEBT_SCORE)' }
 
   return {
-    ownerless:  ownerlessMatch ? parseInt(ownerlessMatch[1], 10) : 0,
-    loops:      loopsMatch     ? parseInt(loopsMatch[1],     10) : 0,
-    debtScore,
-    fastestWin: winMatch      ? winMatch[1].trim()              : '',
-    analysis:   analysisMatch ? analysisMatch[1].trim()         : '',
-    severity,
+    result: {
+      gravityScore: Math.min(100, Math.max(0, score)),
+      ownerless:    matchInt(raw, ['OWNERLESS']) ?? 0,
+      loops:        matchInt(raw, ['LOOPS']) ?? 0,
+      fastestWin:   matchLine(raw, 'FASTEST_WIN') ?? '',
+      analysis:     matchRest(raw, 'ANALYSIS') ?? '',
+    },
   }
-}
-
-const SEV_COLORS: Record<Severity, string> = {
-  low:      '#2FB67E',
-  moderate: '#C9A961',
-  high:     '#E07640',
-  critical: '#E05050',
-}
-
-const SEV_LABELS: Record<Severity, string> = {
-  low:      'LOW GRAVITY',
-  moderate: 'MODERATE GRAVITY',
-  high:     'HIGH GRAVITY',
-  critical: 'CRITICAL GRAVITY',
-}
-
-const SEV_DESCS: Record<Severity, string> = {
-  low:      'Your operation carries manageable maintenance mass. Governance structures are functional.',
-  moderate: 'Operational debt is accumulating. Without intervention, gravity compounds.',
-  high:     'Significant maintenance mass detected. Key systems lack clear ownership or oversight.',
-  critical: 'Operation is under severe maintenance gravity. Immediate governance intervention required.',
 }
 
 const baseInput: React.CSSProperties = {
@@ -108,14 +127,25 @@ export function MGScoringTool() {
   const [dump,       setDump]       = useState('')
   const [response,   setResponse]   = useState('')
   const [result,     setResult]     = useState<ScoreResult | null>(null)
-  const [parseError, setParseError] = useState(false)
+  const [parseErrorField, setParseErrorField] = useState<string | null>(null)
   const [copied,     setCopied]     = useState(false)
-  const promptRef = useRef<HTMLTextAreaElement>(null)
+
+  const [scoreId,   setScoreId]   = useState<string | null>(null)
+  const [createdAt, setCreatedAt] = useState<string | null>(null)
+  const [saveError, setSaveError] = useState(false)
+
+  const [emailInput,  setEmailInput]  = useState('')
+  const [emailStatus, setEmailStatus] = useState<SaveStatus>('idle')
+
+  const [testimonialComment, setTestimonialComment] = useState('')
+  const [testimonialStatus,  setTestimonialStatus]  = useState<SaveStatus>('idle')
 
   const generated = buildPrompt(
     headline.trim() || 'AI-assisted operation',
     dump.trim()     || '(no description provided)',
   )
+
+  const band = result ? getBand(result.gravityScore) : null
 
   function handleGenerate() {
     if (!headline.trim() && !dump.trim()) return
@@ -130,17 +160,96 @@ export function MGScoringTool() {
     })
   }
 
-  function handleCalculate() {
-    const parsed = parseResult(response)
-    if (!parsed) { setParseError(true); return }
-    setParseError(false)
-    setResult(parsed)
+  async function handleCalculate() {
+    const outcome = parseResult(response)
+    if (!('result' in outcome)) {
+      setParseErrorField(outcome.missingField)
+      return
+    }
+    setParseErrorField(null)
+    setResult(outcome.result)
     setStep('result')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+
+    setSaveError(false)
+    try {
+      const res = await fetch('/api/maintenance-gravity/score', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          headline:     headline.trim(),
+          dump:         dump.trim(),
+          ownerless:    outcome.result.ownerless,
+          loops:        outcome.result.loops,
+          gravityScore: outcome.result.gravityScore,
+          band:         getBand(outcome.result.gravityScore).label,
+          analysis:     outcome.result.analysis,
+          fastestWin:   outcome.result.fastestWin,
+        }),
+      })
+      if (!res.ok) throw new Error('save failed')
+      const data = await res.json()
+      setScoreId(data.id)
+      setCreatedAt(data.createdAt)
+    } catch {
+      setSaveError(true)
+    }
+  }
+
+  async function handleSaveEmail() {
+    if (!scoreId || !emailInput.includes('@')) return
+    setEmailStatus('loading')
+    try {
+      const res = await fetch(`/api/maintenance-gravity/score/${scoreId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailInput.trim() }),
+      })
+      if (!res.ok) throw new Error()
+      setEmailStatus('saved')
+    } catch {
+      setEmailStatus('error')
+    }
+  }
+
+  async function handleTestimonialYes() {
+    if (!scoreId) return
+    setTestimonialStatus('loading')
+    try {
+      const res = await fetch(`/api/maintenance-gravity/score/${scoreId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          testimonialPermission: true,
+          testimonial: testimonialComment.trim() || undefined,
+        }),
+      })
+      if (!res.ok) throw new Error()
+      setTestimonialStatus('saved')
+    } catch {
+      setTestimonialStatus('error')
+    }
+  }
+
+  function handleDownload() {
+    window.print()
+  }
+
+  function handleGetStartedClick() {
+    if (!scoreId) return
+    fetch(`/api/maintenance-gravity/score/${scoreId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ auditInterest: true }),
+    }).catch(() => {})
   }
 
   function handleReset() {
     setStep('input'); setHeadline(''); setDump('')
-    setResponse(''); setResult(null); setParseError(false)
+    setResponse(''); setResult(null); setParseErrorField(null)
+    setScoreId(null); setCreatedAt(null); setSaveError(false)
+    setEmailInput(''); setEmailStatus('idle')
+    setTestimonialComment(''); setTestimonialStatus('idle')
   }
 
   return (
@@ -181,6 +290,48 @@ export function MGScoringTool() {
           padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
         }
         .mgt-row:last-child { border-bottom: none; }
+
+        .mg-print-card { display: none; }
+        @media print {
+          body * { visibility: hidden; }
+          .mg-print-card, .mg-print-card * { visibility: visible; }
+          .mg-print-card {
+            display: block !important;
+            position: absolute; top: 0; left: 0; width: 100%;
+            background: #05070B; color: #FFFFFF;
+            -webkit-print-color-adjust: exact; print-color-adjust: exact;
+          }
+          .mg-print-inner { max-width: 640px; margin: 0 auto; padding: 48px 40px; }
+          .mg-print-brand {
+            font-size: 0.62rem; font-weight: 700; letter-spacing: 0.3em;
+            color: #C9A961; font-family: monospace; margin-bottom: 6px;
+          }
+          .mg-print-label { font-size: 0.9rem; color: #B9C4D6; margin-bottom: 28px; }
+          .mg-print-score { font-size: 4.2rem; font-weight: 300; font-family: monospace; color: #FFFFFF; }
+          .mg-print-score span { font-size: 1.2rem; color: #7A8DA6; margin-left: 4px; }
+          .mg-print-band {
+            font-size: 0.72rem; font-weight: 700; letter-spacing: 0.2em;
+            text-transform: uppercase; color: #C9A961; margin: 8px 0 24px;
+          }
+          .mg-print-rule { height: 1px; background: rgba(255,255,255,0.15); margin-bottom: 20px; }
+          .mg-print-row {
+            display: flex; gap: 12px; align-items: baseline; padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 0.8rem;
+          }
+          .mg-print-row span:first-child { font-family: monospace; color: #7A8DA6; min-width: 100px; }
+          .mg-print-row b { font-size: 1rem; }
+          .mg-print-block { margin-top: 20px; }
+          .mg-print-block-label {
+            font-size: 0.6rem; font-weight: 700; letter-spacing: 0.2em;
+            text-transform: uppercase; color: #C9A961; margin-bottom: 6px;
+          }
+          .mg-print-block p { font-size: 0.84rem; line-height: 1.6; color: #D5DCE8; margin: 0; }
+          .mg-print-footer {
+            display: flex; justify-content: space-between; margin-top: 36px;
+            padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1);
+            font-size: 0.7rem; color: #7A8DA6; font-family: monospace;
+          }
+        }
       `}</style>
 
       <div style={{
@@ -275,7 +426,6 @@ export function MGScoringTool() {
               </p>
               <div style={{ position: 'relative' }}>
                 <textarea
-                  ref={promptRef}
                   readOnly
                   className="mgt-input"
                   style={{
@@ -310,11 +460,11 @@ export function MGScoringTool() {
                 style={{ ...baseInput, minHeight: 160, resize: 'vertical', marginBottom: 14 }}
                 placeholder="Paste the full AI response here..."
                 value={response}
-                onChange={(e) => { setResponse(e.target.value); setParseError(false) }}
+                onChange={(e) => { setResponse(e.target.value); setParseErrorField(null) }}
               />
-              {parseError && (
+              {parseErrorField && (
                 <p style={{ fontSize: '0.74rem', color: '#E05050', marginBottom: 12, lineHeight: 1.5 }}>
-                  Could not find a DEBT_SCORE in the response. Make sure the AI followed the format — check the response contains "DEBT_SCORE: [number]".
+                  Couldn't find {parseErrorField} in the response. Make sure the AI followed the format — check the response contains "GRAVITY_SCORE: [number]".
                 </p>
               )}
               <button
@@ -334,8 +484,14 @@ export function MGScoringTool() {
         )}
 
         {/* ── STEP C ── */}
-        {step === 'result' && result && (
+        {step === 'result' && result && band && (
           <div style={{ padding: '26px 22px' }}>
+
+            {saveError && (
+              <p style={{ fontSize: '0.72rem', color: '#E05050', textAlign: 'center', marginBottom: 18, lineHeight: 1.5 }}>
+                Your results are shown below but couldn't be saved — email delivery and download are unavailable this session.
+              </p>
+            )}
 
             {/* Score */}
             <div style={{
@@ -345,27 +501,27 @@ export function MGScoringTool() {
               <div style={{
                 fontSize: 'clamp(4.5rem, 14vw, 7.5rem)', fontWeight: 300,
                 fontFamily: 'monospace', lineHeight: 1,
-                color: SEV_COLORS[result.severity], letterSpacing: '-0.04em',
+                color: band.color, letterSpacing: '-0.04em',
               }}>
-                {result.debtScore}
+                {result.gravityScore}
                 <span style={{ fontSize: '1.4rem', color: T.dim, marginLeft: 4 }}>/100</span>
               </div>
               <div style={{
                 display: 'inline-block', marginTop: 12,
                 fontSize: '0.58rem', fontWeight: 700, letterSpacing: '0.28em',
                 textTransform: 'uppercase', fontFamily: 'monospace',
-                color: SEV_COLORS[result.severity],
-                background: `${SEV_COLORS[result.severity]}18`,
-                border: `1px solid ${SEV_COLORS[result.severity]}44`,
+                color: band.color,
+                background: `${band.color}18`,
+                border: `1px solid ${band.color}44`,
                 padding: '4px 12px',
               }}>
-                {SEV_LABELS[result.severity]}
+                {band.label}
               </div>
               <p style={{
                 marginTop: 14, fontSize: '0.84rem', color: T.muted,
                 maxWidth: 440, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.65,
               }}>
-                {SEV_DESCS[result.severity]}
+                {band.desc}
               </p>
             </div>
 
@@ -380,9 +536,9 @@ export function MGScoringTool() {
               </div>
               <div>
                 {([
-                  { key: 'OWNERLESS', val: result.ownerless, desc: 'processes or systems with no clear single owner', color: T.text },
-                  { key: 'LOOPS',     val: result.loops,     desc: 'unresolved recurring problems or cyclic bottlenecks', color: T.text },
-                  { key: 'DEBT_SCORE',val: result.debtScore, desc: 'overall maintenance gravity (0–100)', color: SEV_COLORS[result.severity] },
+                  { key: 'OWNERLESS',      val: result.ownerless,    desc: 'processes or systems with no clear single owner', color: T.text },
+                  { key: 'LOOPS',          val: result.loops,        desc: 'unresolved recurring problems or cyclic bottlenecks', color: T.text },
+                  { key: 'GRAVITY_SCORE',  val: result.gravityScore, desc: 'overall maintenance gravity (0–100)', color: band.color },
                 ] as const).map(({ key, val, desc, color }) => (
                   <div key={key} className="mgt-row">
                     <span style={{ fontSize: '0.72rem', color: T.dim, fontFamily: 'monospace', minWidth: 120, flexShrink: 0 }}>{key}</span>
@@ -433,6 +589,110 @@ export function MGScoringTool() {
               </div>
             )}
 
+            {/* Email capture + testimonial + download — only once the row is persisted */}
+            {scoreId && (
+              <>
+                <div style={{ marginBottom: 14, padding: '16px 18px', background: T.deep, border: `1px solid ${T.border}` }}>
+                  <div style={{
+                    fontSize: '0.56rem', fontWeight: 700, letterSpacing: '0.28em',
+                    textTransform: 'uppercase', fontFamily: 'monospace',
+                    color: 'rgba(201,169,97,0.65)', marginBottom: 10,
+                  }}>
+                    Email me my scorecard
+                  </div>
+                  {emailStatus === 'saved' ? (
+                    <p style={{ fontSize: '0.82rem', color: '#2FB67E', margin: 0 }}>
+                      Saved — you can now download your scorecard below.
+                    </p>
+                  ) : (
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      <input
+                        type="email"
+                        className="mgt-input"
+                        style={{ ...baseInput, flex: '1 1 220px' }}
+                        placeholder="you@company.com"
+                        value={emailInput}
+                        onChange={(e) => setEmailInput(e.target.value)}
+                      />
+                      <button
+                        className="mgt-btn"
+                        style={{
+                          fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.14em',
+                          textTransform: 'uppercase', color: T.bg, background: T.gold, padding: '10px 18px',
+                        }}
+                        disabled={!emailInput.includes('@') || emailStatus === 'loading'}
+                        onClick={handleSaveEmail}
+                      >
+                        {emailStatus === 'loading' ? 'Saving…' : 'Save'}
+                      </button>
+                    </div>
+                  )}
+                  {emailStatus === 'error' && (
+                    <p style={{ fontSize: '0.72rem', color: '#E05050', marginTop: 8 }}>Couldn't save that — try again.</p>
+                  )}
+                </div>
+
+                <div style={{ marginBottom: 18, padding: '16px 18px', background: T.deep, border: `1px solid ${T.border}` }}>
+                  <div style={{
+                    fontSize: '0.56rem', fontWeight: 700, letterSpacing: '0.28em',
+                    textTransform: 'uppercase', fontFamily: 'monospace',
+                    color: 'rgba(201,169,97,0.65)', marginBottom: 10,
+                  }}>
+                    May we cite your score anonymously in our benchmark?
+                  </div>
+                  {testimonialStatus === 'saved' ? (
+                    <p style={{ fontSize: '0.82rem', color: '#2FB67E', margin: 0 }}>Thanks — noted.</p>
+                  ) : (
+                    <>
+                      <input
+                        type="text"
+                        className="mgt-input"
+                        style={{ ...baseInput, marginBottom: 10 }}
+                        placeholder="Optional one-line comment"
+                        value={testimonialComment}
+                        onChange={(e) => setTestimonialComment(e.target.value)}
+                        maxLength={280}
+                      />
+                      <button
+                        className="mgt-btn"
+                        style={{
+                          fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.14em',
+                          textTransform: 'uppercase', color: T.text, background: T.input,
+                          border: `1px solid ${T.borderMid}`, padding: '9px 18px',
+                        }}
+                        disabled={testimonialStatus === 'loading'}
+                        onClick={handleTestimonialYes}
+                      >
+                        {testimonialStatus === 'loading' ? 'Saving…' : 'Yes, you may'}
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                <div style={{ marginBottom: 24 }}>
+                  <button
+                    className="mgt-btn"
+                    style={{
+                      fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase',
+                      color: emailStatus === 'saved' ? T.bg : T.dim,
+                      background: emailStatus === 'saved' ? T.gold : 'transparent',
+                      border: `1px solid ${emailStatus === 'saved' ? T.gold : T.border}`,
+                      padding: '11px 24px', width: '100%',
+                    }}
+                    disabled={emailStatus !== 'saved'}
+                    onClick={handleDownload}
+                  >
+                    Download scorecard
+                  </button>
+                  {emailStatus !== 'saved' && (
+                    <p style={{ marginTop: 8, fontSize: '0.72rem', color: T.dim }}>
+                      Save your email above to unlock the download.
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
+
             {/* Upgrade CTA */}
             <div style={{
               padding: '18px 20px',
@@ -452,6 +712,9 @@ export function MGScoringTool() {
               </div>
               <Link
                 href="/maintenance-gravity/subscribe?tier=starter"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={handleGetStartedClick}
                 style={{
                   fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.14em',
                   textTransform: 'uppercase', color: T.bg, background: T.gold,
@@ -461,6 +724,45 @@ export function MGScoringTool() {
               >
                 Get started →
               </Link>
+            </div>
+
+            {/* Printable scorecard — hidden on screen, shown via print stylesheet */}
+            <div className="mg-print-card">
+              <div className="mg-print-inner">
+                <div className="mg-print-brand">COGNITIVE EMPIRE</div>
+                <div className="mg-print-label">Maintenance Gravity Scorecard</div>
+                <div className="mg-print-score">
+                  {result.gravityScore}<span>/100</span>
+                </div>
+                <div className="mg-print-band">{band.label}</div>
+                <div className="mg-print-rule" />
+                <div className="mg-print-row">
+                  <span>OWNERLESS</span><b>{result.ownerless}</b>
+                </div>
+                <div className="mg-print-row">
+                  <span>LOOPS</span><b>{result.loops}</b>
+                </div>
+                {result.analysis && (
+                  <div className="mg-print-block">
+                    <div className="mg-print-block-label">Analysis</div>
+                    <p>{result.analysis}</p>
+                  </div>
+                )}
+                {result.fastestWin && (
+                  <div className="mg-print-block">
+                    <div className="mg-print-block-label">Fastest Win</div>
+                    <p>{result.fastestWin}</p>
+                  </div>
+                )}
+                <div className="mg-print-footer">
+                  <span>
+                    {new Date(createdAt ?? Date.now()).toLocaleDateString('en-US', {
+                      year: 'numeric', month: 'long', day: 'numeric',
+                    })}
+                  </span>
+                  <span>cognitiveempire.com/maintenance-gravity</span>
+                </div>
+              </div>
             </div>
 
           </div>
