@@ -681,31 +681,51 @@ function Sidebar({ pf }: { pf: string }) {
 
 // ── Dashboard header ──────────────────────────────────────────────────────────
 
-function DashboardHeader() {
+function SearchGlyph() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <circle cx="11" cy="11" r="7" />
+      <line x1="21" y1="21" x2="16.2" y2="16.2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function DashboardHeader({ cycleLabel }: { cycleLabel: string }) {
   return (
     <header className="sg-header">
-      <div className="sg-header-left">
-        <span className="sg-header-wordmark">CE SIGNALS</span>
-        <span className="sg-header-sep">·</span>
-        <span className="sg-header-cycle">Signal Intelligence · Cycle 001</span>
-        <div className="sg-live-indicator">
-          <span className="sg-live-dot" />
-          <span className="sg-live-label">LIVE</span>
+      <div className="sg-header-top">
+        <div className="sg-header-titleblock">
+          <div className="sg-header-eyebrow">CE SIGNALS <span className="sg-header-eyebrow-sep">/</span> OVERVIEW</div>
+          <h1 className="sg-header-title">Structural intelligence across accelerating domains.</h1>
+          <p className="sg-header-subtitle">
+            Track the forces shaping our world. Identify what matters. Act with clarity.
+          </p>
+        </div>
+
+        <div className="sg-header-controls">
+          <div className="sg-header-search" aria-hidden="true">
+            <SearchGlyph />
+            <span>Search signals</span>
+          </div>
+          <div className="sg-live-indicator">
+            <span className="sg-live-dot" />
+            <span className="sg-live-label">LIVE</span>
+          </div>
+          <span className="sg-header-cycle">{cycleLabel}</span>
         </div>
       </div>
-      <p className="sg-header-sub">Human-reviewed structural intelligence for operators.</p>
     </header>
   );
 }
 
 // ── KPI strip ─────────────────────────────────────────────────────────────────
 
-type KPI = { label: string; value: string; gold?: boolean };
+type KPI = { label: string; value: string; sub: string; gold?: boolean };
 
 function KPIGlyph({ gold }: { gold?: boolean }) {
   const color = gold ? "#C5A46E" : "rgba(0,229,255,0.60)";
   return (
-    <svg width="11" height="11" viewBox="0 0 12 12" aria-hidden="true">
+    <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
       <circle cx="6" cy="6" r="5" fill="none" stroke={color} strokeWidth="1.1" />
       <circle cx="6" cy="6" r="1.6" fill={color} />
     </svg>
@@ -722,6 +742,7 @@ function KPIStrip({ kpis }: { kpis: KPI[] }) {
             <span className="sg-kpi-label">{kpi.label}</span>
           </div>
           <span className={`sg-kpi-value${kpi.gold ? " sg-kpi-gold" : ""}`}>{kpi.value}</span>
+          <span className="sg-kpi-sub">{kpi.sub}</span>
         </div>
       ))}
     </div>
@@ -752,22 +773,31 @@ type MapNode = {
   central: boolean;
 };
 
+// Deterministic decorative dust field — fixed formula, no runtime randomness.
+const MAP_DUST: [number, number, number, number][] = Array.from({ length: 46 }, (_, i) => {
+  const x = (i * 47.3 + (i % 5) * 6.1) % 100;
+  const y = (i * 71.9 + (i % 7) * 4.3) % 100;
+  const r = 0.4 + ((i * 13) % 7) / 10;
+  const o = 0.10 + ((i * 7) % 10) / 45;
+  return [x, y, r, o];
+});
+
 function stateColor(state: string | null): string {
   if (!state) return "#5C6E84";
   return STATE_MAP[state]?.color ?? "#5C6E84";
 }
 
 function buildForceMapNodes(forces: V2Signal[], featured: V2Signal | null): MapNode[] {
-  const ring = forces.filter((f) => f.id !== featured?.id).slice(0, 6);
+  const ring = forces.filter((f) => f.id !== featured?.id).slice(0, 7);
   const all = featured ? [featured, ...ring] : ring;
   const weights = all.map((f) => f.directional_weight ?? 0);
   const maxW = Math.max(1, ...weights);
   const minW = Math.min(...weights.filter((w) => w > 0), maxW);
 
   const scaleR = (w: number) => {
-    if (maxW === minW) return 15;
+    if (maxW === minW) return 14;
     const t = (w - minW) / (maxW - minW);
-    return 9 + t * 13;
+    return 8 + t * 12;
   };
 
   const nodes: MapNode[] = [];
@@ -779,7 +809,7 @@ function buildForceMapNodes(forces: V2Signal[], featured: V2Signal | null): MapN
       weight: featured.directional_weight ?? 0,
       x: 50,
       y: 50,
-      r: scaleR(featured.directional_weight ?? 0) + 6,
+      r: scaleR(featured.directional_weight ?? 0) + 7,
       color: stateColor(featured.signal_state),
       central: true,
     });
@@ -788,7 +818,7 @@ function buildForceMapNodes(forces: V2Signal[], featured: V2Signal | null): MapN
   const n = ring.length;
   ring.forEach((f, i) => {
     const angle = (i / Math.max(n, 1)) * Math.PI * 2 - Math.PI / 2;
-    const rx = 36, ry = 32;
+    const rx = 30, ry = 26;
     nodes.push({
       id: f.id,
       title: f.title,
@@ -804,9 +834,16 @@ function buildForceMapNodes(forces: V2Signal[], featured: V2Signal | null): MapN
   return nodes;
 }
 
+const MAP_LEGEND = [
+  { key: "act_now",     label: "Act Now",     color: "#C5A46E" },
+  { key: "directional", label: "Directional", color: "#00E5FF" },
+  { key: "growing",     label: "Growing",     color: "rgba(0,229,255,0.60)" },
+  { key: "watch",       label: "Watch",       color: "#5C6E84" },
+] as const;
+
 function ForceMap({ nodes }: { nodes: MapNode[] }) {
   const center = nodes.find((n) => n.central) ?? null;
-  const ring = nodes.filter((n) => !n.central);
+  const ring   = nodes.filter((n) => !n.central);
 
   if (nodes.length === 0) {
     return (
@@ -820,17 +857,44 @@ function ForceMap({ nodes }: { nodes: MapNode[] }) {
     <div className="sg-map">
       <svg className="sg-map-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
         <defs>
-          <radialGradient id="sgMapGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="rgba(197,164,110,0.14)" />
+          <radialGradient id="sgMapGlowOuter" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="rgba(197,164,110,0.10)" />
+            <stop offset="100%" stopColor="rgba(197,164,110,0)" />
+          </radialGradient>
+          <radialGradient id="sgMapGlowInner" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="rgba(197,164,110,0.22)" />
             <stop offset="100%" stopColor="rgba(197,164,110,0)" />
           </radialGradient>
         </defs>
-        {center && <ellipse cx={center.x} cy={center.y} rx={26} ry={22} fill="url(#sgMapGlow)" />}
+
+        {/* decorative dust field */}
+        {MAP_DUST.map(([x, y, r, o], i) => (
+          <circle key={`dust-${i}`} cx={x} cy={y} r={r} fill={`rgba(180,200,225,${o})`} />
+        ))}
+
+        {center && <ellipse cx={center.x} cy={center.y} rx={40} ry={34} fill="url(#sgMapGlowOuter)" />}
+        {center && <ellipse cx={center.x} cy={center.y} rx={22} ry={18} fill="url(#sgMapGlowInner)" />}
+
+        {/* ring-to-ring arcs for network density */}
+        {ring.map((n, i) => {
+          const next = ring[(i + 1) % ring.length];
+          if (!next || ring.length < 3) return null;
+          return (
+            <line
+              key={`arc-${n.id}`}
+              x1={n.x} y1={n.y} x2={next.x} y2={next.y}
+              stroke="rgba(122,141,166,0.16)" strokeWidth={0.2}
+              vectorEffect="non-scaling-stroke"
+            />
+          );
+        })}
+
+        {/* spokes from center */}
         {center && ring.map((n) => (
           <line
             key={`line-${n.id}`}
             x1={center.x} y1={center.y} x2={n.x} y2={n.y}
-            stroke={n.color} strokeOpacity={0.24} strokeWidth={0.3}
+            stroke={n.color} strokeOpacity={0.30} strokeWidth={0.32}
             vectorEffect="non-scaling-stroke"
           />
         ))}
@@ -847,7 +911,7 @@ function ForceMap({ nodes }: { nodes: MapNode[] }) {
             style={{
               width: n.r * 2, height: n.r * 2,
               background: n.color,
-              boxShadow: `0 0 ${n.central ? 20 : 10}px ${n.color}`,
+              boxShadow: `0 0 ${n.central ? 26 : 12}px ${n.color}`,
             }}
           />
           <span className="sg-map-node-label">{n.title}</span>
@@ -858,7 +922,37 @@ function ForceMap({ nodes }: { nodes: MapNode[] }) {
   );
 }
 
+function MapLegend() {
+  return (
+    <div className="sg-map-legend">
+      {MAP_LEGEND.map((l) => (
+        <span key={l.key} className="sg-map-legend-item">
+          <span className="sg-map-legend-dot" style={{ background: l.color, boxShadow: `0 0 6px ${l.color}` }} />
+          {l.label}
+        </span>
+      ))}
+      <span className="sg-map-legend-item sg-map-legend-item--muted">Node size = weight</span>
+    </div>
+  );
+}
+
 // ── Featured Force panel ──────────────────────────────────────────────────────
+
+function WeightRing({ weight }: { weight: number }) {
+  const r = 30;
+  const c = 2 * Math.PI * r;
+  const offset = c - (Math.min(weight, 100) / 100) * c;
+  return (
+    <svg width="76" height="76" viewBox="0 0 76 76" style={{ position: "absolute", top: -8, right: -8 }} aria-hidden="true">
+      <circle cx="38" cy="38" r={r} fill="none" stroke="rgba(197,164,110,0.14)" strokeWidth="3" />
+      <circle
+        cx="38" cy="38" r={r} fill="none" stroke="#C5A46E" strokeWidth="3"
+        strokeDasharray={c} strokeDashoffset={offset} strokeLinecap="round"
+        transform="rotate(-90 38 38)"
+      />
+    </svg>
+  );
+}
 
 function FeaturedForcePanel({ force, pf }: { force: V2Signal | null; pf: string }) {
   if (!force) {
@@ -883,21 +977,21 @@ function FeaturedForcePanel({ force, pf }: { force: V2Signal | null; pf: string 
 
       <div className="sg-lead-body">
         <div className="sg-lead-main">
-          <div style={{ display: "flex", gap: 7, flexWrap: "wrap" as const, alignItems: "center", marginBottom: 14 }}>
+          <div style={{ display: "flex", gap: 7, flexWrap: "wrap" as const, alignItems: "center", marginBottom: 12 }}>
             {force.signal_state && <StateBadge state={force.signal_state} />}
             {urgency && <UrgencyBadge urgency={urgency} />}
           </div>
 
-          <h2 style={{ fontFamily: pf, fontSize: 26, fontWeight: 600, color: CE_WHITE, margin: "0 0 14px", lineHeight: 1.22 }}>
+          <h2 style={{ fontFamily: pf, fontSize: 30, fontWeight: 600, color: CE_WHITE, margin: "0 0 14px", lineHeight: 1.18 }}>
             {force.title}
           </h2>
 
           {path && (
-            <div style={{ marginBottom: move ? 16 : 0 }}>
+            <div style={{ marginBottom: move ? 14 : 0 }}>
               <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.35em", textTransform: "uppercase" as const, color: CE_DIM, margin: "0 0 6px" }}>
                 Dominant Path
               </p>
-              <p style={{ fontSize: 12.5, color: CE_MUTED, margin: 0, lineHeight: 1.65, maxWidth: 580 }}>
+              <p style={{ fontSize: 12.5, color: CE_MUTED, margin: 0, lineHeight: 1.6, maxWidth: 580 }}>
                 {path}
               </p>
             </div>
@@ -906,7 +1000,7 @@ function FeaturedForcePanel({ force, pf }: { force: V2Signal | null; pf: string 
           {move && (
             <div style={{
               display: "flex", alignItems: "flex-start", gap: 12,
-              borderTop: `1px solid rgba(14,26,46,0.85)`, paddingTop: 14,
+              borderTop: `1px solid rgba(14,26,46,0.85)`, paddingTop: 12,
             }}>
               <span style={{
                 fontSize: 10, fontWeight: 800, letterSpacing: "0.20em", textTransform: "uppercase" as const,
@@ -915,7 +1009,7 @@ function FeaturedForcePanel({ force, pf }: { force: V2Signal | null; pf: string 
               }}>
                 MOVE →
               </span>
-              <p style={{ fontSize: 12.5, color: CE_WHITE, margin: 0, lineHeight: 1.65, opacity: 0.92, maxWidth: 580 }}>
+              <p style={{ fontSize: 12.5, color: CE_WHITE, margin: 0, lineHeight: 1.6, opacity: 0.92, maxWidth: 580 }}>
                 {move}
               </p>
             </div>
@@ -924,12 +1018,13 @@ function FeaturedForcePanel({ force, pf }: { force: V2Signal | null; pf: string 
 
         <div className="sg-lead-side">
           {weight > 0 && (
-            <div style={{ textAlign: "right" as const }}>
+            <div className="sg-lead-weight">
+              <WeightRing weight={weight} />
               <div style={{ lineHeight: 1 }}>
-                <span style={{ fontSize: 58, fontWeight: 700, color: CE_WHITE, letterSpacing: "-0.03em", lineHeight: 1 }}>
+                <span style={{ fontSize: 52, fontWeight: 700, color: CE_WHITE, letterSpacing: "-0.03em", lineHeight: 1 }}>
                   {weight}
                 </span>
-                <span style={{ fontSize: 20, color: CE_MUTED }}>{"%"}</span>
+                <span style={{ fontSize: 18, color: CE_MUTED }}>{"%"}</span>
               </div>
               <span style={{ fontSize: 9, fontWeight: 700, color: CE_DIM, letterSpacing: "0.20em", textTransform: "uppercase" as const }}>
                 weight
@@ -939,7 +1034,7 @@ function FeaturedForcePanel({ force, pf }: { force: V2Signal | null; pf: string 
 
           <div style={{
             display: "flex", flexDirection: "column" as const, alignItems: "flex-end", gap: 6,
-            fontSize: 10, color: CE_DIM, marginTop: "auto", paddingTop: 20,
+            fontSize: 10, color: CE_DIM, marginTop: "auto", paddingTop: 18,
           }}>
             <span><span style={{ color: GOLD }}>✓</span> Human-reviewed</span>
             <span><span style={{ color: GOLD }}>✓</span> Doctrine-governed</span>
@@ -965,28 +1060,29 @@ function StateDistWidget({ signals }: { signals: V2Signal[] }) {
   const total  = signals.length;
 
   return (
-    <div className="sg-panel">
+    <div className="sg-panel sg-rail-panel">
       <PanelHdr label="Signal States" meta={`${total} forces`} />
       <div className="sg-panel-body">
         {STATES.map(({ key, label, color }) => {
           const count = counts[key] ?? 0;
           return (
             <div key={key} className="sg-dist-row">
-              <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.10em", color, width: 88, flexShrink: 0 }}>
+              <span className="sg-dist-dot" style={{ background: color, boxShadow: `0 0 5px ${color}` }} />
+              <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.10em", color, width: 76, flexShrink: 0 }}>
                 {label}
               </span>
               <div className="sg-dist-track">
                 <div className="sg-dist-fill" style={{ width: `${(count / max) * 100}%`, background: color }} />
               </div>
-              <span style={{ fontSize: 15, fontWeight: 700, color: CE_WHITE, width: 18, textAlign: "right" as const, flexShrink: 0 }}>
+              <span style={{ fontSize: 14, fontWeight: 700, color: CE_WHITE, width: 16, textAlign: "right" as const, flexShrink: 0 }}>
                 {count}
               </span>
             </div>
           );
         })}
         <div style={{
-          display: "flex", justifyContent: "space-between", paddingTop: 12,
-          marginTop: 4, borderTop: `1px solid rgba(14,26,46,0.7)`,
+          display: "flex", justifyContent: "space-between", paddingTop: 10,
+          marginTop: 2, borderTop: `1px solid rgba(14,26,46,0.7)`,
           fontSize: 10, color: CE_DIM,
         }}>
           <span>Forces tracked</span>
@@ -999,6 +1095,14 @@ function StateDistWidget({ signals }: { signals: V2Signal[] }) {
 
 // ── Dominant signals widget ───────────────────────────────────────────────────
 
+function DsignalGlyph({ color }: { color: string }) {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+      <path d="M1 11L5 6l3 3 5-7" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 function DominantSignalsWidget({ signals, pf }: { signals: V2Signal[]; pf: string }) {
   return (
     <div id="sg-dominant" className="sg-panel sg-c12">
@@ -1010,10 +1114,13 @@ function DominantSignalsWidget({ signals, pf }: { signals: V2Signal[]; pf: strin
           const urgency = getUrgency(s);
           const path    = s.dominant_path ?? s.directional_thesis ?? null;
           const isLive  = s.signal_state === "act_now" || s.is_featured;
+          const color   = stateColor(s.signal_state);
           return (
             <div key={s.id} className={`sg-dsignal-card${isLive ? " sg-dsignal-card--live" : ""}`}>
+              <div className="sg-dsignal-bar" style={{ background: `linear-gradient(90deg, ${color}, transparent)` }} />
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" as const }}>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" as const, alignItems: "center" }}>
+                  <span className="sg-dsignal-glyph"><DsignalGlyph color={color} /></span>
                   {s.signal_state && <StateBadge state={s.signal_state} />}
                   {urgency && <UrgencyBadge urgency={urgency} />}
                 </div>
@@ -1030,9 +1137,7 @@ function DominantSignalsWidget({ signals, pf }: { signals: V2Signal[]; pf: strin
               </p>
 
               {path && (
-                <p style={{ fontSize: 11.5, color: CE_MUTED, margin: 0, lineHeight: 1.55 }}>
-                  {path}
-                </p>
+                <p className="sg-dsignal-path">{path}</p>
               )}
 
               {s.operator_move && (
@@ -1061,23 +1166,23 @@ function DominantSignalsWidget({ signals, pf }: { signals: V2Signal[]; pf: strin
 function OperatorMovesQueue({ signals }: { signals: V2Signal[] }) {
   const moves = signals
     .filter((s) => s.operator_move)
-    .map((s) => ({ move: s.operator_move!, force: s.title }))
-    .slice(0, 7);
+    .map((s, i) => ({ move: s.operator_move!, force: s.title, color: stateColor(s.signal_state), n: i + 1 }))
+    .slice(0, 6);
 
   return (
-    <div id="sg-moves" className="sg-panel">
-      <PanelHdr label="Operator Moves" meta={`${moves.length} queued`} />
+    <div id="sg-moves" className="sg-panel sg-rail-panel">
+      <PanelHdr label="Operator Moves" meta={`${moves.length} queued`} gold />
       <div className="sg-panel-body sg-moves-body">
         {moves.length === 0 ? (
           <p style={{ fontSize: 12, color: CE_MUTED }}>No operator moves available.</p>
-        ) : moves.map(({ move, force }, i) => (
-          <div key={i} className="sg-move-item">
-            <span className="sg-move-arrow">→</span>
+        ) : moves.map(({ move, force, color, n }) => (
+          <div key={n} className="sg-move-item">
+            <span className="sg-move-index" style={{ borderColor: `${color}55`, color }}>{n}</span>
             <div>
-              <p style={{ fontSize: 11.5, color: "#C5D2E0", margin: "0 0 3px", lineHeight: 1.55 }}>
+              <p style={{ fontSize: 11.5, color: "#C5D2E0", margin: "0 0 3px", lineHeight: 1.5 }}>
                 {move}
               </p>
-              <p style={{ fontSize: 10, color: CE_DIM, margin: 0 }}>{force}</p>
+              <p style={{ fontSize: 9.5, color: CE_DIM, margin: 0 }}>{force}</p>
             </div>
           </div>
         ))}
@@ -1093,33 +1198,39 @@ function ForceRegisterPanel({ signals }: { signals: V2Signal[] }) {
     <div id="sg-register" className="sg-panel sg-c12">
       <PanelHdr label="Seven Base Forces" meta="Force Register" />
       <div className="sg-register-list">
-        {signals.map((s) => {
+        {signals.map((s, i) => {
           const urgency = getUrgency(s);
           const path    = s.dominant_path ?? s.directional_thesis ?? null;
+          const color   = stateColor(s.signal_state);
           return (
             <div key={s.id} className="sg-register-row">
-              <div className="sg-register-row-top">
-                <div className="sg-register-row-id">
-                  <span className="sg-register-row-name">{s.title}</span>
-                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" as const, marginTop: 7 }}>
-                    {s.signal_state && <StateBadge state={s.signal_state} />}
-                    {urgency && <UrgencyBadge urgency={urgency} />}
+              <span className="sg-register-rank" style={{ borderColor: `${color}44`, color }}>
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <div className="sg-register-body">
+                <div className="sg-register-row-top">
+                  <div className="sg-register-row-id">
+                    <span className="sg-register-row-name">{s.title}</span>
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" as const, marginTop: 7 }}>
+                      {s.signal_state && <StateBadge state={s.signal_state} />}
+                      {urgency && <UrgencyBadge urgency={urgency} />}
+                    </div>
                   </div>
+                  {s.directional_weight != null && (
+                    <div className="sg-register-row-weight">
+                      <span>{s.directional_weight}</span>
+                      <span style={{ fontSize: 12, color: CE_MUTED, fontWeight: 600 }}>%</span>
+                    </div>
+                  )}
                 </div>
-                {s.directional_weight != null && (
-                  <div className="sg-register-row-weight">
-                    <span>{s.directional_weight}</span>
-                    <span style={{ fontSize: 12, color: CE_MUTED, fontWeight: 600 }}>%</span>
+                {path && <p className="sg-register-row-path">{path}</p>}
+                {s.operator_move && (
+                  <div className="sg-register-row-move">
+                    <span className="sg-register-row-move-tag">MOVE</span>
+                    <span>{s.operator_move}</span>
                   </div>
                 )}
               </div>
-              {path && <p className="sg-register-row-path">{path}</p>}
-              {s.operator_move && (
-                <div className="sg-register-row-move">
-                  <span className="sg-register-row-move-tag">MOVE</span>
-                  <span>{s.operator_move}</span>
-                </div>
-              )}
             </div>
           );
         })}
@@ -1147,19 +1258,19 @@ function EvidenceEngineStrip() {
             borderRight: i < EVIDENCE_STAGES.length - 1 ? `1px solid rgba(14,26,46,0.7)` : "none",
           }}>
             <div style={{
-              fontSize: 13, fontWeight: 800, color: "rgba(201,169,97,0.35)",
-              fontFamily: "ui-monospace, monospace", flexShrink: 0, minWidth: 24,
+              fontSize: 15, fontWeight: 800, color: "rgba(201,169,97,0.38)",
+              fontFamily: "ui-monospace, monospace", flexShrink: 0, minWidth: 26,
             }}>
               {stage.num}
             </div>
             <div>
               <p style={{
                 fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" as const,
-                color: "rgba(201,169,97,0.68)", margin: "0 0 5px",
+                color: "rgba(201,169,97,0.70)", margin: "0 0 5px",
               }}>
                 {stage.label}
               </p>
-              <p style={{ fontSize: 11, color: CE_DIM, margin: 0, lineHeight: 1.65 }}>
+              <p style={{ fontSize: 11, color: CE_DIM, margin: 0, lineHeight: 1.6 }}>
                 {stage.desc}
               </p>
             </div>
@@ -1170,24 +1281,32 @@ function EvidenceEngineStrip() {
   );
 }
 
-// ── Doctrine seal (rail) ──────────────────────────────────────────────────────
+// ── Evidence & doctrine integrity (rail) ──────────────────────────────────────
 
-function DoctrineSealCard() {
+function EvidenceDoctrineRailCard() {
   return (
-    <div className="sg-panel sg-doctrine-seal">
-      <PanelHdr label="Doctrine" gold />
-      <div className="sg-panel-body" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, color: CE_WHITE }}>
-          <span style={{ color: GOLD }}>✓</span>
-          <span>Human-reviewed</span>
+    <div className="sg-panel sg-rail-panel">
+      <PanelHdr label="Evidence & Doctrine" gold />
+      <div className="sg-panel-body" style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+        {EVIDENCE_STAGES.map((stage) => (
+          <div key={stage.num} className="sg-rail-evidence-row">
+            <span className="sg-rail-evidence-num">{stage.num}</span>
+            <span className="sg-rail-evidence-label">{stage.label}</span>
+          </div>
+        ))}
+        <div style={{
+          display: "flex", flexDirection: "column", gap: 6,
+          marginTop: 10, paddingTop: 10, borderTop: `1px solid rgba(14,26,46,0.7)`,
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, color: CE_WHITE }}>
+            <span style={{ color: GOLD }}>✓</span>
+            <span>Human-reviewed</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, color: CE_WHITE }}>
+            <span style={{ color: GOLD }}>✓</span>
+            <span>Doctrine-governed</span>
+          </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, color: CE_WHITE }}>
-          <span style={{ color: GOLD }}>✓</span>
-          <span>Doctrine-governed</span>
-        </div>
-        <p style={{ fontSize: 10.5, color: CE_DIM, lineHeight: 1.7, margin: "4px 0 0", paddingTop: 10, borderTop: `1px solid rgba(14,26,46,0.7)` }}>
-          {EVIDENCE_STAGES[3].desc}
-        </p>
       </div>
     </div>
   );
@@ -1225,6 +1344,26 @@ function ConvergencesWidget({ convergences }: { convergences: ConvergenceResult[
   );
 }
 
+// ── Convergences preview (rail) ───────────────────────────────────────────────
+
+function ConvergencesRailPreview({ convergences }: { convergences: ConvergenceResult[] }) {
+  return (
+    <div className="sg-panel sg-rail-panel">
+      <PanelHdr label="Top Convergences" meta={`${convergences.length}`} />
+      <div className="sg-panel-body" style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+        {convergences.slice(0, 3).map((c) => (
+          <div key={c.id} className="sg-rail-conv-row">
+            {c.convergence_score != null && (
+              <span className="sg-rail-conv-score">{c.convergence_score.toFixed(0)}</span>
+            )}
+            <span className="sg-rail-conv-title">{c.title}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ── Dashboard layout ──────────────────────────────────────────────────────────
 
 function SignalsDashboard({
@@ -1250,19 +1389,19 @@ function SignalsDashboard({
   const mapNodes       = buildForceMapNodes(sortedForces, featuredForce);
 
   const kpis: KPI[] = [
-    { label: "Forces Tracked", value: String(baseForces.length || 7) },
-    { label: "ACT NOW",        value: String(actNowCount), gold: actNowCount > 0 },
-    { label: "Directional",    value: String(directional) },
-    { label: "Highest Weight", value: highestWeight > 0 ? `${highestWeight}%` : "—", gold: highestWeight > 0 },
-    { label: "Human Reviewed", value: "Yes" },
-    { label: "Doctrine Governed", value: "Yes" },
+    { label: "Forces Tracked", value: String(baseForces.length || 7), sub: "Seven Base Forces" },
+    { label: "ACT NOW",        value: String(actNowCount), sub: `of ${baseForces.length || 7} forces`, gold: actNowCount > 0 },
+    { label: "Directional",    value: String(directional), sub: `of ${baseForces.length || 7} forces` },
+    { label: "Highest Weight", value: highestWeight > 0 ? `${highestWeight}%` : "—", sub: featuredForce?.title ?? "—", gold: highestWeight > 0 },
+    { label: "Human Reviewed", value: "Yes", sub: "Every signal" },
+    { label: "Doctrine Governed", value: "Yes", sub: "Eight Laws" },
   ];
 
   return (
     <div
       className="sg-shell"
       style={{
-        background: `url("${NOISE_URI}") repeat, radial-gradient(ellipse at 50% -8%, rgba(197,164,110,0.055), transparent 55%), linear-gradient(168deg, #02060F 0%, #030B1A 32%, #020810 65%, #010406 100%)`,
+        background: `url("${NOISE_URI}") repeat, radial-gradient(ellipse at 50% -8%, rgba(197,164,110,0.06), transparent 55%), linear-gradient(168deg, #02060F 0%, #030B1A 32%, #020810 65%, #010406 100%)`,
         color: CE_WHITE,
         minHeight: "100vh",
       }}
@@ -1317,7 +1456,7 @@ function SignalsDashboard({
         /* ── App shell ── */
         .sg-shell {
           display: grid;
-          grid-template-columns: 240px 1fr;
+          grid-template-columns: 260px 1fr;
           min-height: 100vh;
           position: relative;
         }
@@ -1398,8 +1537,18 @@ function SignalsDashboard({
           display: flex;
           flex-direction: column;
           min-height: 100vh;
+          min-width: 0;
           position: relative;
           z-index: 1;
+        }
+        .sg-workspace-inner {
+          width: 100%;
+          max-width: 1680px;
+          margin: 0 auto;
+          display: flex;
+          flex-direction: column;
+          min-height: 100vh;
+          min-width: 0;
         }
 
         /* ── Header ── */
@@ -1407,38 +1556,71 @@ function SignalsDashboard({
           position: sticky;
           top: 0;
           z-index: 20;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 0 20px;
-          height: 52px;
-          background: rgba(1,4,10,0.92);
+          background: rgba(1,4,10,0.94);
           border-bottom: 1px solid rgba(14,26,46,0.92);
           backdrop-filter: blur(18px);
           -webkit-backdrop-filter: blur(18px);
           flex-shrink: 0;
+          padding: 22px 24px 20px;
         }
-        .sg-header-left {
+        .sg-header-top {
           display: flex;
-          align-items: center;
-          gap: 10px;
+          align-items: flex-end;
+          justify-content: space-between;
+          gap: 24px;
           flex-wrap: wrap;
         }
-        .sg-header-wordmark {
-          font-size: 12px;
+        .sg-header-titleblock { max-width: 720px; min-width: 0; flex: 1 1 auto; }
+        .sg-header-eyebrow {
+          font-size: 10px;
           font-weight: 700;
-          color: #EEF3FA;
-          letter-spacing: 0.16em;
+          letter-spacing: 0.30em;
+          text-transform: uppercase;
+          color: rgba(197,164,110,0.80);
+          margin-bottom: 10px;
         }
-        .sg-header-sep { color: rgba(46,62,82,0.6); }
-        .sg-header-cycle { font-size: 11px; color: #7A8DA6; letter-spacing: 0.05em; }
+        .sg-header-eyebrow-sep { color: rgba(197,164,110,0.35); margin: 0 2px; }
+        .sg-header-title {
+          font-family: ${playfair.style.fontFamily};
+          font-size: 26px;
+          font-weight: 600;
+          line-height: 1.22;
+          color: #F4F7FB;
+          margin: 0 0 8px;
+          letter-spacing: -0.01em;
+        }
+        .sg-header-subtitle {
+          font-size: 12.5px;
+          color: #7A8DA6;
+          margin: 0;
+          line-height: 1.6;
+        }
+        .sg-header-controls {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          flex-shrink: 0;
+          padding-bottom: 2px;
+        }
+        .sg-header-search {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 14px;
+          border: 1px solid rgba(14,26,46,0.95);
+          border-radius: 5px;
+          background: rgba(3,7,16,0.7);
+          color: rgba(90,110,135,0.85);
+          font-size: 11.5px;
+        }
+        .sg-header-cycle { font-size: 10.5px; color: rgba(46,62,82,0.85); letter-spacing: 0.04em; white-space: nowrap; }
         .sg-live-indicator {
           display: flex;
           align-items: center;
           gap: 6px;
-          padding: 3px 8px;
+          padding: 5px 10px;
           border: 1px solid rgba(0,229,255,0.18);
-          border-radius: 2px;
+          border-radius: 3px;
           background: rgba(0,229,255,0.04);
         }
         .sg-live-dot {
@@ -1458,20 +1640,13 @@ function SignalsDashboard({
           letter-spacing: 0.22em;
           opacity: 0.85;
         }
-        .sg-header-sub {
-          font-size: 11px;
-          color: rgba(46,62,82,0.85);
-          margin: 0;
-          white-space: nowrap;
-          letter-spacing: 0.02em;
-        }
 
         /* ── KPI strip ── */
         .sg-kpi-strip {
           display: grid;
           grid-template-columns: repeat(6, 1fr);
           gap: 10px;
-          padding: 12px 14px;
+          padding: 12px 24px;
           border-bottom: 1px solid rgba(14,26,46,0.92);
           background: rgba(1,4,10,0.55);
           flex-shrink: 0;
@@ -1479,31 +1654,31 @@ function SignalsDashboard({
         .sg-kpi-card {
           background: rgba(3,7,16,0.70);
           border: 1px solid rgba(14,26,46,0.85);
-          border-radius: 5px;
-          padding: 10px 12px 11px;
+          border-radius: 6px;
+          padding: 11px 13px 12px;
           display: flex;
           flex-direction: column;
-          gap: 7px;
-          transition: border-color 180ms ease, transform 180ms ease, background 180ms ease;
+          gap: 6px;
+          transition: border-color 180ms ease, transform 180ms ease, background 180ms ease, box-shadow 180ms ease;
           cursor: default;
         }
         .sg-kpi-card:hover {
-          border-color: rgba(0,229,255,0.22);
-          background: rgba(5,12,24,0.78);
-          transform: translateY(-1px);
+          border-color: rgba(0,229,255,0.24);
+          background: rgba(5,12,24,0.80);
+          transform: translateY(-2px);
+          box-shadow: 0 8px 24px rgba(0,0,0,0.35);
         }
-        .sg-kpi-card--gold:hover { border-color: rgba(197,164,110,0.38); }
+        .sg-kpi-card--gold:hover { border-color: rgba(197,164,110,0.42); }
         .sg-kpi-card-top { display: flex; align-items: center; gap: 6px; }
         .sg-kpi-label {
           font-size: 8.5px;
           font-weight: 700;
-          letter-spacing: 0.22em;
+          letter-spacing: 0.20em;
           text-transform: uppercase;
           color: #334458;
-          font-variant-numeric: tabular-nums;
         }
         .sg-kpi-value {
-          font-size: 19px;
+          font-size: 20px;
           font-weight: 700;
           color: #EEF3FA;
           letter-spacing: -0.01em;
@@ -1511,9 +1686,16 @@ function SignalsDashboard({
           font-variant-numeric: tabular-nums;
         }
         .sg-kpi-gold { color: #C5A46E; }
+        .sg-kpi-sub {
+          font-size: 9.5px;
+          color: rgba(122,141,166,0.65);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
 
         /* ── Grid ── */
-        .sg-scrollarea { flex: 1; padding: 14px; display: flex; flex-direction: column; gap: 16px; }
+        .sg-scrollarea { flex: 1; min-width: 0; padding: 16px 24px 28px; display: flex; flex-direction: column; gap: 14px; }
         .sg-grid {
           display: grid;
           grid-template-columns: repeat(12, 1fr);
@@ -1521,7 +1703,7 @@ function SignalsDashboard({
         }
         .sg-c12 { grid-column: span 12; }
 
-        /* ── Command grid: pressure map + intelligence rail ── */
+        /* ── Command grid: convergence map + intelligence rail ── */
         .sg-command-grid {
           display: grid;
           grid-template-columns: 1fr;
@@ -1529,28 +1711,29 @@ function SignalsDashboard({
           align-items: start;
         }
         @media (min-width: 1180px) {
-          .sg-command-grid { grid-template-columns: 1fr 320px; }
-          .sg-rail { position: sticky; top: 68px; }
+          .sg-command-grid { grid-template-columns: 1fr 360px; }
+          .sg-rail { position: sticky; top: 168px; }
         }
         .sg-command-main { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-        .sg-rail { display: flex; flex-direction: column; gap: 12px; }
+        .sg-rail { display: flex; flex-direction: column; gap: 10px; }
+        .sg-rail-panel { }
 
         /* ── Panel base ── */
         .sg-panel {
           background: rgba(3,7,16,0.85);
           border: 1px solid rgba(14,26,46,0.92);
-          border-radius: 4px;
+          border-radius: 5px;
           overflow: hidden;
           display: flex;
           flex-direction: column;
           transition: border-color 220ms ease, box-shadow 220ms ease;
         }
-        .sg-panel:hover { border-color: rgba(197,164,110,0.22); }
+        .sg-panel:hover { border-color: rgba(197,164,110,0.22); box-shadow: 0 12px 40px rgba(0,0,0,0.30); }
 
-        /* Gold-accent variant: Featured Force */
+        /* Gold-accent variant: Featured Force / hero map */
         .sg-panel--gold {
           border-left: 3px solid rgba(197,164,110,0.55);
-          border-radius: 0 4px 4px 0;
+          border-radius: 0 5px 5px 0;
         }
         .sg-panel--gold:hover { border-left-color: rgba(197,164,110,0.85); }
 
@@ -1569,28 +1752,28 @@ function SignalsDashboard({
           text-transform: uppercase;
           color: #334458;
         }
-        .sg-panel-label--gold { color: rgba(197,164,110,0.65); }
+        .sg-panel-label--gold { color: rgba(197,164,110,0.68); }
         .sg-panel-meta {
           font-size: 9px;
           color: rgba(46,62,82,0.60);
           letter-spacing: 0.05em;
         }
-        .sg-panel-body { padding: 16px; flex: 1; overflow: auto; }
+        .sg-panel-body { padding: 14px 16px; flex: 1; overflow: auto; }
 
-        /* ── Pressure map (hero) ── */
+        /* ── Pressure / convergence map (hero) ── */
         .sg-map-panel { min-width: 0; }
         .sg-map {
           position: relative;
           width: 100%;
-          aspect-ratio: 2.15 / 1;
-          max-height: 420px;
-          min-height: 260px;
+          aspect-ratio: 2.05 / 1;
+          min-height: 390px;
+          max-height: 460px;
         }
         .sg-map--empty {
           display: flex;
           align-items: center;
           justify-content: center;
-          min-height: 220px;
+          min-height: 260px;
         }
         .sg-map-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
         .sg-map-node {
@@ -1599,12 +1782,12 @@ function SignalsDashboard({
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 6px;
-          width: 118px;
+          gap: 5px;
+          width: 122px;
           text-align: center;
           z-index: 2;
         }
-        .sg-map-node--center { z-index: 3; width: 168px; }
+        .sg-map-node--center { z-index: 3; width: 172px; }
         .sg-map-node-dot {
           border-radius: 50%;
           display: block;
@@ -1613,17 +1796,34 @@ function SignalsDashboard({
         }
         .sg-map-node:hover .sg-map-node-dot { transform: scale(1.15); }
         .sg-map-node-label {
-          font-size: 10px;
+          font-size: 10.5px;
           color: #C5D2E0;
           letter-spacing: 0.01em;
-          line-height: 1.35;
+          line-height: 1.3;
         }
         .sg-map-node--center .sg-map-node-label {
-          font-size: 12.5px;
+          font-size: 14px;
           font-weight: 600;
           color: #EEF3FA;
         }
         .sg-map-node-weight { font-size: 9px; color: #C5A46E; font-weight: 700; }
+        .sg-map-legend {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          flex-wrap: wrap;
+          padding: 10px 16px 12px;
+          border-top: 1px solid rgba(14,26,46,0.7);
+        }
+        .sg-map-legend-item {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 10px;
+          color: #7A8DA6;
+        }
+        .sg-map-legend-item--muted { color: rgba(46,62,82,0.85); margin-left: auto; }
+        .sg-map-legend-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
 
         /* ── Lead force banner ── */
         .sg-lead-body {
@@ -1634,16 +1834,18 @@ function SignalsDashboard({
         }
         .sg-lead-main { flex: 1; min-width: 0; }
         .sg-lead-side { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; }
+        .sg-lead-weight { position: relative; text-align: right; padding-top: 4px; padding-right: 4px; }
 
         /* ── State dist ── */
         .sg-dist-row {
           display: flex;
           align-items: center;
-          gap: 10px;
-          padding: 9px 0;
+          gap: 8px;
+          padding: 8px 0;
           border-bottom: 1px solid rgba(14,26,46,0.6);
         }
         .sg-dist-row:last-child { border-bottom: none; }
+        .sg-dist-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
         .sg-dist-track {
           flex: 1;
           height: 2px;
@@ -1660,68 +1862,126 @@ function SignalsDashboard({
         /* ── Dominant signals ── */
         .sg-dsignal-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
           gap: 12px;
         }
         .sg-dsignal-card {
+          position: relative;
           background: rgba(2,5,10,0.55);
           border: 1px solid rgba(14,26,46,0.85);
           border-radius: 6px;
-          padding: 16px;
+          padding: 16px 16px 15px;
           display: flex;
           flex-direction: column;
-          gap: 9px;
-          border-left: 2px solid transparent;
-          transition: background 160ms, border-color 160ms, transform 160ms;
+          gap: 8px;
+          overflow: hidden;
+          transition: background 160ms, border-color 160ms, transform 160ms, box-shadow 160ms;
         }
+        .sg-dsignal-bar { position: absolute; top: 0; left: 0; right: 0; height: 2px; opacity: 0.8; }
+        .sg-dsignal-glyph {
+          display: inline-flex; align-items: center; justify-content: center;
+          width: 20px; height: 20px; border-radius: 4px;
+          background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
+          flex-shrink: 0;
+        }
+        .sg-dsignal-path { font-size: 11.5px; color: #7A8DA6; margin: 0; line-height: 1.55; }
         .sg-dsignal-card:hover {
-          background: rgba(4,10,22,0.75);
-          border-color: rgba(197,164,110,0.24);
-          transform: translateY(-2px);
+          background: rgba(4,10,22,0.80);
+          border-color: rgba(197,164,110,0.26);
+          transform: translateY(-3px);
+          box-shadow: 0 14px 34px rgba(0,0,0,0.35);
         }
-        .sg-dsignal-card--live { border-left-color: rgba(0,229,255,0.42); }
+        .sg-dsignal-card--live { border-left: 2px solid rgba(0,229,255,0.42); }
         .sg-dsignal-card--live:hover { border-left-color: rgba(0,229,255,0.75); }
 
-        /* ── Operator moves ── */
-        .sg-moves-body {
-          display: flex;
-          flex-direction: column;
-          padding: 0;
-        }
+        /* ── Operator moves (rail) ── */
+        .sg-moves-body { display: flex; flex-direction: column; padding: 0; }
         .sg-move-item {
           display: flex;
           gap: 10px;
           align-items: flex-start;
-          padding: 11px 16px;
+          padding: 10px 14px;
           border-bottom: 1px solid rgba(14,26,46,0.6);
           transition: background 150ms;
         }
         .sg-move-item:last-child { border-bottom: none; }
         .sg-move-item:hover { background: rgba(4,10,22,0.60); }
-        .sg-move-arrow {
+        .sg-move-index {
           display: flex;
           align-items: center;
           justify-content: center;
-          width: 16px;
-          height: 16px;
-          border-radius: 2px;
-          background: rgba(197,164,110,0.10);
-          border: 1px solid rgba(197,164,110,0.22);
-          color: #C5A46E;
-          font-size: 10px;
+          width: 18px;
+          height: 18px;
+          border-radius: 50%;
+          border: 1px solid;
+          background: rgba(197,164,110,0.06);
+          font-size: 9px;
+          font-weight: 700;
           flex-shrink: 0;
           margin-top: 1px;
         }
 
+        /* ── Rail: evidence & doctrine ── */
+        .sg-rail-evidence-row {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 7px 0;
+          border-bottom: 1px solid rgba(14,26,46,0.55);
+        }
+        .sg-rail-evidence-row:last-child { border-bottom: none; }
+        .sg-rail-evidence-num {
+          font-size: 10px;
+          font-weight: 800;
+          color: rgba(197,164,110,0.55);
+          font-family: ui-monospace, monospace;
+          width: 18px;
+          flex-shrink: 0;
+        }
+        .sg-rail-evidence-label {
+          font-size: 11px;
+          color: #C5D2E0;
+          font-weight: 500;
+        }
+
+        /* ── Rail: convergences preview ── */
+        .sg-rail-conv-row {
+          display: flex;
+          align-items: baseline;
+          gap: 10px;
+          padding: 8px 0;
+          border-bottom: 1px solid rgba(14,26,46,0.55);
+        }
+        .sg-rail-conv-row:last-child { border-bottom: none; }
+        .sg-rail-conv-score { font-size: 15px; font-weight: 700; color: #C5A46E; flex-shrink: 0; width: 26px; }
+        .sg-rail-conv-title { font-size: 11.5px; color: #C5D2E0; line-height: 1.4; }
+
         /* ── Force register rows ── */
         .sg-register-list { display: flex; flex-direction: column; }
         .sg-register-row {
-          padding: 16px 18px;
+          display: flex;
+          gap: 14px;
+          padding: 15px 18px;
           border-bottom: 1px solid rgba(14,26,46,0.75);
           transition: background 150ms;
         }
         .sg-register-row:last-child { border-bottom: none; }
         .sg-register-row:hover { background: rgba(4,10,22,0.55); }
+        .sg-register-rank {
+          font-size: 10px;
+          font-weight: 700;
+          font-family: ui-monospace, monospace;
+          border: 1px solid;
+          border-radius: 4px;
+          width: 26px;
+          height: 22px;
+          flex-shrink: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-top: 1px;
+        }
+        .sg-register-body { flex: 1; min-width: 0; }
         .sg-register-row-top {
           display: flex;
           align-items: flex-start;
@@ -1731,7 +1991,7 @@ function SignalsDashboard({
         }
         .sg-register-row-name { font-size: 14px; font-weight: 600; color: #EEF3FA; }
         .sg-register-row-weight {
-          font-size: 22px;
+          font-size: 21px;
           font-weight: 700;
           color: #EEF3FA;
           flex-shrink: 0;
@@ -1742,20 +2002,20 @@ function SignalsDashboard({
         .sg-register-row-path {
           font-size: 12px;
           color: #7A8DA6;
-          line-height: 1.6;
-          margin: 10px 0 0;
+          line-height: 1.55;
+          margin: 9px 0 0;
           max-width: 640px;
         }
         .sg-register-row-move {
           display: flex;
           align-items: flex-start;
           gap: 10px;
-          margin-top: 10px;
-          padding-top: 10px;
+          margin-top: 9px;
+          padding-top: 9px;
           border-top: 1px solid rgba(14,26,46,0.55);
           font-size: 12px;
           color: #C5D2E0;
-          line-height: 1.6;
+          line-height: 1.55;
         }
         .sg-register-row-move-tag {
           font-size: 9px;
@@ -1775,7 +2035,7 @@ function SignalsDashboard({
         .sg-evidence-tile {
           display: flex;
           gap: 12px;
-          padding: 14px 16px;
+          padding: 15px 16px;
           transition: background 160ms;
         }
         .sg-evidence-tile:hover { background: rgba(4,10,22,0.70); }
@@ -1797,10 +2057,11 @@ function SignalsDashboard({
 
         /* ── Mobile ── */
         @media (max-width: 768px) {
-          .sg-shell { grid-template-columns: 1fr; }
+          .sg-shell { grid-template-columns: minmax(0, 1fr); }
           .sg-sidebar {
             position: relative;
             height: auto;
+            min-width: 0;
             flex-direction: row;
             overflow-x: auto;
             overflow-y: hidden;
@@ -1838,26 +2099,32 @@ function SignalsDashboard({
             background: rgba(10,20,38,0.6);
           }
           .sg-sidebar-footer { display: none; }
-          .sg-header-sub { display: none; }
+          .sg-header { padding: 16px 14px 14px; }
+          .sg-header-top { align-items: flex-start; }
+          .sg-header-title { font-size: 19px; }
+          .sg-header-subtitle { display: none; }
+          .sg-header-controls { display: none; }
           .sg-kpi-strip {
+            padding: 10px 12px;
             grid-template-columns: none;
             grid-auto-flow: column;
-            grid-auto-columns: minmax(108px, 1fr);
+            grid-auto-columns: minmax(104px, 1fr);
             overflow-x: auto;
             scrollbar-width: none;
           }
           .sg-kpi-strip::-webkit-scrollbar { display: none; }
-          .sg-scrollarea { padding: 10px; gap: 12px; }
+          .sg-scrollarea { padding: 10px 12px 18px; gap: 10px; }
           .sg-grid { gap: 10px; }
           .sg-command-grid { gap: 10px; }
-          .sg-map { aspect-ratio: 4 / 3; max-height: 300px; }
+          .sg-map { aspect-ratio: 4 / 3; min-height: 240px; max-height: 300px; }
           .sg-map-node { width: 92px; }
-          .sg-map-node--center { width: 130px; }
+          .sg-map-node--center { width: 128px; }
           .sg-map-node-label { font-size: 9px; }
           .sg-map-node--center .sg-map-node-label { font-size: 11px; }
-          .sg-lead-body { flex-direction: column; gap: 18px; padding: 18px 18px 20px; }
+          .sg-lead-body { flex-direction: column; gap: 16px; padding: 18px 16px 20px; }
           .sg-lead-side { align-items: flex-start !important; width: 100%; }
           .sg-lead-side > div:first-child { text-align: left !important; }
+          .sg-lead-weight { padding-right: 0; }
         }
 
         /* ── Reduced motion ── */
@@ -1872,38 +2139,42 @@ function SignalsDashboard({
       <Sidebar pf={pf} />
 
       <div className="sg-main">
-        <DashboardHeader />
-        <KPIStrip kpis={kpis} />
+        <div className="sg-workspace-inner">
+          <DashboardHeader cycleLabel="Signal Intelligence · Cycle 001" />
+          <KPIStrip kpis={kpis} />
 
-        <div id="sg-overview" className="sg-scrollarea">
+          <div id="sg-overview" className="sg-scrollarea">
 
-          {/* Hero: pressure map + intelligence rail */}
-          <div className="sg-command-grid">
-            <div className="sg-command-main">
-              <div id="sg-map" className="sg-panel sg-panel--gold sg-map-panel">
-                <PanelHdr label="Pressure Map" meta={`${mapNodes.length} forces mapped`} gold />
-                <ForceMap nodes={mapNodes} />
+            {/* Hero: convergence map + intelligence rail */}
+            <div className="sg-command-grid">
+              <div className="sg-command-main">
+                <div id="sg-map" className="sg-panel sg-panel--gold sg-map-panel">
+                  <PanelHdr label="Convergence Map" meta={`${mapNodes.length} forces mapped`} gold />
+                  <ForceMap nodes={mapNodes} />
+                  <MapLegend />
+                </div>
+                <FeaturedForcePanel force={featuredForce} pf={pf} />
               </div>
-              <FeaturedForcePanel force={featuredForce} pf={pf} />
+
+              <div className="sg-rail">
+                <OperatorMovesQueue signals={baseForces} />
+                <StateDistWidget signals={baseForces} />
+                <EvidenceDoctrineRailCard />
+                {convergences.length > 0 && <ConvergencesRailPreview convergences={convergences} />}
+              </div>
             </div>
 
-            <div className="sg-rail">
-              <OperatorMovesQueue signals={baseForces} />
-              <StateDistWidget signals={baseForces} />
-              <DoctrineSealCard />
+            {/* Supporting sections */}
+            <div className="sg-grid">
+              <DominantSignalsWidget signals={dominantSignals} pf={pf} />
+              <ForceRegisterPanel signals={sortedForces} />
+              <EvidenceEngineStrip />
+              {convergences.length > 0 && (
+                <ConvergencesWidget convergences={convergences} />
+              )}
             </div>
-          </div>
 
-          {/* Supporting sections */}
-          <div className="sg-grid">
-            <DominantSignalsWidget signals={dominantSignals} pf={pf} />
-            <ForceRegisterPanel signals={sortedForces} />
-            <EvidenceEngineStrip />
-            {convergences.length > 0 && (
-              <ConvergencesWidget convergences={convergences} />
-            )}
           </div>
-
         </div>
       </div>
     </div>
