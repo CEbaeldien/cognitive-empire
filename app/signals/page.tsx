@@ -667,6 +667,10 @@ function Sidebar({ pf }: { pf: string }) {
       </nav>
 
       <div className="sg-sidebar-footer">
+        <div className="sg-live-indicator" style={{ marginBottom: 12 }}>
+          <span className="sg-live-dot" />
+          <span className="sg-live-label">LIVE</span>
+        </div>
         <Link href="/" className="sg-sidebar-home-link">
           ← Cognitive Empire
         </Link>
@@ -698,12 +702,25 @@ function DashboardHeader() {
 
 type KPI = { label: string; value: string; gold?: boolean };
 
+function KPIGlyph({ gold }: { gold?: boolean }) {
+  const color = gold ? "#C5A46E" : "rgba(0,229,255,0.60)";
+  return (
+    <svg width="11" height="11" viewBox="0 0 12 12" aria-hidden="true">
+      <circle cx="6" cy="6" r="5" fill="none" stroke={color} strokeWidth="1.1" />
+      <circle cx="6" cy="6" r="1.6" fill={color} />
+    </svg>
+  );
+}
+
 function KPIStrip({ kpis }: { kpis: KPI[] }) {
   return (
     <div className="sg-kpi-strip">
       {kpis.map((kpi, i) => (
-        <div key={i} className="sg-kpi">
-          <span className="sg-kpi-label">{kpi.label}</span>
+        <div key={i} className={`sg-kpi-card${kpi.gold ? " sg-kpi-card--gold" : ""}`}>
+          <div className="sg-kpi-card-top">
+            <KPIGlyph gold={kpi.gold} />
+            <span className="sg-kpi-label">{kpi.label}</span>
+          </div>
           <span className={`sg-kpi-value${kpi.gold ? " sg-kpi-gold" : ""}`}>{kpi.value}</span>
         </div>
       ))}
@@ -722,12 +739,131 @@ function PanelHdr({ label, meta, gold }: { label: string; meta?: string; gold?: 
   );
 }
 
+// ── Force map (hero) ──────────────────────────────────────────────────────────
+
+type MapNode = {
+  id: string;
+  title: string;
+  weight: number;
+  x: number;
+  y: number;
+  r: number;
+  color: string;
+  central: boolean;
+};
+
+function stateColor(state: string | null): string {
+  if (!state) return "#5C6E84";
+  return STATE_MAP[state]?.color ?? "#5C6E84";
+}
+
+function buildForceMapNodes(forces: V2Signal[], featured: V2Signal | null): MapNode[] {
+  const ring = forces.filter((f) => f.id !== featured?.id).slice(0, 6);
+  const all = featured ? [featured, ...ring] : ring;
+  const weights = all.map((f) => f.directional_weight ?? 0);
+  const maxW = Math.max(1, ...weights);
+  const minW = Math.min(...weights.filter((w) => w > 0), maxW);
+
+  const scaleR = (w: number) => {
+    if (maxW === minW) return 15;
+    const t = (w - minW) / (maxW - minW);
+    return 9 + t * 13;
+  };
+
+  const nodes: MapNode[] = [];
+
+  if (featured) {
+    nodes.push({
+      id: featured.id,
+      title: featured.title,
+      weight: featured.directional_weight ?? 0,
+      x: 50,
+      y: 50,
+      r: scaleR(featured.directional_weight ?? 0) + 6,
+      color: stateColor(featured.signal_state),
+      central: true,
+    });
+  }
+
+  const n = ring.length;
+  ring.forEach((f, i) => {
+    const angle = (i / Math.max(n, 1)) * Math.PI * 2 - Math.PI / 2;
+    const rx = 36, ry = 32;
+    nodes.push({
+      id: f.id,
+      title: f.title,
+      weight: f.directional_weight ?? 0,
+      x: 50 + rx * Math.cos(angle),
+      y: 50 + ry * Math.sin(angle),
+      r: scaleR(f.directional_weight ?? 0),
+      color: stateColor(f.signal_state),
+      central: false,
+    });
+  });
+
+  return nodes;
+}
+
+function ForceMap({ nodes }: { nodes: MapNode[] }) {
+  const center = nodes.find((n) => n.central) ?? null;
+  const ring = nodes.filter((n) => !n.central);
+
+  if (nodes.length === 0) {
+    return (
+      <div className="sg-map sg-map--empty">
+        <span style={{ color: CE_MUTED, fontSize: 12 }}>No force data available.</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="sg-map">
+      <svg className="sg-map-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <radialGradient id="sgMapGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="rgba(197,164,110,0.14)" />
+            <stop offset="100%" stopColor="rgba(197,164,110,0)" />
+          </radialGradient>
+        </defs>
+        {center && <ellipse cx={center.x} cy={center.y} rx={26} ry={22} fill="url(#sgMapGlow)" />}
+        {center && ring.map((n) => (
+          <line
+            key={`line-${n.id}`}
+            x1={center.x} y1={center.y} x2={n.x} y2={n.y}
+            stroke={n.color} strokeOpacity={0.24} strokeWidth={0.3}
+            vectorEffect="non-scaling-stroke"
+          />
+        ))}
+      </svg>
+
+      {nodes.map((n) => (
+        <div
+          key={n.id}
+          className={`sg-map-node${n.central ? " sg-map-node--center" : ""}`}
+          style={{ left: `${n.x}%`, top: `${n.y}%` }}
+        >
+          <span
+            className="sg-map-node-dot"
+            style={{
+              width: n.r * 2, height: n.r * 2,
+              background: n.color,
+              boxShadow: `0 0 ${n.central ? 20 : 10}px ${n.color}`,
+            }}
+          />
+          <span className="sg-map-node-label">{n.title}</span>
+          {n.weight > 0 && <span className="sg-map-node-weight">{n.weight}%</span>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ── Featured Force panel ──────────────────────────────────────────────────────
 
 function FeaturedForcePanel({ force, pf }: { force: V2Signal | null; pf: string }) {
   if (!force) {
     return (
-      <div id="sg-featured" className="sg-panel sg-c7">
+      <div id="sg-featured" className="sg-panel sg-lead-force sg-c12">
         <PanelHdr label="Featured Force" gold />
         <div className="sg-panel-body" style={{ color: CE_MUTED, fontSize: 12 }}>
           No force data available.
@@ -742,77 +878,72 @@ function FeaturedForcePanel({ force, pf }: { force: V2Signal | null; pf: string 
   const move     = force.operator_move ?? null;
 
   return (
-    <div id="sg-featured" className="sg-panel sg-panel--gold sg-c7">
+    <div id="sg-featured" className="sg-panel sg-panel--gold sg-lead-force sg-c12">
       <PanelHdr label="Featured Force" meta={fmtCategory(force.category)} gold />
 
-      <div className="sg-panel-body sg-featured-body">
-        {/* Top row: badges + weight */}
-        <div className="sg-featured-top">
-          <div style={{ display: "flex", gap: 7, flexWrap: "wrap" as const, alignItems: "center" }}>
+      <div className="sg-lead-body">
+        <div className="sg-lead-main">
+          <div style={{ display: "flex", gap: 7, flexWrap: "wrap" as const, alignItems: "center", marginBottom: 14 }}>
             {force.signal_state && <StateBadge state={force.signal_state} />}
             {urgency && <UrgencyBadge urgency={urgency} />}
           </div>
+
+          <h2 style={{ fontFamily: pf, fontSize: 26, fontWeight: 600, color: CE_WHITE, margin: "0 0 14px", lineHeight: 1.22 }}>
+            {force.title}
+          </h2>
+
+          {path && (
+            <div style={{ marginBottom: move ? 16 : 0 }}>
+              <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.35em", textTransform: "uppercase" as const, color: CE_DIM, margin: "0 0 6px" }}>
+                Dominant Path
+              </p>
+              <p style={{ fontSize: 12.5, color: CE_MUTED, margin: 0, lineHeight: 1.65, maxWidth: 580 }}>
+                {path}
+              </p>
+            </div>
+          )}
+
+          {move && (
+            <div style={{
+              display: "flex", alignItems: "flex-start", gap: 12,
+              borderTop: `1px solid rgba(14,26,46,0.85)`, paddingTop: 14,
+            }}>
+              <span style={{
+                fontSize: 10, fontWeight: 800, letterSpacing: "0.20em", textTransform: "uppercase" as const,
+                color: GOLD, flexShrink: 0, paddingTop: 1,
+                fontFamily: "ui-monospace, monospace",
+              }}>
+                MOVE →
+              </span>
+              <p style={{ fontSize: 12.5, color: CE_WHITE, margin: 0, lineHeight: 1.65, opacity: 0.92, maxWidth: 580 }}>
+                {move}
+              </p>
+            </div>
+          )}
+        </div>
+
+        <div className="sg-lead-side">
           {weight > 0 && (
             <div style={{ textAlign: "right" as const }}>
               <div style={{ lineHeight: 1 }}>
-                <span style={{ fontSize: 52, fontWeight: 700, color: CE_WHITE, letterSpacing: "-0.03em", lineHeight: 1 }}>
+                <span style={{ fontSize: 58, fontWeight: 700, color: CE_WHITE, letterSpacing: "-0.03em", lineHeight: 1 }}>
                   {weight}
                 </span>
-                <span style={{ fontSize: 18, color: CE_MUTED }}>{"%"}</span>
+                <span style={{ fontSize: 20, color: CE_MUTED }}>{"%"}</span>
               </div>
               <span style={{ fontSize: 9, fontWeight: 700, color: CE_DIM, letterSpacing: "0.20em", textTransform: "uppercase" as const }}>
                 weight
               </span>
             </div>
           )}
-        </div>
 
-        {/* Force name */}
-        <h2 style={{ fontFamily: pf, fontSize: 22, fontWeight: 600, color: CE_WHITE, margin: 0, lineHeight: 1.25 }}>
-          {force.title}
-        </h2>
-
-        {/* Dominant path */}
-        {path && (
-          <div style={{ display: "flex", flexDirection: "column" as const, gap: 5 }}>
-            <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.35em", textTransform: "uppercase" as const, color: CE_DIM, margin: 0 }}>
-              Dominant Path
-            </p>
-            <p style={{ fontSize: 12, color: CE_MUTED, margin: 0, lineHeight: 1.65 }}>
-              {path}
-            </p>
-          </div>
-        )}
-
-        {/* Operator move */}
-        {move && (
           <div style={{
-            display: "flex", alignItems: "flex-start", gap: 12,
-            borderTop: `1px solid rgba(14,26,46,0.85)`, paddingTop: 14,
+            display: "flex", flexDirection: "column" as const, alignItems: "flex-end", gap: 6,
+            fontSize: 10, color: CE_DIM, marginTop: "auto", paddingTop: 20,
           }}>
-            <span style={{
-              fontSize: 10, fontWeight: 800, letterSpacing: "0.20em", textTransform: "uppercase" as const,
-              color: GOLD, flexShrink: 0, paddingTop: 1,
-              fontFamily: "ui-monospace, monospace",
-            }}>
-              MOVE →
-            </span>
-            <p style={{ fontSize: 12.5, color: CE_WHITE, margin: 0, lineHeight: 1.65, opacity: 0.92 }}>
-              {move}
-            </p>
+            <span><span style={{ color: GOLD }}>✓</span> Human-reviewed</span>
+            <span><span style={{ color: GOLD }}>✓</span> Doctrine-governed</span>
           </div>
-        )}
-
-        {/* Status */}
-        <div style={{
-          display: "flex", alignItems: "center", gap: 6, fontSize: 10, color: CE_DIM,
-          borderTop: `1px solid rgba(14,26,46,0.7)`, paddingTop: 12, marginTop: "auto",
-        }}>
-          <span style={{ color: GOLD }}>✓</span>
-          <span>Human-reviewed</span>
-          <span style={{ color: "rgba(62,78,98,0.4)" }}>·</span>
-          <span style={{ color: GOLD }}>✓</span>
-          <span>Doctrine-governed</span>
         </div>
       </div>
     </div>
@@ -834,7 +965,7 @@ function StateDistWidget({ signals }: { signals: V2Signal[] }) {
   const total  = signals.length;
 
   return (
-    <div className="sg-panel sg-c5">
+    <div className="sg-panel">
       <PanelHdr label="Signal States" meta={`${total} forces`} />
       <div className="sg-panel-body">
         {STATES.map(({ key, label, color }) => {
@@ -870,9 +1001,9 @@ function StateDistWidget({ signals }: { signals: V2Signal[] }) {
 
 function DominantSignalsWidget({ signals, pf }: { signals: V2Signal[]; pf: string }) {
   return (
-    <div id="sg-dominant" className="sg-panel sg-c8">
+    <div id="sg-dominant" className="sg-panel sg-c12">
       <PanelHdr label="Dominant Signals" meta={`${signals.length} active`} gold />
-      <div className="sg-panel-body sg-dominant-body">
+      <div className="sg-panel-body sg-dsignal-grid">
         {signals.length === 0 ? (
           <p style={{ fontSize: 12, color: CE_MUTED }}>No featured signals.</p>
         ) : signals.map((s) => {
@@ -880,7 +1011,7 @@ function DominantSignalsWidget({ signals, pf }: { signals: V2Signal[]; pf: strin
           const path    = s.dominant_path ?? s.directional_thesis ?? null;
           const isLive  = s.signal_state === "act_now" || s.is_featured;
           return (
-            <div key={s.id} className={`sg-dominant-card${isLive ? " sg-dominant-card--live" : ""}`}>
+            <div key={s.id} className={`sg-dsignal-card${isLive ? " sg-dsignal-card--live" : ""}`}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap" as const }}>
                   {s.signal_state && <StateBadge state={s.signal_state} />}
@@ -934,7 +1065,7 @@ function OperatorMovesQueue({ signals }: { signals: V2Signal[] }) {
     .slice(0, 7);
 
   return (
-    <div id="sg-moves" className="sg-panel sg-c4">
+    <div id="sg-moves" className="sg-panel">
       <PanelHdr label="Operator Moves" meta={`${moves.length} queued`} />
       <div className="sg-panel-body sg-moves-body">
         {moves.length === 0 ? (
@@ -961,46 +1092,37 @@ function ForceRegisterPanel({ signals }: { signals: V2Signal[] }) {
   return (
     <div id="sg-register" className="sg-panel sg-c12">
       <PanelHdr label="Seven Base Forces" meta="Force Register" />
-      <div className="sg-table-wrap">
-        <table className="sg-table">
-          <thead>
-            <tr>
-              {["Force", "State", "Dominant Path", "Weight", "Urgency", "Operator Move"].map((h) => (
-                <th key={h} className="sg-th">{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {signals.map((s, i) => {
-              const urgency = getUrgency(s);
-              return (
-                <tr key={s.id} className="sg-tr" style={{
-                  borderBottom: i < signals.length - 1 ? `1px solid rgba(14,26,46,0.75)` : "none",
-                }}>
-                  <td className="sg-td sg-td-force">{s.title}</td>
-                  <td className="sg-td">
-                    {s.signal_state
-                      ? <StateBadge state={s.signal_state} />
-                      : <span style={{ color: CE_DIM }}>—</span>}
-                  </td>
-                  <td className="sg-td sg-td-path">{s.dominant_path ?? s.directional_thesis ?? "—"}</td>
-                  <td className="sg-td" style={{ whiteSpace: "nowrap" as const }}>
-                    {s.directional_weight != null ? (
-                      <span style={{ display: "inline-flex", alignItems: "baseline", gap: 1 }}>
-                        <span style={{ fontSize: 17, fontWeight: 700, color: CE_WHITE }}>{s.directional_weight}</span>
-                        <span style={{ fontSize: 10, color: CE_MUTED }}>%</span>
-                      </span>
-                    ) : <span style={{ color: CE_DIM }}>—</span>}
-                  </td>
-                  <td className="sg-td">
-                    {urgency ? <UrgencyBadge urgency={urgency} /> : <span style={{ color: CE_DIM }}>—</span>}
-                  </td>
-                  <td className="sg-td sg-td-move">{s.operator_move ?? "—"}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+      <div className="sg-register-list">
+        {signals.map((s) => {
+          const urgency = getUrgency(s);
+          const path    = s.dominant_path ?? s.directional_thesis ?? null;
+          return (
+            <div key={s.id} className="sg-register-row">
+              <div className="sg-register-row-top">
+                <div className="sg-register-row-id">
+                  <span className="sg-register-row-name">{s.title}</span>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" as const, marginTop: 7 }}>
+                    {s.signal_state && <StateBadge state={s.signal_state} />}
+                    {urgency && <UrgencyBadge urgency={urgency} />}
+                  </div>
+                </div>
+                {s.directional_weight != null && (
+                  <div className="sg-register-row-weight">
+                    <span>{s.directional_weight}</span>
+                    <span style={{ fontSize: 12, color: CE_MUTED, fontWeight: 600 }}>%</span>
+                  </div>
+                )}
+              </div>
+              {path && <p className="sg-register-row-path">{path}</p>}
+              {s.operator_move && (
+                <div className="sg-register-row-move">
+                  <span className="sg-register-row-move-tag">MOVE</span>
+                  <span>{s.operator_move}</span>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -1043,6 +1165,29 @@ function EvidenceEngineStrip() {
             </div>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Doctrine seal (rail) ──────────────────────────────────────────────────────
+
+function DoctrineSealCard() {
+  return (
+    <div className="sg-panel sg-doctrine-seal">
+      <PanelHdr label="Doctrine" gold />
+      <div className="sg-panel-body" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, color: CE_WHITE }}>
+          <span style={{ color: GOLD }}>✓</span>
+          <span>Human-reviewed</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, color: CE_WHITE }}>
+          <span style={{ color: GOLD }}>✓</span>
+          <span>Doctrine-governed</span>
+        </div>
+        <p style={{ fontSize: 10.5, color: CE_DIM, lineHeight: 1.7, margin: "4px 0 0", paddingTop: 10, borderTop: `1px solid rgba(14,26,46,0.7)` }}>
+          {EVIDENCE_STAGES[3].desc}
+        </p>
       </div>
     </div>
   );
@@ -1102,6 +1247,7 @@ function SignalsDashboard({
   const actNowCount    = baseForces.filter((s) => s.signal_state === "act_now").length;
   const directional    = baseForces.filter((s) => s.signal_state === "directional").length;
   const highestWeight  = sortedForces[0]?.directional_weight ?? 0;
+  const mapNodes       = buildForceMapNodes(sortedForces, featuredForce);
 
   const kpis: KPI[] = [
     { label: "Forces Tracked", value: String(baseForces.length || 7) },
@@ -1116,7 +1262,7 @@ function SignalsDashboard({
     <div
       className="sg-shell"
       style={{
-        background: `url("${NOISE_URI}") repeat, linear-gradient(168deg, #02060F 0%, #030B1A 32%, #020810 65%, #010406 100%)`,
+        background: `url("${NOISE_URI}") repeat, radial-gradient(ellipse at 50% -8%, rgba(197,164,110,0.055), transparent 55%), linear-gradient(168deg, #02060F 0%, #030B1A 32%, #020810 65%, #010406 100%)`,
         color: CE_WHITE,
         minHeight: "100vh",
       }}
@@ -1191,9 +1337,10 @@ function SignalsDashboard({
         .sg-sidebar-brand {
           display: flex;
           align-items: center;
-          gap: 7px;
-          padding: 18px 20px 14px;
+          gap: 8px;
+          padding: 20px 20px 16px;
           border-bottom: 1px solid rgba(14,26,46,0.7);
+          background: linear-gradient(180deg, rgba(197,164,110,0.05), transparent);
           flex-shrink: 0;
         }
         .sg-sidebar-section {
@@ -1201,7 +1348,7 @@ function SignalsDashboard({
           font-weight: 700;
           letter-spacing: 0.28em;
           color: rgba(46,62,82,0.75);
-          padding: 14px 20px 6px;
+          padding: 16px 20px 8px;
           margin: 0;
           flex-shrink: 0;
         }
@@ -1215,7 +1362,7 @@ function SignalsDashboard({
           display: flex;
           align-items: center;
           gap: 10px;
-          padding: 9px 12px;
+          padding: 10px 12px;
           border-radius: 3px;
           color: rgba(90,110,135,0.75);
           font-size: 12px;
@@ -1223,13 +1370,13 @@ function SignalsDashboard({
           text-decoration: none;
           border-left: 2px solid transparent;
           transition: color 160ms, background 160ms, border-color 140ms;
-          margin-bottom: 1px;
+          margin-bottom: 2px;
           position: relative;
         }
         .sg-nav-item:hover { color: #EEF3FA; background: rgba(10,20,38,0.7); }
         .sg-nav-item--active {
           color: #EEF3FA;
-          background: rgba(10,20,38,0.9);
+          background: linear-gradient(90deg, rgba(197,164,110,0.10), rgba(10,20,38,0.9) 65%);
           border-left-color: #C5A46E;
         }
         .sg-sidebar-footer {
@@ -1321,33 +1468,42 @@ function SignalsDashboard({
 
         /* ── KPI strip ── */
         .sg-kpi-strip {
-          display: flex;
+          display: grid;
+          grid-template-columns: repeat(6, 1fr);
+          gap: 10px;
+          padding: 12px 14px;
           border-bottom: 1px solid rgba(14,26,46,0.92);
-          background: rgba(1,4,10,0.60);
+          background: rgba(1,4,10,0.55);
           flex-shrink: 0;
         }
-        .sg-kpi {
-          flex: 1;
-          padding: 12px 16px;
-          border-right: 1px solid rgba(14,26,46,0.65);
+        .sg-kpi-card {
+          background: rgba(3,7,16,0.70);
+          border: 1px solid rgba(14,26,46,0.85);
+          border-radius: 5px;
+          padding: 10px 12px 11px;
           display: flex;
           flex-direction: column;
-          gap: 4px;
-          transition: background 180ms;
+          gap: 7px;
+          transition: border-color 180ms ease, transform 180ms ease, background 180ms ease;
           cursor: default;
         }
-        .sg-kpi:last-child { border-right: none; }
-        .sg-kpi:hover { background: rgba(5,12,24,0.70); }
+        .sg-kpi-card:hover {
+          border-color: rgba(0,229,255,0.22);
+          background: rgba(5,12,24,0.78);
+          transform: translateY(-1px);
+        }
+        .sg-kpi-card--gold:hover { border-color: rgba(197,164,110,0.38); }
+        .sg-kpi-card-top { display: flex; align-items: center; gap: 6px; }
         .sg-kpi-label {
-          font-size: 9px;
+          font-size: 8.5px;
           font-weight: 700;
-          letter-spacing: 0.26em;
+          letter-spacing: 0.22em;
           text-transform: uppercase;
           color: #334458;
           font-variant-numeric: tabular-nums;
         }
         .sg-kpi-value {
-          font-size: 20px;
+          font-size: 19px;
           font-weight: 700;
           color: #EEF3FA;
           letter-spacing: -0.01em;
@@ -1357,20 +1513,27 @@ function SignalsDashboard({
         .sg-kpi-gold { color: #C5A46E; }
 
         /* ── Grid ── */
-        .sg-scrollarea { flex: 1; padding: 14px; }
+        .sg-scrollarea { flex: 1; padding: 14px; display: flex; flex-direction: column; gap: 16px; }
         .sg-grid {
           display: grid;
           grid-template-columns: repeat(12, 1fr);
           gap: 12px;
         }
-        .sg-c4, .sg-c5, .sg-c7, .sg-c8, .sg-c12 { grid-column: span 12; }
-        @media (min-width: 1100px) {
-          .sg-c4  { grid-column: span 4; }
-          .sg-c5  { grid-column: span 5; }
-          .sg-c7  { grid-column: span 7; }
-          .sg-c8  { grid-column: span 8; }
-          .sg-c12 { grid-column: span 12; }
+        .sg-c12 { grid-column: span 12; }
+
+        /* ── Command grid: pressure map + intelligence rail ── */
+        .sg-command-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 12px;
+          align-items: start;
         }
+        @media (min-width: 1180px) {
+          .sg-command-grid { grid-template-columns: 1fr 320px; }
+          .sg-rail { position: sticky; top: 68px; }
+        }
+        .sg-command-main { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+        .sg-rail { display: flex; flex-direction: column; gap: 12px; }
 
         /* ── Panel base ── */
         .sg-panel {
@@ -1414,19 +1577,63 @@ function SignalsDashboard({
         }
         .sg-panel-body { padding: 16px; flex: 1; overflow: auto; }
 
-        /* ── Featured force ── */
-        .sg-featured-body {
+        /* ── Pressure map (hero) ── */
+        .sg-map-panel { min-width: 0; }
+        .sg-map {
+          position: relative;
+          width: 100%;
+          aspect-ratio: 2.15 / 1;
+          max-height: 420px;
+          min-height: 260px;
+        }
+        .sg-map--empty {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 220px;
+        }
+        .sg-map-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+        .sg-map-node {
+          position: absolute;
+          transform: translate(-50%, -50%);
           display: flex;
           flex-direction: column;
-          gap: 16px;
-          height: 100%;
+          align-items: center;
+          gap: 6px;
+          width: 118px;
+          text-align: center;
+          z-index: 2;
         }
-        .sg-featured-top {
+        .sg-map-node--center { z-index: 3; width: 168px; }
+        .sg-map-node-dot {
+          border-radius: 50%;
+          display: block;
+          transition: transform 200ms ease;
+          flex-shrink: 0;
+        }
+        .sg-map-node:hover .sg-map-node-dot { transform: scale(1.15); }
+        .sg-map-node-label {
+          font-size: 10px;
+          color: #C5D2E0;
+          letter-spacing: 0.01em;
+          line-height: 1.35;
+        }
+        .sg-map-node--center .sg-map-node-label {
+          font-size: 12.5px;
+          font-weight: 600;
+          color: #EEF3FA;
+        }
+        .sg-map-node-weight { font-size: 9px; color: #C5A46E; font-weight: 700; }
+
+        /* ── Lead force banner ── */
+        .sg-lead-body {
           display: flex;
+          gap: 32px;
           align-items: flex-start;
-          justify-content: space-between;
-          gap: 12px;
+          padding: 22px 26px 24px;
         }
+        .sg-lead-main { flex: 1; min-width: 0; }
+        .sg-lead-side { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; }
 
         /* ── State dist ── */
         .sg-dist-row {
@@ -1451,24 +1658,29 @@ function SignalsDashboard({
         }
 
         /* ── Dominant signals ── */
-        .sg-dominant-body {
-          display: flex;
-          flex-direction: column;
-          padding: 0;
+        .sg-dsignal-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+          gap: 12px;
         }
-        .sg-dominant-card {
-          padding: 14px 16px;
-          border-bottom: 1px solid rgba(14,26,46,0.7);
+        .sg-dsignal-card {
+          background: rgba(2,5,10,0.55);
+          border: 1px solid rgba(14,26,46,0.85);
+          border-radius: 6px;
+          padding: 16px;
           display: flex;
           flex-direction: column;
-          gap: 8px;
-          transition: background 150ms;
+          gap: 9px;
           border-left: 2px solid transparent;
+          transition: background 160ms, border-color 160ms, transform 160ms;
         }
-        .sg-dominant-card:last-child { border-bottom: none; }
-        .sg-dominant-card:hover { background: rgba(4,10,22,0.60); }
-        .sg-dominant-card--live { border-left-color: rgba(0,229,255,0.38); }
-        .sg-dominant-card--live:hover { border-left-color: rgba(0,229,255,0.70); }
+        .sg-dsignal-card:hover {
+          background: rgba(4,10,22,0.75);
+          border-color: rgba(197,164,110,0.24);
+          transform: translateY(-2px);
+        }
+        .sg-dsignal-card--live { border-left-color: rgba(0,229,255,0.42); }
+        .sg-dsignal-card--live:hover { border-left-color: rgba(0,229,255,0.75); }
 
         /* ── Operator moves ── */
         .sg-moves-body {
@@ -1501,32 +1713,59 @@ function SignalsDashboard({
           margin-top: 1px;
         }
 
-        /* ── Force register table ── */
-        .sg-table-wrap { overflow-x: auto; overflow-y: auto; max-height: 360px; }
-        .sg-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 740px; }
-        .sg-th {
-          position: sticky;
-          top: 0;
-          padding: 10px 16px;
-          text-align: left;
-          font-size: 9px;
+        /* ── Force register rows ── */
+        .sg-register-list { display: flex; flex-direction: column; }
+        .sg-register-row {
+          padding: 16px 18px;
+          border-bottom: 1px solid rgba(14,26,46,0.75);
+          transition: background 150ms;
+        }
+        .sg-register-row:last-child { border-bottom: none; }
+        .sg-register-row:hover { background: rgba(4,10,22,0.55); }
+        .sg-register-row-top {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 16px;
+          flex-wrap: wrap;
+        }
+        .sg-register-row-name { font-size: 14px; font-weight: 600; color: #EEF3FA; }
+        .sg-register-row-weight {
+          font-size: 22px;
           font-weight: 700;
-          letter-spacing: 0.30em;
-          text-transform: uppercase;
-          color: #334458;
-          background: rgba(2,5,10,0.98);
-          white-space: nowrap;
-          border-bottom: 1px solid rgba(14,26,46,0.95);
+          color: #EEF3FA;
+          flex-shrink: 0;
+          display: flex;
+          align-items: baseline;
+          gap: 2px;
         }
-        .sg-tr {
-          background: rgba(2,5,10,0.45);
-          transition: background 140ms ease;
+        .sg-register-row-path {
+          font-size: 12px;
+          color: #7A8DA6;
+          line-height: 1.6;
+          margin: 10px 0 0;
+          max-width: 640px;
         }
-        .sg-tr:hover { background: rgba(5,13,26,0.88); }
-        .sg-td { padding: 12px 16px; vertical-align: top; }
-        .sg-td-force { color: #EEF3FA; font-weight: 600; font-size: 13px; white-space: nowrap; }
-        .sg-td-path  { color: #7A8DA6; max-width: 220px; font-size: 12px; line-height: 1.5; }
-        .sg-td-move  { color: #7A8DA6; max-width: 200px; font-size: 12px; line-height: 1.5; }
+        .sg-register-row-move {
+          display: flex;
+          align-items: flex-start;
+          gap: 10px;
+          margin-top: 10px;
+          padding-top: 10px;
+          border-top: 1px solid rgba(14,26,46,0.55);
+          font-size: 12px;
+          color: #C5D2E0;
+          line-height: 1.6;
+        }
+        .sg-register-row-move-tag {
+          font-size: 9px;
+          font-weight: 800;
+          letter-spacing: 0.18em;
+          color: #C5A46E;
+          flex-shrink: 0;
+          padding-top: 1px;
+          font-family: ui-monospace, monospace;
+        }
 
         /* ── Evidence engine ── */
         .sg-evidence-strip {
@@ -1600,11 +1839,25 @@ function SignalsDashboard({
           }
           .sg-sidebar-footer { display: none; }
           .sg-header-sub { display: none; }
-          .sg-kpi-strip { overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; }
+          .sg-kpi-strip {
+            grid-template-columns: none;
+            grid-auto-flow: column;
+            grid-auto-columns: minmax(108px, 1fr);
+            overflow-x: auto;
+            scrollbar-width: none;
+          }
           .sg-kpi-strip::-webkit-scrollbar { display: none; }
-          .sg-kpi { min-width: 100px; }
-          .sg-scrollarea { padding: 10px; }
+          .sg-scrollarea { padding: 10px; gap: 12px; }
           .sg-grid { gap: 10px; }
+          .sg-command-grid { gap: 10px; }
+          .sg-map { aspect-ratio: 4 / 3; max-height: 300px; }
+          .sg-map-node { width: 92px; }
+          .sg-map-node--center { width: 130px; }
+          .sg-map-node-label { font-size: 9px; }
+          .sg-map-node--center .sg-map-node-label { font-size: 11px; }
+          .sg-lead-body { flex-direction: column; gap: 18px; padding: 18px 18px 20px; }
+          .sg-lead-side { align-items: flex-start !important; width: 100%; }
+          .sg-lead-side > div:first-child { text-align: left !important; }
         }
 
         /* ── Reduced motion ── */
@@ -1623,28 +1876,34 @@ function SignalsDashboard({
         <KPIStrip kpis={kpis} />
 
         <div id="sg-overview" className="sg-scrollarea">
+
+          {/* Hero: pressure map + intelligence rail */}
+          <div className="sg-command-grid">
+            <div className="sg-command-main">
+              <div id="sg-map" className="sg-panel sg-panel--gold sg-map-panel">
+                <PanelHdr label="Pressure Map" meta={`${mapNodes.length} forces mapped`} gold />
+                <ForceMap nodes={mapNodes} />
+              </div>
+              <FeaturedForcePanel force={featuredForce} pf={pf} />
+            </div>
+
+            <div className="sg-rail">
+              <OperatorMovesQueue signals={baseForces} />
+              <StateDistWidget signals={baseForces} />
+              <DoctrineSealCard />
+            </div>
+          </div>
+
+          {/* Supporting sections */}
           <div className="sg-grid">
-
-            {/* Row 1 */}
-            <FeaturedForcePanel force={featuredForce} pf={pf} />
-            <StateDistWidget signals={baseForces} />
-
-            {/* Row 2 */}
             <DominantSignalsWidget signals={dominantSignals} pf={pf} />
-            <OperatorMovesQueue signals={baseForces} />
-
-            {/* Row 3 */}
             <ForceRegisterPanel signals={sortedForces} />
-
-            {/* Row 4 */}
             <EvidenceEngineStrip />
-
-            {/* Row 5 — convergences, if any */}
             {convergences.length > 0 && (
               <ConvergencesWidget convergences={convergences} />
             )}
-
           </div>
+
         </div>
       </div>
     </div>
