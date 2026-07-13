@@ -13,6 +13,7 @@ export default async function CEAdminPage() {
         <h1 style={{ fontSize: '1.75rem', fontWeight: 600, marginBottom: '2rem' }}>CE Admin</h1>
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           <Link href="/ce-admin/dr-e" style={{ padding: '1rem 1.25rem', border: '1px solid rgba(230,237,247,0.1)', color: '#E6EDF7', textDecoration: 'none' }}>Dr. E</Link>
+          <Link href="/hunt" style={{ padding: '1rem 1.25rem', border: '1px solid rgba(230,237,247,0.1)', color: '#E6EDF7', textDecoration: 'none' }}>Hunt</Link>
           <Link href="/ce-admin/runtime" style={{ padding: '1rem 1.25rem', border: '1px solid rgba(230,237,247,0.1)', color: '#E6EDF7', textDecoration: 'none' }}>CE Runtime</Link>
           <Link href="/ce-admin/signals" style={{ padding: '1rem 1.25rem', border: '1px solid rgba(230,237,247,0.1)', color: '#E6EDF7', textDecoration: 'none' }}>Signals Admin</Link>
           <Link href="/mmcp" style={{ padding: '1rem 1.25rem', border: '1px solid rgba(230,237,247,0.1)', color: '#E6EDF7', textDecoration: 'none' }}>MMCP</Link>
