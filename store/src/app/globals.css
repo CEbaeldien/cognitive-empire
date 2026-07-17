@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+/* ── CE Visual Canon — Store ─────────────────────────────────────
+   Black/navy body. Off-white voice. Muted gold for authority marks.
+──────────────────────────────────────────────────────────────────── */
+:root {
+  --ce-bg:        #03050A;
+  --ce-surface:   #0A1221;
+  --ce-card:      #0f1629;
+  --ce-border:    #1e2a45;
+  --ce-border-gold: rgba(201, 169, 97, 0.30);
+  --ce-text:      #f1f5f9;
+  --ce-muted:     #94a3b8;
+  --ce-dim:       #64748b;
+  --ce-dimmer:    #475569;
+  --ce-faint:     #334155;
+  --ce-gold:      #C9A961;
+  --ce-gold-hover: #D4B877;
+}
+
+html, body {
+  background-color: var(--ce-bg);
+  color: var(--ce-text);
+}
