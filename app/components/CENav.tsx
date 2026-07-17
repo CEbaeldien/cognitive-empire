@@ -11,6 +11,7 @@ const NAV_LINKS = [
   { label: "Drift",              href: "/drift"              },
   { label: "Orchestrator",       href: "/orchestrator"       },
   { label: "CE Research",        href: "/ce-research"        },
+  { label: "Store",              href: "https://store.cognitiveempire.com" },
   { label: "Connect",            href: "/connect"            },
 ];
 
