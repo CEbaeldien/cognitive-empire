@@ -11,7 +11,7 @@ export async function GET() {
   const nowIso = new Date().toISOString();
 
   try {
-    const [followupsRes, queuedRes] = await Promise.all([
+    const [followupsRes, queuedBuyerRes, queuedPeerRes, queuedResearchRes, unqualifiedCountRes] = await Promise.all([
       client
         .from("hunt_prospects")
         .select("*")
@@ -22,22 +22,46 @@ export async function GET() {
         .from("hunt_prospects")
         .select("*")
         .eq("status", "queued")
+        .eq("tier", "buyer")
+        .order("icp_score", { ascending: false }),
+      client
+        .from("hunt_prospects")
+        .select("*")
+        .eq("status", "queued")
+        .eq("tier", "peer")
+        .order("icp_score", { ascending: false }),
+      client
+        .from("hunt_prospects")
+        .select("*")
+        .eq("status", "queued")
+        .eq("tier", "research")
         .order("created_at", { ascending: true }),
+      client
+        .from("hunt_prospects")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "queued")
+        .eq("tier", "unqualified"),
     ]);
 
     if (followupsRes.error) throw new Error(followupsRes.error.message);
-    if (queuedRes.error) throw new Error(queuedRes.error.message);
+    if (queuedBuyerRes.error) throw new Error(queuedBuyerRes.error.message);
+    if (queuedPeerRes.error) throw new Error(queuedPeerRes.error.message);
+    if (queuedResearchRes.error) throw new Error(queuedResearchRes.error.message);
+    if (unqualifiedCountRes.error) throw new Error(unqualifiedCountRes.error.message);
 
-    const prospects = [...(followupsRes.data ?? []), ...(queuedRes.data ?? [])].slice(0, 15);
-    const prospectIds = prospects.map((p) => p.id);
+    const buyerProspects = [...(followupsRes.data ?? []), ...(queuedBuyerRes.data ?? [])].slice(0, 15);
+    const peerProspects = queuedPeerRes.data ?? [];
+    const researchProspects = queuedResearchRes.data ?? [];
+
+    const draftableIds = [...buyerProspects, ...peerProspects].map((p) => p.id);
 
     let draftsByProspect: Record<string, unknown[]> = {};
 
-    if (prospectIds.length > 0) {
+    if (draftableIds.length > 0) {
       const { data: drafts, error: draftsError } = await client
         .from("hunt_drafts")
         .select("*")
-        .in("prospect_id", prospectIds)
+        .in("prospect_id", draftableIds)
         .in("status", DRAFT_STATUSES)
         .order("created_at", { ascending: true });
 
@@ -62,7 +86,10 @@ export async function GET() {
     );
 
     return NextResponse.json({
-      prospects: prospects.map((p) => ({ ...p, drafts: draftsByProspect[p.id] ?? [] })),
+      prospects: buyerProspects.map((p) => ({ ...p, drafts: draftsByProspect[p.id] ?? [] })),
+      peerProspects: peerProspects.map((p) => ({ ...p, drafts: draftsByProspect[p.id] ?? [] })),
+      researchProspects,
+      filteredCount: unqualifiedCountRes.count ?? 0,
       counts: Object.fromEntries(countPairs),
     });
   } catch (err) {

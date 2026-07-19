@@ -48,10 +48,14 @@ type Prospect = {
   signal_text: string | null;
   signal_url: string | null;
   linkedin_url: string | null;
+  linkedin_search_url: string | null;
+  tier: string;
   status: string;
   next_followup_at: string | null;
   drafts: Draft[];
 };
+
+type ResearchProspect = Omit<Prospect, "drafts">;
 
 const btnBase: React.CSSProperties = {
   padding: "10px 14px",
@@ -411,8 +415,97 @@ function ManualInjectForm({ onInjected }: { onInjected: () => void }) {
   );
 }
 
+function ResearchCard({
+  prospect,
+  onPromoted,
+}: {
+  prospect: ResearchProspect;
+  onPromoted: () => void;
+}) {
+  const [showForm, setShowForm] = useState(false);
+  const [personName, setPersonName] = useState("");
+  const [personRole, setPersonRole] = useState("");
+  const [linkedinUrl, setLinkedinUrl] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fieldStyle: React.CSSProperties = {
+    width: "100%", padding: "10px 12px", borderRadius: 8, border: `1px solid ${C.border}`,
+    background: C.input, color: C.text, fontSize: 13, outline: "none", boxSizing: "border-box",
+    fontFamily: "system-ui, -apple-system, sans-serif",
+  };
+
+  const signalText = prospect.signal_text ?? "";
+  const shownSignal = signalText.length > 200 ? signalText.slice(0, 200) + "…" : signalText;
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSubmitting(true);
+    setError(null);
+    const res = await fetch(`/api/hunt/prospects/${prospect.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        person_name: personName.trim(),
+        person_role: personRole.trim(),
+        linkedin_url: linkedinUrl.trim(),
+      }),
+    });
+    setSubmitting(false);
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      setError(d.error ?? `HTTP ${res.status}`);
+      return;
+    }
+    onPromoted();
+  }
+
+  return (
+    <div style={{ borderRadius: 12, border: `1px solid ${C.border}`, background: C.panel, padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+      <div>
+        <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{prospect.company_name ?? "Unknown company"}</div>
+        {signalText && <p style={{ fontSize: 13, color: C.muted, margin: "4px 0 0", whiteSpace: "pre-wrap" }}>{shownSignal}</p>}
+      </div>
+
+      {prospect.linkedin_search_url && (
+        <a
+          href={prospect.linkedin_search_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: "block", textAlign: "center", padding: "10px 12px", borderRadius: 8,
+            background: C.accentBg, border: `1px solid ${C.accentBorder}`, color: C.accent,
+            fontSize: 13, fontWeight: 700, textDecoration: "none",
+          }}
+        >
+          Open LinkedIn Search
+        </a>
+      )}
+
+      {!showForm ? (
+        <button type="button" onClick={() => setShowForm(true)} style={btnBase}>
+          Add identity
+        </button>
+      ) : (
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <input style={fieldStyle} placeholder="Person name" value={personName} onChange={(e) => setPersonName(e.target.value)} />
+          <input style={fieldStyle} placeholder="Role" value={personRole} onChange={(e) => setPersonRole(e.target.value)} />
+          <input style={fieldStyle} placeholder="LinkedIn URL" value={linkedinUrl} onChange={(e) => setLinkedinUrl(e.target.value)} />
+          {error && <p style={{ fontSize: 12, color: C.danger, margin: 0 }}>{error}</p>}
+          <button type="submit" disabled={submitting} style={{ ...btnBase, background: C.accentBg, borderColor: C.accentBorder, color: C.accent }}>
+            {submitting ? "Saving…" : "Save & re-evaluate"}
+          </button>
+        </form>
+      )}
+    </div>
+  );
+}
+
 export default function HuntPage() {
   const [prospects, setProspects] = useState<Prospect[]>([]);
+  const [peerProspects, setPeerProspects] = useState<Prospect[]>([]);
+  const [researchProspects, setResearchProspects] = useState<ResearchProspect[]>([]);
+  const [filteredCount, setFilteredCount] = useState(0);
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [skipped, setSkipped] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -430,6 +523,9 @@ export default function HuntPage() {
     }
     const data = await res.json();
     setProspects(data.prospects ?? []);
+    setPeerProspects(data.peerProspects ?? []);
+    setResearchProspects(data.researchProspects ?? []);
+    setFilteredCount(data.filteredCount ?? 0);
     setCounts(data.counts ?? {});
     setSkipped(new Set());
     setLoading(false);
@@ -449,6 +545,7 @@ export default function HuntPage() {
   }
 
   const visible = prospects.filter((p) => !skipped.has(p.id));
+  const visiblePeers = peerProspects.filter((p) => !skipped.has(p.id));
 
   return (
     <div style={{ minHeight: "100vh", background: C.bg, color: C.text, fontFamily: "system-ui, -apple-system, sans-serif" }}>
@@ -479,6 +576,43 @@ export default function HuntPage() {
               onKilled={handleResolved}
             />
           ))}
+        </div>
+
+        {visiblePeers.length > 0 && (
+          <details style={{ marginTop: 16 }}>
+            <summary style={{ cursor: "pointer", fontSize: 10, fontWeight: 700, letterSpacing: "0.35em", textTransform: "uppercase", color: C.faint }}>
+              Peer ({visiblePeers.length})
+            </summary>
+            <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 12 }}>
+              {visiblePeers.map((p) => (
+                <ProspectCard
+                  key={p.id}
+                  prospect={p}
+                  onSkip={handleSkip}
+                  onSent={handleResolved}
+                  onKilled={handleResolved}
+                />
+              ))}
+            </div>
+          </details>
+        )}
+
+        <div style={{ marginTop: 24 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
+            <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.35em", textTransform: "uppercase", color: C.faint, margin: 0 }}>
+              Research
+            </p>
+            <p style={{ fontSize: 11, color: C.faint, margin: 0 }}>{filteredCount} filtered</p>
+          </div>
+          {researchProspects.length === 0 ? (
+            <p style={{ fontSize: 13, color: C.muted }}>Nothing to research right now.</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {researchProspects.map((p) => (
+                <ResearchCard key={p.id} prospect={p} onPromoted={loadQueue} />
+              ))}
+            </div>
+          )}
         </div>
 
         <div style={{ marginTop: 24 }}>
