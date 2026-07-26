@@ -339,13 +339,75 @@ function ProspectCard({
   );
 }
 
+type BatchEntry = {
+  linkedin_url: string;
+  person_name?: string;
+  person_role?: string;
+  company_name?: string;
+  pasted_text?: string;
+};
+
+type BatchParseResult =
+  | { ok: true; entries: BatchEntry[] }
+  | { ok: false; error: string };
+
+function parseBatchInput(raw: string): BatchParseResult {
+  const blocks = raw.split(/\n\s*---+\s*\n/).map((b) => b.trim()).filter((b) => b.length > 0);
+
+  if (blocks.length === 0) return { ok: false, error: "Paste at least one entry." };
+  if (blocks.length > 10) return { ok: false, error: `Max 10 entries per batch (found ${blocks.length}).` };
+
+  const entries: BatchEntry[] = [];
+
+  for (let i = 0; i < blocks.length; i++) {
+    const lines = blocks[i].split("\n").map((l) => l.trim()).filter((l) => l.length > 0);
+    let linkedin_url: string | undefined;
+    let person_name: string | undefined;
+    let person_role: string | undefined;
+    let company_name: string | undefined;
+    const textLines: string[] = [];
+
+    for (const line of lines) {
+      const m = line.match(/^(linkedin|name|role|company)\s*:\s*(.*)$/i);
+      if (m) {
+        const key = m[1].toLowerCase();
+        const value = m[2].trim();
+        if (key === "linkedin") linkedin_url = value;
+        else if (key === "name") person_name = value;
+        else if (key === "role") person_role = value;
+        else if (key === "company") company_name = value;
+        continue;
+      }
+      if (!linkedin_url && /^https?:\/\/\S*linkedin\.com/i.test(line)) {
+        linkedin_url = line;
+        continue;
+      }
+      textLines.push(line);
+    }
+
+    if (!linkedin_url) return { ok: false, error: `Entry ${i + 1} is missing a LinkedIn URL.` };
+
+    entries.push({
+      linkedin_url,
+      person_name,
+      person_role,
+      company_name,
+      pasted_text: textLines.length > 0 ? textLines.join("\n") : undefined,
+    });
+  }
+
+  return { ok: true, entries };
+}
+
 function ManualInjectForm({ onInjected }: { onInjected: () => void }) {
+  const [mode, setMode] = useState<"single" | "batch">("single");
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [personName, setPersonName] = useState("");
   const [personRole, setPersonRole] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [signalText, setSignalText] = useState("");
   const [signalUrl, setSignalUrl] = useState("");
+  const [batchRaw, setBatchRaw] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
 
@@ -354,6 +416,13 @@ function ManualInjectForm({ onInjected }: { onInjected: () => void }) {
     background: C.input, color: C.text, fontSize: 13, outline: "none", boxSizing: "border-box",
     fontFamily: "system-ui, -apple-system, sans-serif",
   };
+
+  const tabStyle = (active: boolean): React.CSSProperties => ({
+    padding: "6px 12px", borderRadius: 6, fontSize: 12, fontWeight: 700, cursor: "pointer",
+    border: `1px solid ${active ? C.accentBorder : C.border}`,
+    background: active ? C.accentBg : "transparent",
+    color: active ? C.accent : C.muted,
+  });
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -394,24 +463,95 @@ function ManualInjectForm({ onInjected }: { onInjected: () => void }) {
     onInjected();
   }
 
+  async function handleBatchSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const parsed = parseBatchInput(batchRaw);
+    if (!parsed.ok) {
+      setMessage({ kind: "err", text: parsed.error });
+      return;
+    }
+    setSubmitting(true);
+    setMessage(null);
+
+    const res = await fetch("/api/hunt/prospects/batch", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ entries: parsed.entries }),
+    });
+
+    setSubmitting(false);
+
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      setMessage({ kind: "err", text: d.error ?? `HTTP ${res.status}` });
+      return;
+    }
+
+    const data = await res.json();
+    const results = (data.results ?? []) as Array<{ ok: boolean; linkedin_url: string; error?: string }>;
+    const succeeded = results.filter((r) => r.ok).length;
+    const failed = results.filter((r) => !r.ok);
+
+    setBatchRaw("");
+    setMessage({
+      kind: failed.length === 0 ? "ok" : "err",
+      text: failed.length === 0
+        ? `Added ${succeeded} to queue.`
+        : `Added ${succeeded}, failed ${failed.length}: ${failed.map((f) => f.error).join("; ")}`,
+    });
+    onInjected();
+  }
+
   return (
-    <form onSubmit={handleSubmit} style={{ borderRadius: 12, border: `1px solid ${C.border}`, background: C.panel, padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
-      <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.35em", textTransform: "uppercase", color: C.faint, margin: 0 }}>
-        Manual Inject
-      </p>
-      <input style={fieldStyle} placeholder="LinkedIn URL *" value={linkedinUrl} onChange={(e) => setLinkedinUrl(e.target.value)} />
-      <input style={fieldStyle} placeholder="Person name" value={personName} onChange={(e) => setPersonName(e.target.value)} />
-      <input style={fieldStyle} placeholder="Person role" value={personRole} onChange={(e) => setPersonRole(e.target.value)} />
-      <input style={fieldStyle} placeholder="Company name" value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
-      <textarea style={{ ...fieldStyle, resize: "vertical" }} rows={3} placeholder="Signal text" value={signalText} onChange={(e) => setSignalText(e.target.value)} />
-      <input style={fieldStyle} placeholder="Signal URL" value={signalUrl} onChange={(e) => setSignalUrl(e.target.value)} />
-      {message && (
-        <p style={{ fontSize: 12, margin: 0, color: message.kind === "ok" ? C.ok : C.danger }}>{message.text}</p>
+    <div style={{ borderRadius: 12, border: `1px solid ${C.border}`, background: C.panel, padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.35em", textTransform: "uppercase", color: C.faint, margin: 0 }}>
+          Manual Inject
+        </p>
+        <div style={{ display: "flex", gap: 6 }}>
+          <button type="button" onClick={() => { setMode("single"); setMessage(null); }} style={tabStyle(mode === "single")}>Single</button>
+          <button type="button" onClick={() => { setMode("batch"); setMessage(null); }} style={tabStyle(mode === "batch")}>Batch</button>
+        </div>
+      </div>
+
+      {mode === "single" ? (
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <input style={fieldStyle} placeholder="LinkedIn URL *" value={linkedinUrl} onChange={(e) => setLinkedinUrl(e.target.value)} />
+          <input style={fieldStyle} placeholder="Person name" value={personName} onChange={(e) => setPersonName(e.target.value)} />
+          <input style={fieldStyle} placeholder="Person role" value={personRole} onChange={(e) => setPersonRole(e.target.value)} />
+          <input style={fieldStyle} placeholder="Company name" value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
+          <textarea style={{ ...fieldStyle, resize: "vertical" }} rows={3} placeholder="Signal text" value={signalText} onChange={(e) => setSignalText(e.target.value)} />
+          <input style={fieldStyle} placeholder="Signal URL" value={signalUrl} onChange={(e) => setSignalUrl(e.target.value)} />
+          {message && (
+            <p style={{ fontSize: 12, margin: 0, color: message.kind === "ok" ? C.ok : C.danger }}>{message.text}</p>
+          )}
+          <button type="submit" disabled={submitting} style={{ ...btnBase, background: C.accentBg, borderColor: C.accentBorder, color: C.accent }}>
+            {submitting ? "Adding…" : "Add to queue"}
+          </button>
+        </form>
+      ) : (
+        <form onSubmit={handleBatchSubmit} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <p style={{ fontSize: 11, color: C.muted, margin: 0 }}>
+            Up to 10 entries, separated by a line with just <code>---</code>. Each entry needs{" "}
+            <code>LinkedIn: &lt;url&gt;</code>; optional <code>Name:</code>, <code>Role:</code>, <code>Company:</code> lines;
+            any other line is treated as pasted post/profile text and enriched automatically.
+          </p>
+          <textarea
+            style={{ ...fieldStyle, resize: "vertical", fontFamily: "ui-monospace, monospace" }}
+            rows={10}
+            placeholder={"LinkedIn: https://linkedin.com/in/janedoe\nRole: Founder\nWe inherited a legacy codebase and are drowning in technical debt...\n---\nLinkedIn: https://linkedin.com/in/johndoe\nName: John Doe\nCompany: Acme"}
+            value={batchRaw}
+            onChange={(e) => setBatchRaw(e.target.value)}
+          />
+          {message && (
+            <p style={{ fontSize: 12, margin: 0, color: message.kind === "ok" ? C.ok : C.danger }}>{message.text}</p>
+          )}
+          <button type="submit" disabled={submitting} style={{ ...btnBase, background: C.accentBg, borderColor: C.accentBorder, color: C.accent }}>
+            {submitting ? "Processing…" : "Process batch"}
+          </button>
+        </form>
       )}
-      <button type="submit" disabled={submitting} style={{ ...btnBase, background: C.accentBg, borderColor: C.accentBorder, color: C.accent }}>
-        {submitting ? "Adding…" : "Add to queue"}
-      </button>
-    </form>
+    </div>
   );
 }
 
